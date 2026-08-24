@@ -4,9 +4,9 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — initial native messaging foundation and Milestone 1 GoreeCloud Data messaging service foundation merged; Data HTTP API foundation in review.
+Active Development — initial native messaging foundation, Milestone 1 GoreeCloud Data messaging service, and Milestone 2 Data HTTP API foundation merged; Milestone 3 authenticated delivery/read receipts in development.
 
-The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. Milestone 1 adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction. The current milestone adds an authenticated HTTP adapter for encrypted Data submission and authorized conversation history without introducing plaintext message handling or production credential issuance.
+The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. Milestone 1 adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction. Milestone 2 adds an authenticated HTTP adapter for encrypted Data submission and authorized conversation history. Milestone 3 adds recipient-authenticated `delivered` and `read` receipt contracts with server-side message/conversation validation and monotonic state progression.
 
 ## Product principles
 
@@ -17,18 +17,19 @@ The merged foundation establishes the transport-provenance domain model used to 
 - Encrypted GoreeCloud conversations do not silently downgrade to SMS or MMS.
 - RCS is integrated only where supported platform and carrier APIs legitimately allow it.
 - Voice and video calling remain distinguishable from carrier calling.
+- Delivery/read state is recipient-authenticated and is not presented as carrier or cryptographic proof.
 - Glaze UI, Privacy Shield, Wardveil Security, and Everkeep are substantive platform integrations.
 
 ## Repository layout
 
 - `cmd/messenger/` — development executable for exercising core contracts
-- `internal/domain/` — transport, encryption, identity, conversation, message, call, and Data-envelope contracts
-- `internal/service/` — GoreeCloud Data service and persistence/authorization boundaries
-- `internal/api/` — authenticated HTTP transport boundary for encrypted GoreeCloud Data envelopes
+- `internal/domain/` — transport, encryption, identity, conversation, message, call, Data-envelope, and receipt contracts
+- `internal/service/` — GoreeCloud Data and receipt services plus persistence/authorization boundaries
+- `internal/api/` — authenticated HTTP transport boundary for encrypted GoreeCloud Data envelopes and delivery/read receipts
 - `docs/architecture.md` — product architecture and trust boundaries
 - `docs/security.md` — encryption and security constraints
 - `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
-- `docs/data-http-api.md` — HTTP API, authentication, authorization, and privacy boundary
+- `docs/data-http-api.md` — HTTP API, authentication, authorization, receipt, and privacy boundary
 
 ## Planned clients
 
