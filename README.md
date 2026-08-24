@@ -4,9 +4,9 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — initial native messaging foundation merged; GoreeCloud Data messaging service foundation in progress.
+Active Development — initial native messaging foundation and Milestone 1 GoreeCloud Data messaging service foundation merged; Data HTTP API foundation in review.
 
-The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. The current development milestone adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction.
+The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. Milestone 1 adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction. The current milestone adds an authenticated HTTP adapter for encrypted Data submission and authorized conversation history without introducing plaintext message handling or production credential issuance.
 
 ## Product principles
 
@@ -24,9 +24,11 @@ The merged foundation establishes the transport-provenance domain model used to 
 - `cmd/messenger/` — development executable for exercising core contracts
 - `internal/domain/` — transport, encryption, identity, conversation, message, call, and Data-envelope contracts
 - `internal/service/` — GoreeCloud Data service and persistence/authorization boundaries
+- `internal/api/` — authenticated HTTP transport boundary for encrypted GoreeCloud Data envelopes
 - `docs/architecture.md` — product architecture and trust boundaries
 - `docs/security.md` — encryption and security constraints
 - `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
+- `docs/data-http-api.md` — HTTP API, authentication, authorization, and privacy boundary
 
 ## Planned clients
 
