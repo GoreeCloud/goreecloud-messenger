@@ -122,6 +122,16 @@ func (s *MemoryDataStore) Put(_ context.Context, envelope domain.DataEnvelope) e
 	return nil
 }
 
+func (s *MemoryDataStore) Get(_ context.Context, messageID string) (domain.DataEnvelope, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	envelope, ok := s.messages[messageID]
+	if !ok {
+		return domain.DataEnvelope{}, false, nil
+	}
+	return cloneEnvelope(envelope), true, nil
+}
+
 func (s *MemoryDataStore) ListConversation(_ context.Context, conversationID string) ([]domain.DataEnvelope, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
