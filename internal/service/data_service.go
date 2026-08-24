@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -14,6 +15,8 @@ import (
 var (
 	ErrDuplicateMessage = errors.New("message already exists")
 	ErrNonceReuse        = errors.New("client nonce already used")
+	ErrSenderMismatch    = errors.New("authenticated user does not match envelope sender")
+	ErrConversationAccess = errors.New("user is not a conversation participant")
 )
 
 // DataStore is the persistence boundary for GoreeCloud Data envelopes.
@@ -22,40 +25,75 @@ type DataStore interface {
 	ListConversation(context.Context, string) ([]domain.DataEnvelope, error)
 }
 
-// DataService validates encrypted GoreeCloud Data envelopes before persistence.
-type DataService struct {
-	store DataStore
+// ConversationAccess verifies membership without trusting client-supplied authorization state.
+type ConversationAccess interface {
+	IsParticipant(context.Context, string, string) (bool, error)
 }
 
-func NewDataService(store DataStore) (*DataService, error) {
+// DataService validates encrypted GoreeCloud Data envelopes and authorization before persistence.
+type DataService struct {
+	store  DataStore
+	access ConversationAccess
+}
+
+func NewDataService(store DataStore, access ConversationAccess) (*DataService, error) {
 	if store == nil {
 		return nil, errors.New("Data store is required")
 	}
-	return &DataService{store: store}, nil
+	if access == nil {
+		return nil, errors.New("conversation access verifier is required")
+	}
+	return &DataService{store: store, access: access}, nil
 }
 
-func (s *DataService) Submit(ctx context.Context, envelope domain.DataEnvelope) error {
+func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, envelope domain.DataEnvelope) error {
+	if strings.TrimSpace(authenticatedUserID) == "" {
+		return errors.New("authenticated user id is required")
+	}
 	if err := envelope.Validate(); err != nil {
 		return fmt.Errorf("validate Data envelope: %w", err)
 	}
+	if authenticatedUserID != envelope.SenderID {
+		return ErrSenderMismatch
+	}
+
+	allowed, err := s.access.IsParticipant(ctx, envelope.ConversationID, authenticatedUserID)
+	if err != nil {
+		return fmt.Errorf("verify conversation access: %w", err)
+	}
+	if !allowed {
+		return ErrConversationAccess
+	}
+
 	if err := s.store.Put(ctx, envelope); err != nil {
 		return fmt.Errorf("persist Data envelope: %w", err)
 	}
 	return nil
 }
 
-func (s *DataService) ListConversation(ctx context.Context, conversationID string) ([]domain.DataEnvelope, error) {
-	if conversationID == "" {
+func (s *DataService) ListConversation(ctx context.Context, authenticatedUserID, conversationID string) ([]domain.DataEnvelope, error) {
+	if strings.TrimSpace(authenticatedUserID) == "" {
+		return nil, errors.New("authenticated user id is required")
+	}
+	if strings.TrimSpace(conversationID) == "" {
 		return nil, errors.New("conversation id is required")
+	}
+
+	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("verify conversation access: %w", err)
+	}
+	if !allowed {
+		return nil, ErrConversationAccess
 	}
 	return s.store.ListConversation(ctx, conversationID)
 }
 
 // MemoryDataStore is a deterministic development store. It is not a production persistence implementation.
 type MemoryDataStore struct {
-	mu          sync.RWMutex
-	messages    map[string]domain.DataEnvelope
-	nonces      map[string]string
+	mu           sync.RWMutex
+	messages     map[string]domain.DataEnvelope
+	nonces       map[string]string
 	conversation map[string][]string
 }
 
@@ -94,6 +132,44 @@ func (s *MemoryDataStore) ListConversation(_ context.Context, conversationID str
 		result = append(result, cloneEnvelope(s.messages[id]))
 	}
 	return result, nil
+}
+
+// MemoryConversationAccess is a deterministic development membership verifier.
+type MemoryConversationAccess struct {
+	mu      sync.RWMutex
+	members map[string]map[string]struct{}
+}
+
+func NewMemoryConversationAccess() *MemoryConversationAccess {
+	return &MemoryConversationAccess{members: make(map[string]map[string]struct{})}
+}
+
+func (a *MemoryConversationAccess) SetConversation(conversation domain.Conversation) error {
+	if err := conversation.Validate(); err != nil {
+		return fmt.Errorf("validate conversation: %w", err)
+	}
+
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	members := make(map[string]struct{}, len(conversation.ParticipantIDs))
+	for _, participantID := range conversation.ParticipantIDs {
+		members[participantID] = struct{}{}
+	}
+	a.members[conversation.ID] = members
+	return nil
+}
+
+func (a *MemoryConversationAccess) IsParticipant(_ context.Context, conversationID, userID string) (bool, error) {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+
+	members, exists := a.members[conversationID]
+	if !exists {
+		return false, nil
+	}
+	_, allowed := members[userID]
+	return allowed, nil
 }
 
 func cloneEnvelope(envelope domain.DataEnvelope) domain.DataEnvelope {
