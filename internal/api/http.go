@@ -23,26 +23,32 @@ type Authenticator interface {
 	Authenticate(context.Context, *http.Request) (string, error)
 }
 
-// Handler exposes the GoreeCloud Data service without weakening its authorization boundary.
+// Handler exposes GoreeCloud Data messaging and receipt services without weakening their authorization boundaries.
 type Handler struct {
-	service *messagingservice.DataService
-	auth    Authenticator
+	service  *messagingservice.DataService
+	receipts *messagingservice.ReceiptService
+	auth     Authenticator
 }
 
-func NewHandler(service *messagingservice.DataService, auth Authenticator) (*Handler, error) {
+func NewHandler(service *messagingservice.DataService, receipts *messagingservice.ReceiptService, auth Authenticator) (*Handler, error) {
 	if service == nil {
 		return nil, errors.New("Data service is required")
+	}
+	if receipts == nil {
+		return nil, errors.New("receipt service is required")
 	}
 	if auth == nil {
 		return nil, errors.New("authenticator is required")
 	}
-	return &Handler{service: service, auth: auth}, nil
+	return &Handler{service: service, receipts: receipts, auth: auth}, nil
 }
 
 func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/data/messages", h.submitMessage)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/messages", h.listConversation)
+	mux.HandleFunc("POST /v1/data/messages/{messageID}/receipts", h.recordReceipt)
+	mux.HandleFunc("GET /v1/data/messages/{messageID}/receipts", h.listReceipts)
 	return mux
 }
 
@@ -64,6 +70,21 @@ type messageResponse struct {
 	Ciphertext     string                 `json:"ciphertext"`
 	Encryption     domain.EncryptionState `json:"encryption"`
 	CreatedAt      time.Time              `json:"created_at"`
+}
+
+type receiptRequest struct {
+	ConversationID string              `json:"conversation_id"`
+	UserID         string              `json:"user_id"`
+	State          domain.ReceiptState `json:"state"`
+	ObservedAt     time.Time           `json:"observed_at"`
+}
+
+type receiptResponse struct {
+	MessageID      string              `json:"message_id"`
+	ConversationID string              `json:"conversation_id"`
+	UserID         string              `json:"user_id"`
+	State          domain.ReceiptState `json:"state"`
+	ObservedAt     time.Time           `json:"observed_at"`
 }
 
 func (h *Handler) submitMessage(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +160,63 @@ func (h *Handler) listConversation(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
+func (h *Handler) recordReceipt(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var input receiptRequest
+	if err := decoder.Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if decoder.Decode(&struct{}{}) == nil {
+		writeError(w, http.StatusBadRequest, "request body must contain one JSON object")
+		return
+	}
+
+	receipt := domain.DeliveryReceipt{
+		MessageID:      strings.TrimSpace(r.PathValue("messageID")),
+		ConversationID: input.ConversationID,
+		UserID:         input.UserID,
+		State:          input.State,
+		ObservedAt:     input.ObservedAt,
+	}
+	if err := h.receipts.Record(r.Context(), userID, receipt); err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func (h *Handler) listReceipts(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+	messageID := strings.TrimSpace(r.PathValue("messageID"))
+	receipts, err := h.receipts.List(r.Context(), userID, messageID)
+	if err != nil {
+		writeServiceError(w, err)
+		return
+	}
+	response := make([]receiptResponse, 0, len(receipts))
+	for _, receipt := range receipts {
+		response = append(response, receiptResponse{
+			MessageID:      receipt.MessageID,
+			ConversationID: receipt.ConversationID,
+			UserID:         receipt.UserID,
+			State:          receipt.State,
+			ObservedAt:     receipt.ObservedAt,
+		})
+	}
+	writeJSON(w, http.StatusOK, response)
+}
+
 func (h *Handler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
 	if err != nil || strings.TrimSpace(userID) == "" {
@@ -154,7 +232,13 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusForbidden, "conversation access denied")
 	case errors.Is(err, messagingservice.ErrSenderMismatch):
 		writeError(w, http.StatusForbidden, "sender does not match authenticated user")
-	case errors.Is(err, messagingservice.ErrDuplicateMessage), errors.Is(err, messagingservice.ErrNonceReuse):
+	case errors.Is(err, messagingservice.ErrReceiptUserMismatch):
+		writeError(w, http.StatusForbidden, "receipt user does not match authenticated user")
+	case errors.Is(err, messagingservice.ErrSelfReceipt):
+		writeError(w, http.StatusForbidden, "sender cannot acknowledge own message")
+	case errors.Is(err, messagingservice.ErrMessageNotFound):
+		writeError(w, http.StatusNotFound, "message not found")
+	case errors.Is(err, messagingservice.ErrDuplicateMessage), errors.Is(err, messagingservice.ErrNonceReuse), errors.Is(err, messagingservice.ErrReceiptRegression):
 		writeError(w, http.StatusConflict, "message conflicts with existing state")
 	default:
 		writeError(w, http.StatusBadRequest, "message request rejected")
