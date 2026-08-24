@@ -17,13 +17,13 @@ const (
 // DataAttachment describes encrypted attachment bytes carried by GoreeCloud Data.
 // Ciphertext is opaque to the service and must never be treated as plaintext content.
 type DataAttachment struct {
-	AttachmentID  string
+	AttachmentID   string
 	ConversationID string
-	SenderID      string
-	ClientNonce   string
-	Filename      string
-	MIMEType      string
-	Ciphertext    []byte
+	SenderID       string
+	ClientNonce    string
+	Filename       string
+	MIMEType       string
+	Ciphertext     []byte
 }
 
 func (a DataAttachment) Validate() error {
