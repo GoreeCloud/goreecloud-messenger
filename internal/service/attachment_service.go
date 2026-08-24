@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrDuplicateAttachment = errors.New("attachment already exists")
+	ErrDuplicateAttachment  = errors.New("attachment already exists")
 	ErrAttachmentNonceReuse = errors.New("attachment client nonce already used")
 )
 
