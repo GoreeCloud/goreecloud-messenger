@@ -15,6 +15,7 @@ func TestMessageValidationAllowsE2EEData(t *testing.T) {
 		Body:           "hello",
 		Transport:      TransportData,
 		Encryption:     EncryptionE2EE,
+		Delivery:       DeliverySent,
 		SentAt:         time.Now(),
 	}
 
@@ -34,6 +35,7 @@ func TestMessageValidationRejectsFalseE2EEOnSMS(t *testing.T) {
 		Body:           "fallback",
 		Transport:      TransportSMS,
 		Encryption:     EncryptionE2EE,
+		Delivery:       DeliveryPending,
 		SentAt:         time.Now(),
 	}
 
@@ -42,9 +44,33 @@ func TestMessageValidationRejectsFalseE2EEOnSMS(t *testing.T) {
 	}
 }
 
+func TestMessageValidationRejectsUnknownDeliveryState(t *testing.T) {
+	m := Message{
+		ID:             "msg-3",
+		ConversationID: "conv-1",
+		SenderID:       "user-1",
+		Body:           "hello",
+		Transport:      TransportData,
+		Encryption:     EncryptionNone,
+		Delivery:       DeliveryState("lost"),
+		SentAt:         time.Now(),
+	}
+
+	if err := m.Validate(); err == nil {
+		t.Fatal("expected unsupported delivery state to fail")
+	}
+}
+
 func TestIdentityRequiresUsernamePrefix(t *testing.T) {
 	identity := Identity{UserID: "user-1", Username: "alex"}
 	if err := identity.Validate(); err == nil {
 		t.Fatal("expected username without @ prefix to fail")
+	}
+}
+
+func TestIdentityRejectsBareAtSign(t *testing.T) {
+	identity := Identity{UserID: "user-1", Username: "@"}
+	if err := identity.Validate(); err == nil {
+		t.Fatal("expected bare @ username to fail")
 	}
 }
