@@ -4,9 +4,9 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Development — initial native messaging foundation.
+Active Development — initial native messaging foundation merged; GoreeCloud Data messaging service foundation in progress.
 
-The first implementation slice establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. The core deliberately treats carrier transports as adapters rather than as the foundation of GoreeCloud messaging.
+The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. The current development milestone adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction.
 
 ## Product principles
 
@@ -19,12 +19,14 @@ The first implementation slice establishes the transport-provenance domain model
 - Voice and video calling remain distinguishable from carrier calling.
 - Glaze UI, Privacy Shield, Wardveil Security, and Everkeep are substantive platform integrations.
 
-## Initial repository layout
+## Repository layout
 
 - `cmd/messenger/` — development executable for exercising core contracts
-- `internal/domain/` — transport, encryption, identity, conversation, and message domain contracts
-- `docs/architecture.md` — initial product architecture and trust boundaries
-- `docs/security.md` — initial encryption and security constraints
+- `internal/domain/` — transport, encryption, identity, conversation, message, call, and Data-envelope contracts
+- `internal/service/` — GoreeCloud Data service and persistence/authorization boundaries
+- `docs/architecture.md` — product architecture and trust boundaries
+- `docs/security.md` — encryption and security constraints
+- `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
 
 ## Planned clients
 
