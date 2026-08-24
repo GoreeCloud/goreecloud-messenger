@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	ErrDuplicateMessage = errors.New("message already exists")
-	ErrNonceReuse        = errors.New("client nonce already used")
-	ErrSenderMismatch    = errors.New("authenticated user does not match envelope sender")
+	ErrDuplicateMessage   = errors.New("message already exists")
+	ErrNonceReuse         = errors.New("client nonce already used")
+	ErrSenderMismatch     = errors.New("authenticated user does not match envelope sender")
 	ErrConversationAccess = errors.New("user is not a conversation participant")
 )
 
