@@ -17,6 +17,7 @@ func main() {
 		Body:           "GoreeCloud Messenger foundation",
 		Transport:      domain.TransportData,
 		Encryption:     domain.EncryptionE2EE,
+		Delivery:       domain.DeliverySent,
 		SentAt:         time.Now().UTC(),
 	}
 
