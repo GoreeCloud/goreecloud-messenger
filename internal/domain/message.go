@@ -32,9 +32,9 @@ func (t Transport) Valid() bool {
 type EncryptionState string
 
 const (
-	EncryptionNone     EncryptionState = "none"
-	EncryptionE2EE     EncryptionState = "e2ee"
-	EncryptionUnknown  EncryptionState = "unknown"
+	EncryptionNone    EncryptionState = "none"
+	EncryptionE2EE    EncryptionState = "e2ee"
+	EncryptionUnknown EncryptionState = "unknown"
 )
 
 func (e EncryptionState) Valid() bool {
@@ -46,12 +46,32 @@ func (e EncryptionState) Valid() bool {
 	}
 }
 
+// DeliveryState records message lifecycle state independently from transport.
+type DeliveryState string
+
+const (
+	DeliveryPending   DeliveryState = "pending"
+	DeliverySent      DeliveryState = "sent"
+	DeliveryDelivered DeliveryState = "delivered"
+	DeliveryRead      DeliveryState = "read"
+	DeliveryFailed    DeliveryState = "failed"
+)
+
+func (d DeliveryState) Valid() bool {
+	switch d {
+	case DeliveryPending, DeliverySent, DeliveryDelivered, DeliveryRead, DeliveryFailed:
+		return true
+	default:
+		return false
+	}
+}
+
 // Identity is a GoreeCloud user identity. Username is first-class and does not require a phone number.
 type Identity struct {
-	UserID         string
-	Username       string
-	DisplayName    string
-	VerifiedPhone  string
+	UserID        string
+	Username      string
+	DisplayName   string
+	VerifiedPhone string
 }
 
 func (i Identity) Validate() error {
@@ -64,22 +84,10 @@ func (i Identity) Validate() error {
 	if !strings.HasPrefix(i.Username, "@") {
 		return errors.New("identity username must begin with @")
 	}
+	if len(i.Username) < 2 {
+		return errors.New("identity username must contain characters after @")
+	}
 	return nil
-}
-
-// ConversationKind distinguishes direct and group messaging.
-type ConversationKind string
-
-const (
-	ConversationDirect ConversationKind = "direct"
-	ConversationGroup  ConversationKind = "group"
-)
-
-// Conversation is transport-neutral. Individual messages retain their own transport provenance.
-type Conversation struct {
-	ID           string
-	Kind         ConversationKind
-	ParticipantIDs []string
 }
 
 // Message stores transport and protection provenance alongside content.
@@ -90,6 +98,7 @@ type Message struct {
 	Body           string
 	Transport      Transport
 	Encryption     EncryptionState
+	Delivery       DeliveryState
 	SentAt         time.Time
 }
 
@@ -103,11 +112,17 @@ func (m Message) Validate() error {
 	if strings.TrimSpace(m.SenderID) == "" {
 		return errors.New("sender id is required")
 	}
+	if strings.TrimSpace(m.Body) == "" {
+		return errors.New("message body is required")
+	}
 	if !m.Transport.Valid() {
 		return fmt.Errorf("unsupported transport %q", m.Transport)
 	}
 	if !m.Encryption.Valid() {
 		return fmt.Errorf("unsupported encryption state %q", m.Encryption)
+	}
+	if !m.Delivery.Valid() {
+		return fmt.Errorf("unsupported delivery state %q", m.Delivery)
 	}
 	if m.Encryption == EncryptionE2EE && m.Transport != TransportData {
 		return errors.New("GoreeCloud E2EE may only be asserted for GoreeCloud Data transport")
