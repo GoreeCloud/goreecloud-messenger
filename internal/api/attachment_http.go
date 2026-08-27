@@ -1,0 +1,150 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+package api
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
+	messagingservice "github.com/GoreeCloud/goreecloud-messenger/internal/service"
+)
+
+// maxAttachmentRequestBodyBytes leaves bounded JSON/base64 overhead above the
+// 25 MiB ciphertext ceiling enforced by the domain contract.
+const maxAttachmentRequestBodyBytes = 36 << 20
+
+// AttachmentHTTPHandler exposes opaque encrypted GoreeCloud Data attachments
+// without introducing a plaintext interpretation boundary.
+type AttachmentHTTPHandler struct {
+	service *messagingservice.AttachmentService
+	auth    Authenticator
+}
+
+func NewAttachmentHTTPHandler(service *messagingservice.AttachmentService, auth Authenticator) (*AttachmentHTTPHandler, error) {
+	if service == nil {
+		return nil, errors.New("attachment service is required")
+	}
+	if auth == nil {
+		return nil, errors.New("authenticator is required")
+	}
+	return &AttachmentHTTPHandler{service: service, auth: auth}, nil
+}
+
+func (h *AttachmentHTTPHandler) Routes() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /v1/data/attachments", h.submitAttachment)
+	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}", h.getAttachment)
+	return mux
+}
+
+type attachmentRequest struct {
+	AttachmentID   string `json:"attachment_id"`
+	ConversationID string `json:"conversation_id"`
+	SenderID       string `json:"sender_id"`
+	ClientNonce    string `json:"client_nonce"`
+	Filename       string `json:"filename"`
+	MIMEType       string `json:"mime_type"`
+	Ciphertext     string `json:"ciphertext"`
+}
+
+type attachmentResponse struct {
+	AttachmentID   string `json:"attachment_id"`
+	ConversationID string `json:"conversation_id"`
+	SenderID       string `json:"sender_id"`
+	ClientNonce    string `json:"client_nonce"`
+	Filename       string `json:"filename"`
+	MIMEType       string `json:"mime_type"`
+	Ciphertext     string `json:"ciphertext"`
+}
+
+func (h *AttachmentHTTPHandler) submitAttachment(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxAttachmentRequestBodyBytes)
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var input attachmentRequest
+	if err := decoder.Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if decoder.Decode(&struct{}{}) == nil {
+		writeError(w, http.StatusBadRequest, "request body must contain one JSON object")
+		return
+	}
+
+	ciphertext, err := base64.StdEncoding.DecodeString(input.Ciphertext)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "ciphertext must be base64 encoded")
+		return
+	}
+
+	attachment := domain.DataAttachment{
+		AttachmentID:   input.AttachmentID,
+		ConversationID: input.ConversationID,
+		SenderID:       input.SenderID,
+		ClientNonce:    input.ClientNonce,
+		Filename:       input.Filename,
+		MIMEType:       input.MIMEType,
+		Ciphertext:     ciphertext,
+	}
+	if err := h.service.Submit(r.Context(), userID, attachment); err != nil {
+		writeAttachmentServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func (h *AttachmentHTTPHandler) getAttachment(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+
+	attachmentID := strings.TrimSpace(r.PathValue("attachmentID"))
+	attachment, err := h.service.Get(r.Context(), userID, attachmentID)
+	if err != nil {
+		writeAttachmentServiceError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, attachmentResponse{
+		AttachmentID:   attachment.AttachmentID,
+		ConversationID: attachment.ConversationID,
+		SenderID:       attachment.SenderID,
+		ClientNonce:    attachment.ClientNonce,
+		Filename:       attachment.Filename,
+		MIMEType:       attachment.MIMEType,
+		Ciphertext:     base64.StdEncoding.EncodeToString(attachment.Ciphertext),
+	})
+}
+
+func (h *AttachmentHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
+	userID, err := h.auth.Authenticate(r.Context(), r)
+	if err != nil || strings.TrimSpace(userID) == "" {
+		writeError(w, http.StatusUnauthorized, "authentication required")
+		return "", false
+	}
+	return userID, true
+}
+
+func writeAttachmentServiceError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, messagingservice.ErrConversationAccess):
+		writeError(w, http.StatusForbidden, "conversation access denied")
+	case errors.Is(err, messagingservice.ErrSenderMismatch):
+		writeError(w, http.StatusForbidden, "sender does not match authenticated user")
+	case errors.Is(err, messagingservice.ErrAttachmentNotFound):
+		writeError(w, http.StatusNotFound, "attachment not found")
+	case errors.Is(err, messagingservice.ErrDuplicateAttachment), errors.Is(err, messagingservice.ErrAttachmentNonceReuse):
+		writeError(w, http.StatusConflict, "attachment conflicts with existing state")
+	default:
+		writeError(w, http.StatusBadRequest, "attachment request rejected")
+	}
+}
