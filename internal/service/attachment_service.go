@@ -15,6 +15,7 @@ import (
 var (
 	ErrDuplicateAttachment  = errors.New("attachment already exists")
 	ErrAttachmentNonceReuse = errors.New("attachment client nonce already used")
+	ErrAttachmentNotFound   = errors.New("attachment not found")
 )
 
 // AttachmentStore is the persistence boundary for encrypted GoreeCloud Data attachments.
@@ -77,7 +78,7 @@ func (s *AttachmentService) Get(ctx context.Context, authenticatedUserID, attach
 		return domain.DataAttachment{}, fmt.Errorf("load Data attachment: %w", err)
 	}
 	if !ok {
-		return domain.DataAttachment{}, errors.New("attachment not found")
+		return domain.DataAttachment{}, ErrAttachmentNotFound
 	}
 
 	allowed, err := s.access.IsParticipant(ctx, attachment.ConversationID, authenticatedUserID)
