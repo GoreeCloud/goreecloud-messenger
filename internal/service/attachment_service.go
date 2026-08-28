@@ -6,22 +6,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
 )
 
+const MaxAttachmentListResults = 100
+
 var (
 	ErrDuplicateAttachment  = errors.New("attachment already exists")
 	ErrAttachmentNonceReuse = errors.New("attachment client nonce already used")
 	ErrAttachmentNotFound   = errors.New("attachment not found")
+	ErrAttachmentListLimit  = errors.New("attachment list limit is invalid")
 )
 
 // AttachmentStore is the persistence boundary for encrypted GoreeCloud Data attachments.
 type AttachmentStore interface {
 	PutAttachment(context.Context, domain.DataAttachment) error
 	GetAttachment(context.Context, string) (domain.DataAttachment, bool, error)
+	ListAttachmentMetadata(context.Context, string, int) ([]domain.DataAttachmentMetadata, error)
 }
 
 // AttachmentService validates encrypted Data attachments and conversation authorization.
@@ -91,6 +96,39 @@ func (s *AttachmentService) Get(ctx context.Context, authenticatedUserID, attach
 	return cloneAttachment(attachment), nil
 }
 
+// List returns a bounded metadata-only projection for one conversation. Authorization is checked
+// before the store is queried so callers cannot use the listing boundary to probe conversation state.
+func (s *AttachmentService) List(
+	ctx context.Context,
+	authenticatedUserID string,
+	conversationID string,
+	limit int,
+) ([]domain.DataAttachmentMetadata, error) {
+	if strings.TrimSpace(authenticatedUserID) == "" {
+		return nil, errors.New("authenticated user id is required")
+	}
+	if strings.TrimSpace(conversationID) == "" {
+		return nil, errors.New("conversation id is required")
+	}
+	if limit < 1 || limit > MaxAttachmentListResults {
+		return nil, ErrAttachmentListLimit
+	}
+
+	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("verify conversation access: %w", err)
+	}
+	if !allowed {
+		return nil, ErrConversationAccess
+	}
+
+	metadata, err := s.store.ListAttachmentMetadata(ctx, conversationID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list Data attachment metadata: %w", err)
+	}
+	return append([]domain.DataAttachmentMetadata(nil), metadata...), nil
+}
+
 // MemoryAttachmentStore is a deterministic development store. It is not production persistence.
 type MemoryAttachmentStore struct {
 	mu          sync.RWMutex
@@ -129,6 +167,29 @@ func (s *MemoryAttachmentStore) GetAttachment(_ context.Context, attachmentID st
 		return domain.DataAttachment{}, false, nil
 	}
 	return cloneAttachment(attachment), true, nil
+}
+
+func (s *MemoryAttachmentStore) ListAttachmentMetadata(
+	_ context.Context,
+	conversationID string,
+	limit int,
+) ([]domain.DataAttachmentMetadata, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	metadata := make([]domain.DataAttachmentMetadata, 0, limit)
+	for _, attachment := range s.attachments {
+		if attachment.ConversationID == conversationID {
+			metadata = append(metadata, attachment.Metadata())
+		}
+	}
+	sort.Slice(metadata, func(i, j int) bool {
+		return metadata[i].AttachmentID < metadata[j].AttachmentID
+	})
+	if len(metadata) > limit {
+		metadata = metadata[:limit]
+	}
+	return metadata, nil
 }
 
 func cloneAttachment(attachment domain.DataAttachment) domain.DataAttachment {
