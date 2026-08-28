@@ -29,12 +29,12 @@ func TestAttachmentListReturnsMetadataWithoutCiphertextOrNonce(t *testing.T) {
 		t.Fatalf("list status = %d, body = %s", recorder.Code, recorder.Body.String())
 	}
 	response := recorder.Body.String()
-	for expected := range []string{`"attachment_id":"attachment-1"`, `"filename":"photo.jpg"`, `"mime_type":"image/jpeg"`, `"ciphertext_bytes":25`} {
+	for _, expected := range []string{`"attachment_id":"attachment-1"`, `"filename":"photo.jpg"`, `"mime_type":"image/jpeg"`, `"ciphertext_bytes":25`} {
 		if !strings.Contains(response, expected) {
 			t.Fatalf("listing missing %s: %s", expected, response)
 		}
 	}
-	for forbidden := range []string{"ciphertext\"", "private-nonce-1", "client_nonce"} {
+	for _, forbidden := range []string{"ciphertext\"", "private-nonce-1", "client_nonce"} {
 		if strings.Contains(response, forbidden) {
 			t.Fatalf("listing exposed forbidden attachment material %q: %s", forbidden, response)
 		}
