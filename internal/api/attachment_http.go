@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -16,6 +17,7 @@ import (
 // maxAttachmentRequestBodyBytes leaves bounded JSON/base64 overhead above the
 // 25 MiB ciphertext ceiling enforced by the domain contract.
 const maxAttachmentRequestBodyBytes = 36 << 20
+const defaultAttachmentListLimit = 50
 
 // AttachmentHTTPHandler exposes opaque encrypted GoreeCloud Data attachments
 // without introducing a plaintext interpretation boundary.
@@ -38,6 +40,7 @@ func (h *AttachmentHTTPHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/data/attachments", h.submitAttachment)
 	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}", h.getAttachment)
+	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/attachments", h.listAttachments)
 	return mux
 }
 
@@ -59,6 +62,19 @@ type attachmentResponse struct {
 	Filename       string `json:"filename"`
 	MIMEType       string `json:"mime_type"`
 	Ciphertext     string `json:"ciphertext"`
+}
+
+type attachmentMetadataResponse struct {
+	AttachmentID    string `json:"attachment_id"`
+	ConversationID  string `json:"conversation_id"`
+	SenderID        string `json:"sender_id"`
+	Filename        string `json:"filename"`
+	MIMEType        string `json:"mime_type"`
+	CiphertextBytes int    `json:"ciphertext_bytes"`
+}
+
+type attachmentListResponse struct {
+	Attachments []attachmentMetadataResponse `json:"attachments"`
 }
 
 func (h *AttachmentHTTPHandler) submitAttachment(w http.ResponseWriter, r *http.Request) {
@@ -125,6 +141,47 @@ func (h *AttachmentHTTPHandler) getAttachment(w http.ResponseWriter, r *http.Req
 	})
 }
 
+func (h *AttachmentHTTPHandler) listAttachments(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+
+	limit := defaultAttachmentListLimit
+	if raw := strings.TrimSpace(r.URL.Query().Get("limit")); raw != "" {
+		parsed, err := strconv.Atoi(raw)
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "attachment list limit is invalid")
+			return
+		}
+		limit = parsed
+	}
+
+	metadata, err := h.service.List(
+		r.Context(),
+		userID,
+		strings.TrimSpace(r.PathValue("conversationID")),
+		limit,
+	)
+	if err != nil {
+		writeAttachmentServiceError(w, err)
+		return
+	}
+
+	items := make([]attachmentMetadataResponse, 0, len(metadata))
+	for _, item := range metadata {
+		items = append(items, attachmentMetadataResponse{
+			AttachmentID:    item.AttachmentID,
+			ConversationID:  item.ConversationID,
+			SenderID:        item.SenderID,
+			Filename:        item.Filename,
+			MIMEType:        item.MIMEType,
+			CiphertextBytes: item.CiphertextBytes,
+		})
+	}
+	writeJSON(w, http.StatusOK, attachmentListResponse{Attachments: items})
+}
+
 func (h *AttachmentHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
 	if err != nil || strings.TrimSpace(userID) == "" {
@@ -144,6 +201,8 @@ func writeAttachmentServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusNotFound, "attachment not found")
 	case errors.Is(err, messagingservice.ErrDuplicateAttachment), errors.Is(err, messagingservice.ErrAttachmentNonceReuse):
 		writeError(w, http.StatusConflict, "attachment conflicts with existing state")
+	case errors.Is(err, messagingservice.ErrAttachmentListLimit):
+		writeError(w, http.StatusBadRequest, "attachment list limit is invalid")
 	default:
 		writeError(w, http.StatusBadRequest, "attachment request rejected")
 	}
