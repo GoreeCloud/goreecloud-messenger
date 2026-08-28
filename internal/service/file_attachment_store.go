@@ -23,13 +23,13 @@ const (
 )
 
 type persistedAttachmentMetadata struct {
-	AttachmentID   string `json:"attachment_id"`
-	ConversationID string `json:"conversation_id"`
-	SenderID       string `json:"sender_id"`
-	ClientNonce    string `json:"client_nonce"`
-	Filename       string `json:"filename"`
-	MIMEType       string `json:"mime_type"`
-	CiphertextBytes int   `json:"ciphertext_bytes"`
+	AttachmentID    string `json:"attachment_id"`
+	ConversationID  string `json:"conversation_id"`
+	SenderID        string `json:"sender_id"`
+	ClientNonce     string `json:"client_nonce"`
+	Filename        string `json:"filename"`
+	MIMEType        string `json:"mime_type"`
+	CiphertextBytes int    `json:"ciphertext_bytes"`
 }
 
 // FileAttachmentStore is a durable local store for already-encrypted GoreeCloud Data
