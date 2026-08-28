@@ -4,9 +4,16 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
+	"github.com/GoreeCloud/goreecloud-messenger/internal/service"
+)
+
+const (
+	attachmentStoreModeEnv = "GOREECLOUD_MESSENGER_ATTACHMENT_STORE"
+	attachmentStoreRootEnv = "GOREECLOUD_MESSENGER_ATTACHMENT_ROOT"
 )
 
 func main() {
@@ -25,5 +32,18 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Messenger development contract active: %s\n", message.ProvenanceLabel())
+	mode := service.AttachmentStoreMode(os.Getenv(attachmentStoreModeEnv))
+	if _, err := service.NewAttachmentStore(mode, os.Getenv(attachmentStoreRootEnv)); err != nil {
+		panic(err)
+	}
+	modeLabel := string(mode)
+	if modeLabel == "" {
+		modeLabel = string(service.AttachmentStoreMemory)
+	}
+
+	fmt.Printf(
+		"Messenger development contract active: %s; attachment-store=%s\n",
+		message.ProvenanceLabel(),
+		modeLabel,
+	)
 }
