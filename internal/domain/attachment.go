@@ -26,6 +26,28 @@ type DataAttachment struct {
 	Ciphertext     []byte
 }
 
+// DataAttachmentMetadata is the client-discovery projection for an encrypted attachment.
+// It intentionally excludes ciphertext and client nonce material.
+type DataAttachmentMetadata struct {
+	AttachmentID    string
+	ConversationID  string
+	SenderID        string
+	Filename        string
+	MIMEType        string
+	CiphertextBytes int
+}
+
+func (a DataAttachment) Metadata() DataAttachmentMetadata {
+	return DataAttachmentMetadata{
+		AttachmentID:    a.AttachmentID,
+		ConversationID:  a.ConversationID,
+		SenderID:        a.SenderID,
+		Filename:        a.Filename,
+		MIMEType:        a.MIMEType,
+		CiphertextBytes: len(a.Ciphertext),
+	}
+}
+
 func (a DataAttachment) Validate() error {
 	if strings.TrimSpace(a.AttachmentID) == "" {
 		return errors.New("attachment id is required")
