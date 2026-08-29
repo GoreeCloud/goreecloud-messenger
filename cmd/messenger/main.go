@@ -15,6 +15,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	receiptDiagnostic, err := runtimeconfig.ReceiptPersistenceDiagnosticFor(receiptPersistence)
+	if err != nil {
+		panic(err)
+	}
 
 	message := domain.Message{
 		ID:             "development-message",
@@ -32,8 +36,8 @@ func main() {
 	}
 
 	fmt.Printf(
-		"Messenger development contract active: %s receipt_persistence=%s\n",
+		"Messenger development contract active: %s %s\n",
 		message.ProvenanceLabel(),
-		receiptPersistence.Mode,
+		receiptDiagnostic.LogLine(),
 	)
 }
