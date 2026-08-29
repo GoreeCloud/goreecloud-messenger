@@ -13,15 +13,17 @@ import (
 )
 
 var (
-	ErrDuplicateMessage   = errors.New("message already exists")
-	ErrNonceReuse         = errors.New("client nonce already used")
-	ErrSenderMismatch     = errors.New("authenticated user does not match envelope sender")
-	ErrConversationAccess = errors.New("user is not a conversation participant")
+	ErrDuplicateMessage       = errors.New("message already exists")
+	ErrNonceReuse             = errors.New("client nonce already used")
+	ErrSenderMismatch         = errors.New("authenticated user does not match envelope sender")
+	ErrConversationAccess     = errors.New("user is not a conversation participant")
+	ErrReplyTargetUnavailable = errors.New("reply target unavailable")
 )
 
 // DataStore is the persistence boundary for GoreeCloud Data envelopes.
 type DataStore interface {
 	Put(context.Context, domain.DataEnvelope) error
+	Get(context.Context, string) (domain.DataEnvelope, bool, error)
 	ListConversation(context.Context, string) ([]domain.DataEnvelope, error)
 }
 
@@ -63,6 +65,17 @@ func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, en
 	}
 	if !allowed {
 		return ErrConversationAccess
+	}
+
+	envelope.ReplyToMessageID = strings.TrimSpace(envelope.ReplyToMessageID)
+	if envelope.ReplyToMessageID != "" {
+		target, found, err := s.store.Get(ctx, envelope.ReplyToMessageID)
+		if err != nil {
+			return fmt.Errorf("load reply target: %w", err)
+		}
+		if !found || target.ConversationID != envelope.ConversationID || target.MessageID == envelope.MessageID {
+			return ErrReplyTargetUnavailable
+		}
 	}
 
 	if err := s.store.Put(ctx, envelope); err != nil {

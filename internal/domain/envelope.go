@@ -12,13 +12,14 @@ import (
 // It intentionally carries no carrier transport fields because Data messages never silently
 // become SMS, MMS, or RCS at this boundary.
 type DataEnvelope struct {
-	MessageID      string
-	ConversationID string
-	SenderID       string
-	ClientNonce    string
-	Ciphertext     []byte
-	Encryption     EncryptionState
-	CreatedAt      time.Time
+	MessageID        string
+	ConversationID   string
+	SenderID         string
+	ClientNonce      string
+	ReplyToMessageID string
+	Ciphertext       []byte
+	Encryption       EncryptionState
+	CreatedAt        time.Time
 }
 
 func (e DataEnvelope) Validate() error {
