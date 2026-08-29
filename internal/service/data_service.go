@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	ErrDuplicateMessage       = errors.New("message already exists")
-	ErrNonceReuse             = errors.New("client nonce already used")
-	ErrSenderMismatch         = errors.New("authenticated user does not match envelope sender")
-	ErrConversationAccess     = errors.New("user is not a conversation participant")
-	ErrReplyTargetUnavailable = errors.New("reply target unavailable")
+	ErrDuplicateMessage        = errors.New("message already exists")
+	ErrNonceReuse              = errors.New("client nonce already used")
+	ErrSenderMismatch          = errors.New("authenticated user does not match envelope sender")
+	ErrConversationAccess      = errors.New("user is not a conversation participant")
+	ErrReplyTargetUnavailable  = errors.New("reply target unavailable")
+	ErrThreadTargetUnavailable = errors.New("thread target unavailable")
 )
 
 // DataStore is the persistence boundary for GoreeCloud Data envelopes.
@@ -68,7 +69,13 @@ func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, en
 	}
 
 	envelope.ReplyToMessageID = strings.TrimSpace(envelope.ReplyToMessageID)
-	if envelope.ReplyToMessageID != "" {
+	envelope.ThreadRootMessageID = strings.TrimSpace(envelope.ThreadRootMessageID)
+
+	if envelope.ThreadRootMessageID != "" {
+		if err := s.validateThreadTarget(ctx, envelope); err != nil {
+			return err
+		}
+	} else if envelope.ReplyToMessageID != "" {
 		target, found, err := s.store.Get(ctx, envelope.ReplyToMessageID)
 		if err != nil {
 			return fmt.Errorf("load reply target: %w", err)
@@ -84,11 +91,38 @@ func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, en
 	return nil
 }
 
+func (s *DataService) validateThreadTarget(ctx context.Context, envelope domain.DataEnvelope) error {
+	if envelope.ReplyToMessageID == "" {
+		return ErrThreadTargetUnavailable
+	}
+
+	root, found, err := s.store.Get(ctx, envelope.ThreadRootMessageID)
+	if err != nil {
+		return fmt.Errorf("load thread root: %w", err)
+	}
+	if !found || root.ConversationID != envelope.ConversationID || root.MessageID == envelope.MessageID || root.ThreadRootMessageID != "" {
+		return ErrThreadTargetUnavailable
+	}
+
+	target, found, err := s.store.Get(ctx, envelope.ReplyToMessageID)
+	if err != nil {
+		return fmt.Errorf("load thread reply target: %w", err)
+	}
+	if !found || target.ConversationID != envelope.ConversationID || target.MessageID == envelope.MessageID {
+		return ErrThreadTargetUnavailable
+	}
+	if target.MessageID != root.MessageID && target.ThreadRootMessageID != root.MessageID {
+		return ErrThreadTargetUnavailable
+	}
+	return nil
+}
+
 func (s *DataService) ListConversation(ctx context.Context, authenticatedUserID, conversationID string) ([]domain.DataEnvelope, error) {
 	if strings.TrimSpace(authenticatedUserID) == "" {
 		return nil, errors.New("authenticated user id is required")
 	}
-	if strings.TrimSpace(conversationID) == "" {
+	conversationID = strings.TrimSpace(conversationID)
+	if conversationID == "" {
 		return nil, errors.New("conversation id is required")
 	}
 
@@ -100,6 +134,46 @@ func (s *DataService) ListConversation(ctx context.Context, authenticatedUserID,
 		return nil, ErrConversationAccess
 	}
 	return s.store.ListConversation(ctx, conversationID)
+}
+
+func (s *DataService) ListThread(ctx context.Context, authenticatedUserID, conversationID, rootMessageID string) ([]domain.DataEnvelope, error) {
+	if strings.TrimSpace(authenticatedUserID) == "" {
+		return nil, errors.New("authenticated user id is required")
+	}
+	conversationID = strings.TrimSpace(conversationID)
+	rootMessageID = strings.TrimSpace(rootMessageID)
+	if conversationID == "" || rootMessageID == "" {
+		return nil, ErrThreadTargetUnavailable
+	}
+
+	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)
+	if err != nil {
+		return nil, fmt.Errorf("verify conversation access: %w", err)
+	}
+	if !allowed {
+		return nil, ErrConversationAccess
+	}
+
+	root, found, err := s.store.Get(ctx, rootMessageID)
+	if err != nil {
+		return nil, fmt.Errorf("load thread root: %w", err)
+	}
+	if !found || root.ConversationID != conversationID || root.ThreadRootMessageID != "" {
+		return nil, ErrThreadTargetUnavailable
+	}
+
+	messages, err := s.store.ListConversation(ctx, conversationID)
+	if err != nil {
+		return nil, fmt.Errorf("list conversation for thread: %w", err)
+	}
+	result := make([]domain.DataEnvelope, 0)
+	result = append(result, root)
+	for _, message := range messages {
+		if message.ThreadRootMessageID == root.MessageID {
+			result = append(result, message)
+		}
+	}
+	return result, nil
 }
 
 // MemoryDataStore is a deterministic development store. It is not a production persistence implementation.
