@@ -4,9 +4,9 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — initial native messaging foundation, Milestone 1 GoreeCloud Data messaging service, and Milestone 2 Data HTTP API foundation merged; Milestone 3 authenticated delivery/read receipts in development.
+Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, and encrypted-attachment foundations are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, and client acceptance remain incomplete.
 
-The merged foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. Milestone 1 adds the first GoreeCloud-controlled Data service boundary for encrypted envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, and persistence abstraction. Milestone 2 adds an authenticated HTTP adapter for encrypted Data submission and authorized conversation history. Milestone 3 adds recipient-authenticated `delivered` and `read` receipt contracts with server-side message/conversation validation and monotonic state progression.
+The current foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. GoreeCloud Data adds encrypted-envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, persistence abstraction, authenticated delivery/read receipts, and opaque encrypted-attachment transport. The attachment surface can submit, fetch as JSON/base64, list metadata, delete with replay-safe tombstones, and download exact ciphertext bytes without asking the server to interpret plaintext media.
 
 ## Product principles
 
@@ -18,22 +18,27 @@ The merged foundation establishes the transport-provenance domain model used to 
 - RCS is integrated only where supported platform and carrier APIs legitimately allow it.
 - Voice and video calling remain distinguishable from carrier calling.
 - Delivery/read state is recipient-authenticated and is not presented as carrier or cryptographic proof.
-- Glaze UI, Privacy Shield, Wardveil Security, and Everkeep are substantive platform integrations.
+- Attachment services transport opaque ciphertext and do not decrypt user content.
+- Glaze UI 2.0 or newer, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
 
 ## Repository layout
 
 - `cmd/messenger/` — development executable for exercising core contracts
-- `internal/domain/` — transport, encryption, identity, conversation, message, call, Data-envelope, and receipt contracts
-- `internal/service/` — GoreeCloud Data and receipt services plus persistence/authorization boundaries
-- `internal/api/` — authenticated HTTP transport boundary for encrypted GoreeCloud Data envelopes and delivery/read receipts
+- `internal/domain/` — transport, encryption, identity, conversation, message, call, Data-envelope, receipt, and attachment contracts
+- `internal/service/` — GoreeCloud Data, receipt, attachment, persistence, and authorization boundaries
+- `internal/api/` — authenticated HTTP transport boundary for encrypted GoreeCloud Data envelopes, receipts, and opaque attachments
 - `docs/architecture.md` — product architecture and trust boundaries
 - `docs/security.md` — encryption and security constraints
 - `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
-- `docs/data-http-api.md` — HTTP API, authentication, authorization, receipt, and privacy boundary
+- `docs/data-http-api.md` — HTTP API, authentication, authorization, receipt, attachment, and privacy boundary
 
 ## Planned clients
 
-Native or platform-appropriate clients are planned for Android, tablets, desktop Linux, and other approved GoreeCloud client platforms. Client work will consume the shared transport and security contracts established here rather than redefining them independently.
+Native or platform-appropriate clients are planned for Android, tablets, desktop Linux, and other approved GoreeCloud client platforms. Client work will consume the shared transport and security contracts established here rather than redefining them independently. Consumer username resolution is expected to use a GoreeCloud Identity-owned exact-handle disclosure contract rather than a Messenger-owned account directory.
+
+## Current limitations
+
+This repository remains Development. It does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, distributed message delivery, production object storage, push notification delivery, anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, Glaze UI client acceptance, or production deployment evidence.
 
 ## License
 

@@ -40,6 +40,7 @@ func (h *AttachmentHTTPHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/data/attachments", h.submitAttachment)
 	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}", h.getAttachment)
+	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}/ciphertext", h.getAttachmentCiphertext)
 	mux.HandleFunc("DELETE /v1/data/attachments/{attachmentID}", h.deleteAttachment)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/attachments", h.listAttachments)
 	return mux
@@ -140,6 +141,31 @@ func (h *AttachmentHTTPHandler) getAttachment(w http.ResponseWriter, r *http.Req
 		MIMEType:       attachment.MIMEType,
 		Ciphertext:     base64.StdEncoding.EncodeToString(attachment.Ciphertext),
 	})
+}
+
+func (h *AttachmentHTTPHandler) getAttachmentCiphertext(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+
+	attachment, err := h.service.Get(r.Context(), userID, strings.TrimSpace(r.PathValue("attachmentID")))
+	if err != nil {
+		writeAttachmentServiceError(w, err)
+		return
+	}
+
+	// The transport deliberately describes the payload as generic binary data.
+	// MIME type and filename are metadata for the E2EE client after decryption;
+	// the server must never encourage a browser to interpret ciphertext as the
+	// sender-declared plaintext media type.
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Length", strconv.Itoa(len(attachment.Ciphertext)))
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(attachment.Ciphertext)
 }
 
 func (h *AttachmentHTTPHandler) deleteAttachment(w http.ResponseWriter, r *http.Request) {
