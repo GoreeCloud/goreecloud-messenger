@@ -40,6 +40,7 @@ func (h *AttachmentHTTPHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/data/attachments", h.submitAttachment)
 	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}", h.getAttachment)
+	mux.HandleFunc("DELETE /v1/data/attachments/{attachmentID}", h.deleteAttachment)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/attachments", h.listAttachments)
 	return mux
 }
@@ -139,6 +140,18 @@ func (h *AttachmentHTTPHandler) getAttachment(w http.ResponseWriter, r *http.Req
 		MIMEType:       attachment.MIMEType,
 		Ciphertext:     base64.StdEncoding.EncodeToString(attachment.Ciphertext),
 	})
+}
+
+func (h *AttachmentHTTPHandler) deleteAttachment(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+	if err := h.service.Delete(r.Context(), userID, strings.TrimSpace(r.PathValue("attachmentID"))); err != nil {
+		writeAttachmentServiceError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AttachmentHTTPHandler) listAttachments(w http.ResponseWriter, r *http.Request) {
