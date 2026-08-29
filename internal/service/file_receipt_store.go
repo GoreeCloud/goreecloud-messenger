@@ -17,6 +17,10 @@ import (
 
 const receiptStoreVersion = 1
 
+var ErrReceiptDurabilityUnknown = errors.New("receipt durability unknown")
+
+var syncReceiptStoreDirectory = syncDirectory
+
 type receiptStoreDocument struct {
 	Version  int                      `json:"version"`
 	Receipts []domain.DeliveryReceipt `json:"receipts"`
@@ -24,21 +28,27 @@ type receiptStoreDocument struct {
 
 // FileReceiptStore is a durable single-node Development ReceiptStore.
 //
-// It persists the latest receipt state per message/user to one private JSON document
-// using write-temp-and-rename replacement. It is intentionally not a distributed
-// database, replication protocol, backup-erasure guarantee, or multi-writer store.
+// It persists the latest receipt state per message/user to one private JSON document using
+// write-temp, fsync, atomic rename, and parent-directory fsync. The persistence root may not be a
+// symlink and an existing state file must be a private regular file. If the rename succeeds but a
+// post-rename durability step fails, the store poisons itself and refuses further reads/writes until
+// reopened so the process cannot continue with an in-memory state that may disagree with disk.
+//
+// It is intentionally not a distributed database, replication protocol, backup-erasure guarantee,
+// or multi-writer store.
 type FileReceiptStore struct {
-	mu       sync.RWMutex
-	path     string
-	receipts map[string]domain.DeliveryReceipt
+	mu          sync.RWMutex
+	path        string
+	receipts    map[string]domain.DeliveryReceipt
+	unavailable error
 }
 
 func NewFileReceiptStore(root string) (*FileReceiptStore, error) {
 	if root == "" {
 		return nil, errors.New("receipt store root is required")
 	}
-	if err := os.MkdirAll(root, 0o700); err != nil {
-		return nil, fmt.Errorf("create receipt store root: %w", err)
+	if err := ensurePrivateReceiptRoot(root); err != nil {
+		return nil, err
 	}
 	store := &FileReceiptStore{
 		path:     filepath.Join(root, "receipts.json"),
@@ -60,6 +70,9 @@ func (s *FileReceiptStore) PutReceipt(ctx context.Context, receipt domain.Delive
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.unavailable != nil {
+		return fmt.Errorf("receipt store unavailable: %w", s.unavailable)
+	}
 
 	key := receiptKey(receipt.MessageID, receipt.UserID)
 	if existing, ok := s.receipts[key]; ok && receipt.State.Rank() < existing.State.Rank() {
@@ -69,6 +82,9 @@ func (s *FileReceiptStore) PutReceipt(ctx context.Context, receipt domain.Delive
 	next := cloneReceiptMap(s.receipts)
 	next[key] = receipt
 	if err := s.persist(next); err != nil {
+		if errors.Is(err, ErrReceiptDurabilityUnknown) {
+			s.unavailable = err
+		}
 		return err
 	}
 	s.receipts = next
@@ -81,6 +97,9 @@ func (s *FileReceiptStore) ListReceipts(ctx context.Context, messageID string) (
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	if s.unavailable != nil {
+		return nil, fmt.Errorf("receipt store unavailable: %w", s.unavailable)
+	}
 
 	result := make([]domain.DeliveryReceipt, 0)
 	for _, receipt := range s.receipts {
@@ -101,10 +120,21 @@ func (s *FileReceiptStore) ListReceipts(ctx context.Context, messageID string) (
 }
 
 func (s *FileReceiptStore) load() error {
-	data, err := os.ReadFile(s.path)
+	info, err := os.Lstat(s.path)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("stat receipt store: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
+		return errors.New("receipt store state must be a regular non-symlink file")
+	}
+	if info.Mode().Perm() != 0o600 {
+		return fmt.Errorf("receipt store state permissions must be 0600, got %o", info.Mode().Perm())
+	}
+
+	data, err := os.ReadFile(s.path)
 	if err != nil {
 		return fmt.Errorf("read receipt store: %w", err)
 	}
@@ -177,9 +207,40 @@ func (s *FileReceiptStore) persist(receipts map[string]domain.DeliveryReceipt) e
 		return fmt.Errorf("replace receipt store: %w", err)
 	}
 	if err := os.Chmod(s.path, 0o600); err != nil {
-		return fmt.Errorf("protect receipt store: %w", err)
+		return fmt.Errorf("%w: protect replaced receipt store: %v", ErrReceiptDurabilityUnknown, err)
+	}
+	if err := syncReceiptStoreDirectory(filepath.Dir(s.path)); err != nil {
+		return fmt.Errorf("%w: sync receipt store directory: %v", ErrReceiptDurabilityUnknown, err)
 	}
 	return nil
+}
+
+func ensurePrivateReceiptRoot(root string) error {
+	if err := os.MkdirAll(root, 0o700); err != nil {
+		return fmt.Errorf("create receipt store root: %w", err)
+	}
+	info, err := os.Lstat(root)
+	if err != nil {
+		return fmt.Errorf("stat receipt store root: %w", err)
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
+		return errors.New("receipt store root must be a non-symlink directory")
+	}
+	if info.Mode().Perm() != 0o700 {
+		if err := os.Chmod(root, 0o700); err != nil {
+			return fmt.Errorf("protect receipt store root: %w", err)
+		}
+	}
+	return nil
+}
+
+func syncDirectory(directory string) error {
+	handle, err := os.Open(directory)
+	if err != nil {
+		return err
+	}
+	defer handle.Close()
+	return handle.Sync()
 }
 
 func receiptKey(messageID, userID string) string {
