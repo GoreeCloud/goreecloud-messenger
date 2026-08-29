@@ -2,7 +2,7 @@
 
 ## Development milestone
 
-This milestone adds a durable single-node implementation of the existing `ReceiptStore` contract for authenticated GoreeCloud Data delivery/read receipts.
+This milestone adds a durable single-node implementation of the existing `ReceiptStore` contract for authenticated GoreeCloud Data delivery/read receipts and an explicit Data-runtime composition selector for choosing receipt persistence.
 
 The store preserves the current receipt semantics:
 
@@ -24,8 +24,19 @@ The store:
 - returns deterministic per-message receipt ordering; and
 - honors canceled request contexts before reads or writes.
 
+## Runtime selection
+
+`NewConfiguredDataRuntimeHandler` now owns an explicit receipt-persistence selection step while composing the existing Data HTTP runtime. The caller must select one of the implemented modes:
+
+- `memory` for the deterministic non-durable development store; or
+- `file` for the current durable single-node file store, with an explicit root directory.
+
+An omitted mode, unknown mode, or file mode without a usable root fails closed. There is deliberately no silent fallback from durable to memory persistence.
+
+This closes the previous composition gap where `FileReceiptStore` existed but the Data runtime could only receive a receipt service that another caller had already assembled. The selection path is tested to reopen file-backed receipt state across store instances.
+
 ## Explicit limitations
 
-This is a Development single-node durability boundary. It is not production distributed persistence, replication, cross-region delivery state, backup/restore acceptance, multi-device convergence, push delivery, a Privacy Shield read-receipt preference store, or a universal proof that a human read or understood a message.
+This remains a Development single-node durability boundary. It is not production distributed persistence, replication, cross-region delivery state, backup/restore acceptance, multi-device convergence, push delivery, a Privacy Shield read-receipt preference store, or a universal proof that a human read or understood a message.
 
-The HTTP runtime does not automatically select this store. Production composition, database selection, deployment, migration, monitoring, recovery, and acceptance remain explicit later work.
+The repository command entrypoint does not yet derive this configuration from an accepted production configuration source, and no deployed process is claimed to be using file receipt persistence. Production process wiring, migration, monitoring, recovery, backup/restore evidence, distributed persistence, and deployment acceptance remain explicit later work.
