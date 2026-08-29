@@ -7,7 +7,7 @@
 - Authenticated sender and conversation authorization.
 - Encrypted envelope submission and authorized history reads.
 - Replay/duplicate and client-nonce protections.
-- Recipient-authenticated delivery/read receipts with monotonic state progression.
+- Recipient-authenticated delivery/read receipts with monotonic state progression; the current stacked Development branch adds explicit read-receipt publish/observe privacy gates while leaving `delivered` state operational.
 - Opaque encrypted attachment upload and authorized fetch.
 - Metadata-only attachment listing.
 - Replay-safe encrypted attachment deletion.
@@ -25,7 +25,7 @@
 - Identity-owned exact-handle username resolution integration.
 - Production E2EE session establishment, verification, rotation, and multi-device state.
 - Distributed message, reaction, and attachment persistence/object storage.
-- Production presence fan-out, Privacy Shield preference persistence, push delivery, offline synchronization, and production rate limiting.
+- Production presence fan-out, durable Privacy Shield preference persistence for typing/read-receipt controls, push delivery, offline synchronization, and production rate limiting.
 - SMS/MMS/RCS carrier/platform adapters where legitimate APIs permit.
 - Voice/video call signaling and media transport.
 - Native client packaging and Glaze UI 2.0+ rendered acceptance.

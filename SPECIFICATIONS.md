@@ -13,7 +13,7 @@ GoreeCloud Messenger is the native GoreeCloud messaging and calling application/
 - Native Go domain/service/API layers for Data conversations and encrypted message envelopes.
 - Authenticated sender and conversation-membership enforcement.
 - Deterministic duplicate/idempotency and nonce-reuse protections.
-- Authenticated delivery/read receipt contracts with monotonic state.
+- Authenticated delivery/read receipt contracts with monotonic state; the current stacked Development source adds conversation-scoped read publication/observation privacy-policy gates while keeping delivered state operational.
 - Opaque encrypted attachment submission, authorized JSON/base64 fetch, metadata listing, replay-safe deletion, and raw ciphertext download.
 - Immutable encrypted sent-message revisions and delete-for-everyone synchronization tombstones on the current stacked Development source.
 - Direct replies with same-conversation target validation and threaded replies with stable root/parent relationships plus authorized thread-history reads on the current stacked Development source.
@@ -34,6 +34,8 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 - Reaction values must remain opaque ciphertext at the service boundary; server-visible set/clear state is control metadata and must not be presented as plaintext reaction content.
 - Typing indicators must remain content-free ephemeral presence metadata. Draft text, keystrokes, cursor positions, message ciphertext, and device secrets must not enter the typing-indicator service.
 - Typing publication and observation must remain subject to explicit privacy-policy checks in addition to conversation membership.
+- Read-receipt publication and observation must remain subject to explicit privacy-policy checks. Current policy changes must be able to hide stored read projections without changing the underlying delivery acknowledgement contract.
+- Delivered state remains operational GoreeCloud Data metadata and must not be mislabeled as read, human-view proof, carrier delivery proof, or cryptographic proof.
 - Thread, reply, and reaction target errors must remain bounded so cross-conversation message identifiers are not exposed through existence-oracle behavior.
 - Attachment raw-byte transport must remain generic binary with no content sniffing and no server-side plaintext MIME interpretation.
 - Wardveil Security, Privacy Shield, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity integration are required where applicable.
@@ -41,4 +43,4 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 
 ## Current acceptance boundary
 
-This is not production-ready. Production-grade identity/device keys, cryptographic session establishment, multi-device synchronization, distributed message/reaction/object persistence, push delivery, production presence fan-out and preference persistence, thread and reaction synchronization/indexing at production scale, abuse controls, carrier adapters, calling media infrastructure, client packaging, and deployment acceptance remain incomplete.
+This is not production-ready. Production-grade identity/device keys, cryptographic session establishment, multi-device synchronization, distributed message/reaction/object persistence, push delivery, production presence fan-out and durable typing/read-receipt preference persistence, thread and reaction synchronization/indexing at production scale, abuse controls, carrier adapters, calling media infrastructure, client packaging, and deployment acceptance remain incomplete.

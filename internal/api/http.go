@@ -261,6 +261,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusForbidden, "sender does not match authenticated user")
 	case errors.Is(err, messagingservice.ErrReceiptUserMismatch):
 		writeError(w, http.StatusForbidden, "receipt user does not match authenticated user")
+	case errors.Is(err, messagingservice.ErrReceiptPrivacyDenied):
+		writeError(w, http.StatusForbidden, "read receipt privacy policy denied")
 	case errors.Is(err, messagingservice.ErrSelfReceipt):
 		writeError(w, http.StatusForbidden, "sender cannot acknowledge own message")
 	case errors.Is(err, messagingservice.ErrMessageNotFound):
