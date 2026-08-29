@@ -24,17 +24,20 @@ const (
 
 type persistedAttachmentMetadata struct {
 	AttachmentID    string `json:"attachment_id"`
-	ConversationID  string `json:"conversation_id"`
-	SenderID        string `json:"sender_id"`
+	ConversationID  string `json:"conversation_id,omitempty"`
+	SenderID        string `json:"sender_id,omitempty"`
 	ClientNonce     string `json:"client_nonce"`
-	Filename        string `json:"filename"`
-	MIMEType        string `json:"mime_type"`
-	CiphertextBytes int    `json:"ciphertext_bytes"`
+	Filename        string `json:"filename,omitempty"`
+	MIMEType        string `json:"mime_type,omitempty"`
+	CiphertextBytes int    `json:"ciphertext_bytes,omitempty"`
+	Deleted         bool   `json:"deleted,omitempty"`
 }
 
 // FileAttachmentStore is a durable local store for already-encrypted GoreeCloud Data
 // attachment bytes. Attachment identifiers are hashed before becoming filenames, raw
 // ciphertext is never interpreted, and metadata is the commit marker for a completed write.
+// Deletion removes ciphertext first and then replaces metadata with a minimal tombstone so
+// attachment identifiers and client nonces remain permanently reserved against replay.
 type FileAttachmentStore struct {
 	mu          sync.RWMutex
 	root        string
@@ -156,6 +159,9 @@ func (s *FileAttachmentStore) GetAttachment(ctx context.Context, attachmentID st
 	if err != nil || !ok {
 		return domain.DataAttachment{}, ok, err
 	}
+	if metadata.Deleted {
+		return domain.DataAttachment{}, false, nil
+	}
 	ciphertext, err := os.ReadFile(filepath.Join(s.cipherDir, attachmentStorageKey(attachmentID)+".bin"))
 	if err != nil {
 		return domain.DataAttachment{}, false, fmt.Errorf("read attachment ciphertext: %w", err)
@@ -172,6 +178,53 @@ func (s *FileAttachmentStore) GetAttachment(ctx context.Context, attachmentID st
 		MIMEType:       metadata.MIMEType,
 		Ciphertext:     append([]byte(nil), ciphertext...),
 	}, true, nil
+}
+
+func (s *FileAttachmentStore) DeleteAttachment(ctx context.Context, attachmentID string) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	metadata, ok, err := s.readMetadataLocked(attachmentID)
+	if err != nil || !ok {
+		return false, err
+	}
+	if metadata.Deleted {
+		return false, nil
+	}
+
+	key := attachmentStorageKey(attachmentID)
+	cipherPath := filepath.Join(s.cipherDir, key+".bin")
+	if err := os.Remove(cipherPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return false, fmt.Errorf("remove attachment ciphertext: %w", err)
+	}
+
+	// Preserve only replay-prevention state. User-facing metadata is removed from the tombstone.
+	metadata.ConversationID = ""
+	metadata.SenderID = ""
+	metadata.Filename = ""
+	metadata.MIMEType = ""
+	metadata.CiphertextBytes = 0
+	metadata.Deleted = true
+	metadataBytes, err := json.Marshal(metadata)
+	if err != nil {
+		return false, fmt.Errorf("encode attachment deletion tombstone: %w", err)
+	}
+	metadataPath := filepath.Join(s.metadataDir, key+".json")
+	metadataTemp := metadataPath + ".delete.tmp"
+	defer func() { _ = os.Remove(metadataTemp) }()
+	if err := writePrivateFile(metadataTemp, metadataBytes); err != nil {
+		return false, fmt.Errorf("write attachment deletion tombstone: %w", err)
+	}
+	if err := os.Rename(metadataTemp, metadataPath); err != nil {
+		return false, fmt.Errorf("commit attachment deletion tombstone: %w", err)
+	}
+	if err := os.Chmod(metadataPath, attachmentFileMode); err != nil {
+		return false, fmt.Errorf("restrict attachment deletion tombstone: %w", err)
+	}
+	return true, nil
 }
 
 func (s *FileAttachmentStore) ListAttachmentMetadata(
@@ -198,7 +251,7 @@ func (s *FileAttachmentStore) ListAttachmentMetadata(
 		if err != nil {
 			return nil, err
 		}
-		if metadata.ConversationID != conversationID {
+		if metadata.Deleted || metadata.ConversationID != conversationID {
 			continue
 		}
 		items = append(items, domain.DataAttachmentMetadata{
@@ -241,7 +294,16 @@ func (s *FileAttachmentStore) readMetadataPathLocked(path string) (persistedAtta
 	if err := json.Unmarshal(contents, &metadata); err != nil {
 		return persistedAttachmentMetadata{}, fmt.Errorf("decode attachment metadata: %w", err)
 	}
-	if metadata.AttachmentID == "" || metadata.ConversationID == "" || metadata.ClientNonce == "" || metadata.CiphertextBytes < 1 {
+	if metadata.AttachmentID == "" || metadata.ClientNonce == "" {
+		return persistedAttachmentMetadata{}, errors.New("committed attachment metadata is incomplete")
+	}
+	if metadata.Deleted {
+		if metadata.CiphertextBytes != 0 {
+			return persistedAttachmentMetadata{}, errors.New("deleted attachment tombstone retains ciphertext length")
+		}
+		return metadata, nil
+	}
+	if metadata.ConversationID == "" || metadata.SenderID == "" || metadata.Filename == "" || metadata.MIMEType == "" || metadata.CiphertextBytes < 1 {
 		return persistedAttachmentMetadata{}, errors.New("committed attachment metadata is incomplete")
 	}
 	return metadata, nil
