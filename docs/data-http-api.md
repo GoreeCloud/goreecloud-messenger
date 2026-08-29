@@ -13,15 +13,15 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 - `GET /v1/data/messages/{messageID}/reactions` returns the current active encrypted reaction projection to an authorized conversation participant.
 - `POST /v1/data/conversations/{conversationID}/typing` publishes content-free authenticated `typing` or `idle` presence state.
 - `GET /v1/data/conversations/{conversationID}/typing` returns currently active typing participants to an authorized observer whose privacy policy permits observation.
-- `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or read acknowledgement.
-- `GET /v1/data/messages/{messageID}/receipts` returns receipt state to an authorized conversation participant.
+- `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or privacy-permitted read acknowledgement.
+- `GET /v1/data/messages/{messageID}/receipts` returns authorized delivery state plus only read projections permitted by the current receipt privacy policy.
 - `POST /v1/data/attachments` accepts already-encrypted opaque attachment ciphertext plus bounded metadata.
 - `GET /v1/data/attachments/{attachmentID}` returns opaque ciphertext as base64 JSON to an authorized conversation participant.
 - `GET /v1/data/attachments/{attachmentID}/ciphertext` returns the exact stored ciphertext bytes to an authorized conversation participant as `application/octet-stream`.
 - `GET /v1/data/conversations/{conversationID}/attachments` returns a bounded metadata-only attachment projection.
 - `DELETE /v1/data/attachments/{attachmentID}` removes retrievable ciphertext for an authorized participant and is idempotent for already-missing/deleted attachment identifiers.
 
-Message, reaction, and ordinary attachment JSON ciphertext is transported as standard base64 text. Typing endpoints do not accept message or reaction ciphertext at all. The raw ciphertext download endpoint transports encrypted bytes directly. The API does not accept plaintext message-body, plaintext reaction-value, plaintext typing-draft, or plaintext attachment-content fields.
+Message, reaction, and ordinary attachment JSON ciphertext is transported as standard base64 text. Typing endpoints do not accept message or reaction ciphertext at all. Receipt endpoints carry delivery/read metadata only. The raw ciphertext download endpoint transports encrypted bytes directly. The API does not accept plaintext message-body, plaintext reaction-value, plaintext typing-draft, or plaintext attachment-content fields.
 
 ## Authentication boundary
 
@@ -33,7 +33,7 @@ Credential issuance, login, token creation, token storage, session management, d
 
 The authenticated user is passed to service-layer authorization. The implementation:
 
-- binds the authenticated user to message and attachment senders, reaction reactors, and typing-state publishers;
+- binds the authenticated user to message and attachment senders, reaction reactors, typing-state publishers, and receipt recipients;
 - verifies server-side conversation membership;
 - validates direct-reply targets against same-conversation message state;
 - validates thread roots and immediate thread parents against same-conversation message state;
@@ -42,10 +42,11 @@ The authenticated user is passed to service-layer authorization. The implementat
 - rejects stale reaction events and reaction ID/client-nonce replay while maintaining one current active projection per reactor/message;
 - applies an explicit typing privacy-policy boundary for both publishing and observing typing state;
 - rejects stale or equal typing sequences so delayed state cannot overwrite a newer per-conversation/per-user typing decision;
-- binds a receipt to the authenticated recipient;
 - rejects delivery/read acknowledgements from the message sender for that sender's own message;
 - verifies that a receipt references an existing message in the stated conversation;
 - prevents receipt state from moving backwards from `read` to `delivered`;
+- applies explicit read-receipt privacy policy to both read publication and read observation while leaving `delivered` state outside that privacy gate;
+- re-evaluates the receipt owner's current read-publication policy when producing read projections so a later privacy change can hide stored read state;
 - rejects duplicate message and attachment identifiers;
 - rejects message and attachment client-nonce reuse;
 - authorizes attachment JSON fetch, raw ciphertext fetch, list, and delete operations against conversation membership; and
@@ -95,7 +96,11 @@ Deleted attachments are not returned by fetch or metadata listing. Repeating `DE
 
 ## Receipt semantics
 
-Delivery receipts are GoreeCloud Data metadata, not proof of carrier delivery and not cryptographic proof that a human viewed content. `delivered` means an authorized recipient client reported delivery progress. `read` is a later recipient-observed state. Receipt state is monotonic for each message and recipient in the current service contract.
+Delivery receipts are GoreeCloud Data metadata, not proof of carrier delivery and not cryptographic proof that a human viewed content. `delivered` means an authorized recipient client reported delivery progress. `read` is a later recipient-observed state. Receipt state remains monotonic for each message and recipient in the current service contract.
+
+Read state now has an explicit privacy boundary. A recipient may publish `read` only when `ReceiptPrivacyPolicy.CanPublishRead` permits that conversation/user pair. Authorized receipt reads include a stored `read` projection only when the observer's `CanObserveRead` policy permits read state and the receipt owner's current `CanPublishRead` policy still permits sharing it. A later privacy change can therefore hide an already-stored read projection without rewriting stored receipt state.
+
+`delivered` is deliberately not blocked by read-receipt privacy settings. When a stored read projection is privacy-hidden, the Development service omits that read projection rather than fabricating or backdating a delivery acknowledgement from the later read timestamp. Because the current in-memory store keeps one latest receipt state per recipient/message, an earlier delivered projection may no longer be available after it was replaced by read; production receipt persistence may preserve richer delivery history while keeping the same privacy contract.
 
 Receipts contain message, conversation, recipient, state, and observation timestamp only. They do not contain plaintext message bodies, encryption keys, device secrets, or carrier metadata.
 
@@ -105,6 +110,7 @@ The HTTP adapter:
 
 - accepts ciphertext rather than plaintext message or reaction content;
 - keeps typing state content-free and separate from drafts or message bodies;
+- keeps read-receipt state subject to explicit publish/observe privacy policy while preserving delivery-state semantics;
 - rejects unknown JSON fields;
 - bounds request bodies, including attachment uploads;
 - sets `Cache-Control: no-store` on JSON and raw ciphertext responses;
@@ -114,10 +120,11 @@ The HTTP adapter:
 - keeps reply/thread metadata limited to message relationships rather than plaintext previews or summaries;
 - keeps active reaction values as ciphertext and omits replay/control metadata not needed by the current projection;
 - keeps active typing projections time-bounded, privacy-gated, and free of draft/keypress data;
+- filters privacy-disallowed read projections before HTTP response construction;
 - transports raw attachment ciphertext as generic binary rather than sender-declared plaintext media;
 - removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
 - does not claim that a cryptographic session exists merely because an envelope or reaction contract records `e2ee`.
 
 ## Current limitations
 
-This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, production presence fan-out, durable Privacy Shield preference storage, cryptographic session establishment, key management, production thread or reaction indexing, offline or multi-device thread/reaction/typing synchronization, cross-device typing sequence allocation, carrier adapters, client reaction encrypt/decrypt/render behavior, client typing rendering, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt and reaction storage remain in-memory Development implementations; typing state is intentionally ephemeral in-memory Development state.
+This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, production presence fan-out, durable Privacy Shield preference storage for typing/read-receipt controls, cryptographic session establishment, key management, production thread or reaction indexing, offline or multi-device thread/reaction/typing/receipt-policy synchronization, cross-device typing sequence allocation, carrier adapters, client reaction encrypt/decrypt/render behavior, client typing/read-receipt settings and rendering, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt and reaction storage remain in-memory Development implementations; typing state is intentionally ephemeral in-memory Development state.
