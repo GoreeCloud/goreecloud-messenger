@@ -4,6 +4,14 @@
 
 This document defines the HTTP transport boundary for GoreeCloud Data messaging. The HTTP layer is an adapter around the Data, receipt, and encrypted-attachment services and does not replace their authorization, transport-provenance, or E2EE-only validation rules.
 
+## Application-facing runtime composition
+
+`DataRuntimeHandler` is the current application-facing composition boundary for the implemented Data HTTP surface. It requires the Data service, receipt service, attachment service, and one `Authenticator`, then registers all implemented routes directly on a shared `http.ServeMux`.
+
+Direct route registration is intentional. Message listing and attachment listing both occupy the `/v1/data/conversations/{conversationID}/...` namespace; prefix-mounting separate child handlers could hide one surface behind another. The composed runtime keeps both route families reachable without duplicating authorization logic or inventing a second authentication boundary.
+
+The runtime composition does not create credentials, establish cryptographic sessions, choose production persistence, terminate TLS, configure rate limits, or start a production listener. Those remain explicit outer application/deployment responsibilities.
+
 ## Current endpoints
 
 - `POST /v1/data/messages` accepts an encrypted GoreeCloud Data envelope.
@@ -20,7 +28,7 @@ Message and ordinary attachment JSON ciphertext is transported as standard base6
 
 ## Authentication boundary
 
-The HTTP package requires an `Authenticator` implementation. The authenticator must resolve the request to an authenticated GoreeCloud user identifier before a service is called.
+The HTTP package requires an `Authenticator` implementation. The authenticator must resolve the request to an authenticated GoreeCloud user identifier before a service is called. The composed runtime deliberately reuses the same injected authenticator for message, receipt, and attachment routes.
 
 Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, attachment, or receipt metadata.
 
@@ -73,9 +81,10 @@ The HTTP adapter:
 - keeps SMS, MMS, and RCS outside the Data API;
 - authorizes receipt and attachment operations against server-side state;
 - transports raw attachment ciphertext as generic binary rather than sender-declared plaintext media;
-- removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
+- removes attachment ciphertext before committing a privacy-minimized deletion tombstone;
+- shares one required authentication boundary across the composed Data runtime; and
 - does not claim that a cryptographic session exists merely because the envelope contract records `e2ee`.
 
 ## Current limitations
 
-This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, multi-device synchronization, carrier adapters, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt storage remains an in-memory development implementation.
+This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, multi-device synchronization, carrier adapters, client packaging, production listener/bootstrap configuration, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt storage remains an in-memory development implementation.
