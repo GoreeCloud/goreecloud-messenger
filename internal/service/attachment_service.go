@@ -23,10 +23,12 @@ var (
 )
 
 // AttachmentStore is the persistence boundary for encrypted GoreeCloud Data attachments.
+// Deletion removes retrievable ciphertext while retaining a minimal replay-prevention tombstone.
 type AttachmentStore interface {
 	PutAttachment(context.Context, domain.DataAttachment) error
 	GetAttachment(context.Context, string) (domain.DataAttachment, bool, error)
 	ListAttachmentMetadata(context.Context, string, int) ([]domain.DataAttachmentMetadata, error)
+	DeleteAttachment(context.Context, string) (bool, error)
 }
 
 // AttachmentService validates encrypted Data attachments and conversation authorization.
@@ -96,6 +98,30 @@ func (s *AttachmentService) Get(ctx context.Context, authenticatedUserID, attach
 	return cloneAttachment(attachment), nil
 }
 
+// Delete removes retrievable ciphertext for an attachment after authenticating conversation access.
+// Missing attachments are treated as already deleted so callers can safely retry without learning
+// whether a prior request completed. Stores keep only the minimum tombstone state required to prevent
+// attachment-id and client-nonce replay.
+func (s *AttachmentService) Delete(ctx context.Context, authenticatedUserID, attachmentID string) error {
+	if strings.TrimSpace(authenticatedUserID) == "" {
+		return errors.New("authenticated user id is required")
+	}
+	if strings.TrimSpace(attachmentID) == "" {
+		return errors.New("attachment id is required")
+	}
+
+	if _, err := s.Get(ctx, authenticatedUserID, attachmentID); err != nil {
+		if errors.Is(err, ErrAttachmentNotFound) {
+			return nil
+		}
+		return err
+	}
+	if _, err := s.store.DeleteAttachment(ctx, attachmentID); err != nil {
+		return fmt.Errorf("delete Data attachment: %w", err)
+	}
+	return nil
+}
+
 // List returns a bounded metadata-only projection for one conversation. Authorization is checked
 // before the store is queried so callers cannot use the listing boundary to probe conversation state.
 func (s *AttachmentService) List(
@@ -134,12 +160,14 @@ type MemoryAttachmentStore struct {
 	mu          sync.RWMutex
 	attachments map[string]domain.DataAttachment
 	nonces      map[string]string
+	tombstones  map[string]struct{}
 }
 
 func NewMemoryAttachmentStore() *MemoryAttachmentStore {
 	return &MemoryAttachmentStore{
 		attachments: make(map[string]domain.DataAttachment),
 		nonces:      make(map[string]string),
+		tombstones:  make(map[string]struct{}),
 	}
 }
 
@@ -148,6 +176,9 @@ func (s *MemoryAttachmentStore) PutAttachment(_ context.Context, attachment doma
 	defer s.mu.Unlock()
 
 	if _, exists := s.attachments[attachment.AttachmentID]; exists {
+		return ErrDuplicateAttachment
+	}
+	if _, exists := s.tombstones[attachment.AttachmentID]; exists {
 		return ErrDuplicateAttachment
 	}
 	if existingAttachmentID, exists := s.nonces[attachment.ClientNonce]; exists {
@@ -167,6 +198,21 @@ func (s *MemoryAttachmentStore) GetAttachment(_ context.Context, attachmentID st
 		return domain.DataAttachment{}, false, nil
 	}
 	return cloneAttachment(attachment), true, nil
+}
+
+func (s *MemoryAttachmentStore) DeleteAttachment(_ context.Context, attachmentID string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, deleted := s.tombstones[attachmentID]; deleted {
+		return false, nil
+	}
+	if _, exists := s.attachments[attachmentID]; !exists {
+		return false, nil
+	}
+	delete(s.attachments, attachmentID)
+	s.tombstones[attachmentID] = struct{}{}
+	// Intentionally retain the nonce reservation. Deletion must not reopen replay state.
+	return true, nil
 }
 
 func (s *MemoryAttachmentStore) ListAttachmentMetadata(
