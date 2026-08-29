@@ -6,8 +6,9 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 
 ## Current endpoints
 
-- `POST /v1/data/messages` accepts an encrypted GoreeCloud Data envelope.
+- `POST /v1/data/messages` accepts an encrypted GoreeCloud Data envelope, including optional direct-reply and threaded-reply metadata.
 - `GET /v1/data/conversations/{conversationID}/messages` returns encrypted envelopes for one authorized conversation.
+- `GET /v1/data/conversations/{conversationID}/threads/{rootMessageID}/messages` returns one authorized thread root plus its encrypted threaded replies.
 - `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or read acknowledgement.
 - `GET /v1/data/messages/{messageID}/receipts` returns receipt state to an authorized conversation participant.
 - `POST /v1/data/attachments` accepts already-encrypted opaque attachment ciphertext plus bounded metadata.
@@ -22,7 +23,7 @@ Message and ordinary attachment JSON ciphertext is transported as standard base6
 
 The HTTP package requires an `Authenticator` implementation. The authenticator must resolve the request to an authenticated GoreeCloud user identifier before a service is called.
 
-Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, attachment, or receipt metadata.
+Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, attachment, receipt, reply, or thread metadata.
 
 ## Authorization boundary
 
@@ -30,6 +31,9 @@ The authenticated user is passed to service-layer authorization. The implementat
 
 - binds the authenticated user to message and attachment senders;
 - verifies server-side conversation membership;
+- validates direct-reply targets against same-conversation message state;
+- validates thread roots and immediate thread parents against same-conversation message state;
+- authorizes thread-history reads before returning root or reply metadata;
 - binds a receipt to the authenticated recipient;
 - rejects delivery/read acknowledgements from the message sender for that sender's own message;
 - verifies that a receipt references an existing message in the stated conversation;
@@ -39,7 +43,17 @@ The authenticated user is passed to service-layer authorization. The implementat
 - authorizes attachment JSON fetch, raw ciphertext fetch, list, and delete operations against conversation membership; and
 - enforces the E2EE-only Data-envelope contract.
 
-The HTTP layer maps authorization failures to bounded non-success responses without returning internal error details.
+The HTTP layer maps authorization and relationship-validation failures to bounded non-success responses without returning internal error details.
+
+## Reply and thread semantics
+
+`reply_to_message_id` identifies an existing message that the new encrypted message directly references. When `thread_root_message_id` is absent, the relationship is a direct reply.
+
+When `thread_root_message_id` is present, the message is part of a focused thread. It must also carry `reply_to_message_id`. The declared root must be a stable same-conversation root rather than an existing threaded child, and the immediate parent must be either that root or a message already assigned to that root.
+
+`GET /v1/data/conversations/{conversationID}/threads/{rootMessageID}/messages` returns the root followed by messages assigned to that thread in deterministic Development-store order. Missing, cross-conversation, invalid-root, and unrelated-parent thread identifiers use the same bounded `thread target unavailable` state. Direct replies use the corresponding bounded `reply target unavailable` state.
+
+The server never decrypts original messages, replies, thread roots, quoted text, or previews. Any plaintext quote, preview, summary, or thread title is a client concern and must be derived only from content the authorized client can already decrypt.
 
 ## Raw ciphertext download semantics
 
@@ -71,11 +85,12 @@ The HTTP adapter:
 - sets `Cache-Control: no-store` on JSON and raw ciphertext responses;
 - sets `X-Content-Type-Options: nosniff`;
 - keeps SMS, MMS, and RCS outside the Data API;
-- authorizes receipt and attachment operations against server-side state;
+- authorizes reply, thread, receipt, and attachment operations against server-side state;
+- keeps reply/thread metadata limited to message relationships rather than plaintext previews or summaries;
 - transports raw attachment ciphertext as generic binary rather than sender-declared plaintext media;
 - removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
 - does not claim that a cryptographic session exists merely because the envelope contract records `e2ee`.
 
 ## Current limitations
 
-This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, multi-device synchronization, carrier adapters, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt storage remains an in-memory development implementation.
+This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, production thread indexing, offline or multi-device thread synchronization, carrier adapters, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt storage remains an in-memory development implementation.

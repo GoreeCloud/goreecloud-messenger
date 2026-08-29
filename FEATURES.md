@@ -15,6 +15,7 @@
 - Immutable encrypted sent-message revision records on the current stacked Development branch.
 - Delete-for-everyone synchronization tombstones on the current stacked Development branch.
 - Direct reply references that preserve opaque message ciphertext and verify same-conversation targets on the current stacked Development branch.
+- Threaded reply metadata and authorized thread-history reads with stable same-conversation roots on the current stacked Development branch.
 
 ## Planned / incomplete
 
