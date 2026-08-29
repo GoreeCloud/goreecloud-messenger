@@ -2,7 +2,7 @@
 
 ## Current availability
 
-GoreeCloud Messenger is in **Active Development**. The repository currently provides messaging-domain, service, authenticated HTTP transport, receipt, persistence, and encrypted-attachment foundations. A production-ready end-user Messenger client is **not yet available** from this repository.
+GoreeCloud Messenger is in **Active Development**. The repository currently provides messaging-domain, service, authenticated HTTP transport, receipt, persistence, encrypted-attachment, and unified Data runtime-composition foundations. A production-ready end-user Messenger client is **not yet available** from this repository.
 
 This manual therefore explains what current Development builds/services do and which product behaviors must not yet be assumed.
 
@@ -11,6 +11,8 @@ This manual therefore explains what current Development builds/services do and w
 GoreeCloud Data is the first-party GoreeCloud messaging transport for authorized GoreeCloud conversations. It is technically distinct from SMS, MMS, and RCS and must not silently downgrade an encrypted GoreeCloud conversation to a carrier transport.
 
 Current source validates encrypted Data envelopes, enforces authenticated sender/conversation authorization, provides deterministic retry protection, and exposes authenticated message transport through the Development HTTP service.
+
+The current HTTP foundation also provides one application-facing Data runtime handler that composes message, receipt, and encrypted-attachment routes under the same injected authenticator. This is a Development integration boundary, not a production server bootstrap, Identity session implementation, TLS endpoint, or deployment approval.
 
 End-to-end encryption is represented only when the relevant cryptographic state is actually verified. The current repository does not yet establish production device/key lifecycle or complete production cryptographic session establishment.
 
@@ -60,7 +62,7 @@ Current source does not establish production carrier adapters, voice/video media
 
 ## Current limitations
 
-The Development repository does not yet establish production identity sessions, complete cryptographic session/key management, distributed delivery/storage, production object storage, push delivery, carrier adapters, calling media transport, anti-abuse/rate-limit acceptance, complete native clients, Glaze UI client acceptance, deployment, signed release, or Stable qualification.
+The Development repository does not yet establish production identity sessions, complete cryptographic session/key management, distributed delivery/storage, production object storage, push delivery, carrier adapters, calling media transport, anti-abuse/rate-limit acceptance, complete native clients, Glaze UI client acceptance, production server/bootstrap configuration, deployment, signed release, or Stable qualification.
 
 Until a later release record states otherwise, there is no supported production end-user installation workflow from this repository.
 
