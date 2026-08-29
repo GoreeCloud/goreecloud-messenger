@@ -16,13 +16,14 @@
 - Delete-for-everyone synchronization tombstones on the current stacked Development branch.
 - Direct reply references that preserve opaque message ciphertext and verify same-conversation targets on the current stacked Development branch.
 - Threaded reply metadata and authorized thread-history reads with stable same-conversation roots on the current stacked Development branch.
+- Encrypted message-reaction set/clear events with authenticated per-user active projections, replay protection, and stale-event rejection on the current stacked Development branch.
 
 ## Planned / incomplete
 
 - Production GoreeCloud Identity sessions and device/key lifecycle.
 - Identity-owned exact-handle username resolution integration.
 - Production E2EE session establishment, verification, rotation, and multi-device state.
-- Distributed message and attachment persistence/object storage.
+- Distributed message, reaction, and attachment persistence/object storage.
 - Push delivery, presence/typing policy, offline synchronization, and production rate limiting.
 - SMS/MMS/RCS carrier/platform adapters where legitimate APIs permit.
 - Voice/video call signaling and media transport.
