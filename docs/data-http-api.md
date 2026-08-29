@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the HTTP transport boundary for GoreeCloud Data messaging. The HTTP layer is an adapter around the Data and delivery-receipt services and does not replace their authorization, transport-provenance, or E2EE-only validation rules.
+This document defines the HTTP transport boundary for GoreeCloud Data messaging. The HTTP layer is an adapter around the Data, receipt, and encrypted-attachment services and does not replace their authorization, transport-provenance, or E2EE-only validation rules.
 
 ## Current endpoints
 
@@ -10,30 +10,41 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 - `GET /v1/data/conversations/{conversationID}/messages` returns encrypted envelopes for one authorized conversation.
 - `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or read acknowledgement.
 - `GET /v1/data/messages/{messageID}/receipts` returns receipt state to an authorized conversation participant.
+- `POST /v1/data/attachments` accepts already-encrypted opaque attachment ciphertext plus bounded metadata.
+- `GET /v1/data/attachments/{attachmentID}` returns opaque ciphertext to an authorized conversation participant.
+- `GET /v1/data/conversations/{conversationID}/attachments` returns a bounded metadata-only attachment projection.
+- `DELETE /v1/data/attachments/{attachmentID}` removes retrievable ciphertext for an authorized participant and is idempotent for already-missing/deleted attachment identifiers.
 
-The API transports ciphertext as standard base64 text inside JSON. It does not accept a plaintext message-body field.
+Message and attachment ciphertext is transported as standard base64 text inside JSON. The API does not accept plaintext message-body or plaintext attachment-content fields.
 
 ## Authentication boundary
 
 The HTTP package requires an `Authenticator` implementation. The authenticator must resolve the request to an authenticated GoreeCloud user identifier before a service is called.
 
-Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender or receipt metadata.
+Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, attachment, or receipt metadata.
 
 ## Authorization boundary
 
 The authenticated user is passed to service-layer authorization. The implementation:
 
-- binds the authenticated user to the envelope sender;
+- binds the authenticated user to message and attachment senders;
 - verifies server-side conversation membership;
 - binds a receipt to the authenticated recipient;
 - rejects delivery/read acknowledgements from the message sender for that sender's own message;
 - verifies that a receipt references an existing message in the stated conversation;
 - prevents receipt state from moving backwards from `read` to `delivered`;
-- rejects duplicate message identifiers;
-- rejects client-nonce reuse; and
+- rejects duplicate message and attachment identifiers;
+- rejects message and attachment client-nonce reuse;
+- authorizes attachment fetch/list/delete against conversation membership; and
 - enforces the E2EE-only Data-envelope contract.
 
 The HTTP layer maps authorization failures to bounded non-success responses without returning internal error details.
+
+## Attachment deletion semantics
+
+Attachment deletion is designed to remove retrievable encrypted payload bytes without reopening replay state. The durable local store removes ciphertext first, then replaces user-facing attachment metadata with a minimal deletion tombstone that retains only the attachment identifier, client nonce, and deletion marker required to keep the identifier and nonce reserved.
+
+Deleted attachments are not returned by fetch or metadata listing. Repeating `DELETE` is safe. A previously deleted attachment identifier or client nonce cannot be reused by a later submission. The tombstone is replay-prevention metadata; it is not evidence that a remote replica, backup, client cache, or production storage system has deleted corresponding data.
 
 ## Receipt semantics
 
@@ -45,15 +56,16 @@ Receipts contain message, conversation, recipient, state, and observation timest
 
 The HTTP adapter:
 
-- accepts ciphertext rather than plaintext message bodies;
+- accepts ciphertext rather than plaintext content;
 - rejects unknown JSON fields;
-- bounds request bodies to 1 MiB;
+- bounds request bodies, including attachment uploads;
 - sets `Cache-Control: no-store` on JSON responses;
 - sets `X-Content-Type-Options: nosniff`;
 - keeps SMS, MMS, and RCS outside the Data API;
-- authorizes receipt operations against server-side message and conversation state; and
+- authorizes receipt and attachment operations against server-side state;
+- removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
 - does not claim that a cryptographic session exists merely because the envelope contract records `e2ee`.
 
 ## Current limitations
 
-This is a Development source foundation. It does not provide production credentials, production persistence, TLS termination, rate limiting, push delivery, attachment transfer, cryptographic session establishment, key management, multi-device synchronization, carrier adapters, client packaging, deployment, or production acceptance. Receipt storage is currently an in-memory development implementation and is not production persistence.
+This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, multi-device synchronization, carrier adapters, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt storage remains an in-memory development implementation.
