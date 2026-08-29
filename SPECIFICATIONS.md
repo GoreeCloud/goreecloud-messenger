@@ -18,6 +18,7 @@ GoreeCloud Messenger is the native GoreeCloud messaging and calling application/
 - Immutable encrypted sent-message revisions and delete-for-everyone synchronization tombstones on the current stacked Development source.
 - Direct replies with same-conversation target validation and threaded replies with stable root/parent relationships plus authorized thread-history reads on the current stacked Development source.
 - Encrypted message-reaction set/clear events with authenticated per-reactor current-state projection, replay protection, and stale-event rejection on the current stacked Development source.
+- Privacy-controlled ephemeral typing indicators with authenticated participant binding, monotonic per-user sequence ordering, server-assigned expiry, publish/observe policy gates, and content-free active projections on the current stacked Development source.
 - Local Development persistence abstractions and focused tests.
 
 ## Identity and discovery
@@ -31,6 +32,8 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 - Encrypted conversations must not silently downgrade to SMS/MMS.
 - Reply and thread metadata must not become a server-side plaintext quote, preview, or conversation-summary channel.
 - Reaction values must remain opaque ciphertext at the service boundary; server-visible set/clear state is control metadata and must not be presented as plaintext reaction content.
+- Typing indicators must remain content-free ephemeral presence metadata. Draft text, keystrokes, cursor positions, message ciphertext, and device secrets must not enter the typing-indicator service.
+- Typing publication and observation must remain subject to explicit privacy-policy checks in addition to conversation membership.
 - Thread, reply, and reaction target errors must remain bounded so cross-conversation message identifiers are not exposed through existence-oracle behavior.
 - Attachment raw-byte transport must remain generic binary with no content sniffing and no server-side plaintext MIME interpretation.
 - Wardveil Security, Privacy Shield, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity integration are required where applicable.
@@ -38,4 +41,4 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 
 ## Current acceptance boundary
 
-This is not production-ready. Production-grade identity/device keys, cryptographic session establishment, multi-device synchronization, distributed message/reaction/object persistence, push delivery, thread and reaction synchronization/indexing at production scale, abuse controls, carrier adapters, calling media infrastructure, client packaging, and deployment acceptance remain incomplete.
+This is not production-ready. Production-grade identity/device keys, cryptographic session establishment, multi-device synchronization, distributed message/reaction/object persistence, push delivery, production presence fan-out and preference persistence, thread and reaction synchronization/indexing at production scale, abuse controls, carrier adapters, calling media infrastructure, client packaging, and deployment acceptance remain incomplete.

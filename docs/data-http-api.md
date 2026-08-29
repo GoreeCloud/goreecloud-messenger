@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the HTTP transport boundary for GoreeCloud Data messaging. The HTTP layer is an adapter around the Data, receipt, encrypted-reaction, and encrypted-attachment services and does not replace their authorization, transport-provenance, or E2EE-only validation rules.
+This document defines the HTTP transport boundary for GoreeCloud Data messaging. The HTTP layer is an adapter around the Data, receipt, encrypted-reaction, typing-presence, and encrypted-attachment services and does not replace their authorization, transport-provenance, privacy-policy, or E2EE-only validation rules.
 
 ## Current endpoints
 
@@ -11,6 +11,8 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 - `GET /v1/data/conversations/{conversationID}/threads/{rootMessageID}/messages` returns one authorized thread root plus its encrypted threaded replies.
 - `POST /v1/data/messages/{messageID}/reactions` records an authenticated encrypted reaction set/clear event.
 - `GET /v1/data/messages/{messageID}/reactions` returns the current active encrypted reaction projection to an authorized conversation participant.
+- `POST /v1/data/conversations/{conversationID}/typing` publishes content-free authenticated `typing` or `idle` presence state.
+- `GET /v1/data/conversations/{conversationID}/typing` returns currently active typing participants to an authorized observer whose privacy policy permits observation.
 - `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or read acknowledgement.
 - `GET /v1/data/messages/{messageID}/receipts` returns receipt state to an authorized conversation participant.
 - `POST /v1/data/attachments` accepts already-encrypted opaque attachment ciphertext plus bounded metadata.
@@ -19,25 +21,27 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 - `GET /v1/data/conversations/{conversationID}/attachments` returns a bounded metadata-only attachment projection.
 - `DELETE /v1/data/attachments/{attachmentID}` removes retrievable ciphertext for an authorized participant and is idempotent for already-missing/deleted attachment identifiers.
 
-Message, reaction, and ordinary attachment JSON ciphertext is transported as standard base64 text. The raw ciphertext download endpoint transports encrypted bytes directly. The API does not accept plaintext message-body, plaintext reaction-value, or plaintext attachment-content fields.
+Message, reaction, and ordinary attachment JSON ciphertext is transported as standard base64 text. Typing endpoints do not accept message or reaction ciphertext at all. The raw ciphertext download endpoint transports encrypted bytes directly. The API does not accept plaintext message-body, plaintext reaction-value, plaintext typing-draft, or plaintext attachment-content fields.
 
 ## Authentication boundary
 
 The HTTP package requires an `Authenticator` implementation. The authenticator must resolve the request to an authenticated GoreeCloud user identifier before a service is called.
 
-Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, reactor, attachment, receipt, reply, or thread metadata.
+Credential issuance, login, token creation, token storage, session management, device identity, and identity-provider integration remain outside this milestone. The API must not infer identity from client-supplied sender, reactor, typing user, attachment, receipt, reply, or thread metadata.
 
 ## Authorization boundary
 
 The authenticated user is passed to service-layer authorization. The implementation:
 
-- binds the authenticated user to message and attachment senders and reaction reactors;
+- binds the authenticated user to message and attachment senders, reaction reactors, and typing-state publishers;
 - verifies server-side conversation membership;
 - validates direct-reply targets against same-conversation message state;
 - validates thread roots and immediate thread parents against same-conversation message state;
 - authorizes thread-history reads before returning root or reply metadata;
 - validates reaction targets against same-conversation message state and returns one bounded target error for missing/cross-conversation reaction targets;
 - rejects stale reaction events and reaction ID/client-nonce replay while maintaining one current active projection per reactor/message;
+- applies an explicit typing privacy-policy boundary for both publishing and observing typing state;
+- rejects stale or equal typing sequences so delayed state cannot overwrite a newer per-conversation/per-user typing decision;
 - binds a receipt to the authenticated recipient;
 - rejects delivery/read acknowledgements from the message sender for that sender's own message;
 - verifies that a receipt references an existing message in the stated conversation;
@@ -47,7 +51,7 @@ The authenticated user is passed to service-layer authorization. The implementat
 - authorizes attachment JSON fetch, raw ciphertext fetch, list, and delete operations against conversation membership; and
 - enforces the E2EE-only Data-envelope and encrypted-reaction contracts.
 
-The HTTP layer maps authorization and relationship-validation failures to bounded non-success responses without returning internal error details.
+The HTTP layer maps authorization, privacy-policy, and relationship-validation failures to bounded non-success responses without returning internal error details.
 
 ## Reply and thread semantics
 
@@ -66,6 +70,14 @@ A reaction is represented as an immutable `set` or `clear` state event for one m
 Each reaction event has a unique event ID and per-reactor client nonce. The in-memory Development store retains the latest event per message/reactor and rejects events whose timestamp does not advance that reactor's current state, preventing a delayed stale event from overwriting a newer reaction. The active-reaction GET response returns only current `set` projections and deliberately omits replay nonces and the set/clear operation field.
 
 Missing and cross-conversation reaction targets share the bounded `reaction target unavailable` state during submission. Reaction value interpretation and rendering remain client responsibilities after authorized decryption.
+
+## Typing indicator semantics
+
+Typing indicators are ephemeral, content-free conversation-presence state. `POST /v1/data/conversations/{conversationID}/typing` accepts only `user_id`, a monotonically increasing `sequence`, and `state` (`typing` or `idle`). The authenticated user must match the published typing user, must still be a conversation participant, and must pass the configured publish privacy policy.
+
+A `typing` update creates a server-expiring active projection for 10 seconds. An `idle` update clears that active projection immediately. The Development store retains only the latest sequence needed to reject stale updates and the currently active projection. Equal or older sequences are rejected, including delayed `typing` signals that arrive after a newer `idle` signal.
+
+`GET /v1/data/conversations/{conversationID}/typing` requires conversation membership plus observe permission from the typing privacy policy. It returns only other active participants, sequence numbers, and server-assigned expiry times. It does not return the observer's own state, a client timestamp, draft content, cursor location, keystrokes, message ciphertext, device secret, or a free-form presence payload.
 
 ## Raw ciphertext download semantics
 
@@ -92,18 +104,20 @@ Receipts contain message, conversation, recipient, state, and observation timest
 The HTTP adapter:
 
 - accepts ciphertext rather than plaintext message or reaction content;
+- keeps typing state content-free and separate from drafts or message bodies;
 - rejects unknown JSON fields;
 - bounds request bodies, including attachment uploads;
 - sets `Cache-Control: no-store` on JSON and raw ciphertext responses;
 - sets `X-Content-Type-Options: nosniff`;
 - keeps SMS, MMS, and RCS outside the Data API;
-- authorizes reply, thread, reaction, receipt, and attachment operations against server-side state;
+- authorizes reply, thread, reaction, typing, receipt, and attachment operations against server-side state;
 - keeps reply/thread metadata limited to message relationships rather than plaintext previews or summaries;
 - keeps active reaction values as ciphertext and omits replay/control metadata not needed by the current projection;
+- keeps active typing projections time-bounded, privacy-gated, and free of draft/keypress data;
 - transports raw attachment ciphertext as generic binary rather than sender-declared plaintext media;
 - removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
 - does not claim that a cryptographic session exists merely because an envelope or reaction contract records `e2ee`.
 
 ## Current limitations
 
-This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, cryptographic session establishment, key management, production thread or reaction indexing, offline or multi-device thread/reaction synchronization, carrier adapters, client reaction encrypt/decrypt/render behavior, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt and reaction storage remain in-memory Development implementations.
+This remains a Development source foundation. It does not provide production credentials, production-grade distributed persistence, TLS termination, rate limiting, push delivery, production presence fan-out, durable Privacy Shield preference storage, cryptographic session establishment, key management, production thread or reaction indexing, offline or multi-device thread/reaction/typing synchronization, cross-device typing sequence allocation, carrier adapters, client reaction encrypt/decrypt/render behavior, client typing rendering, client packaging, deployment, or production acceptance. The durable attachment file store is a single-node local implementation, not a distributed deletion or backup-erasure guarantee. Receipt and reaction storage remain in-memory Development implementations; typing state is intentionally ephemeral in-memory Development state.
