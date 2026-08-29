@@ -55,6 +55,13 @@ func TestFileReceiptStoreSurvivesReopenAndPreservesLatestState(t *testing.T) {
 	if info.Mode().Perm() != 0o600 {
 		t.Fatalf("expected private receipt store permissions, got %o", info.Mode().Perm())
 	}
+	rootInfo, err := os.Stat(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rootInfo.Mode().Perm() != 0o700 {
+		t.Fatalf("expected private receipt root permissions, got %o", rootInfo.Mode().Perm())
+	}
 }
 
 func TestFileReceiptStoreRejectsRegressionWithoutChangingDurableState(t *testing.T) {
@@ -84,7 +91,7 @@ func TestFileReceiptStoreRejectsRegressionWithoutChangingDurableState(t *testing
 	}
 }
 
-func TestFileReceiptStoreFailsClosedOnCorruptOrUnsupportedState(t *testing.T) {
+func TestFileReceiptStoreFailsClosedOnCorruptUnsupportedOrUnsafeState(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "receipts.json")
 	if err := os.WriteFile(path, []byte("not-json"), 0o600); err != nil {
@@ -100,6 +107,99 @@ func TestFileReceiptStoreFailsClosedOnCorruptOrUnsupportedState(t *testing.T) {
 	}
 	if _, err := NewFileReceiptStore(root); err == nil {
 		t.Fatal("expected unsupported store version to fail closed")
+	}
+
+	valid := []byte("{\"version\":1,\"receipts\":[]}")
+	if err := os.WriteFile(path, valid, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewFileReceiptStore(root); err == nil {
+		t.Fatal("expected permissive persisted-state permissions to fail closed")
+	}
+}
+
+func TestFileReceiptStoreProtectsRootAndRejectsSymlinkBoundaries(t *testing.T) {
+	base := t.TempDir()
+	root := filepath.Join(base, "receipts")
+	if err := os.Mkdir(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewFileReceiptStore(root); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm() != 0o700 {
+		t.Fatalf("expected root to be tightened to 0700, got %o", info.Mode().Perm())
+	}
+
+	target := filepath.Join(base, "target")
+	if err := os.Mkdir(target, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	rootLink := filepath.Join(base, "root-link")
+	if err := os.Symlink(target, rootLink); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewFileReceiptStore(rootLink); err == nil {
+		t.Fatal("expected symlink receipt root to fail closed")
+	}
+
+	stateRoot := filepath.Join(base, "state-root")
+	if err := os.Mkdir(stateRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	stateTarget := filepath.Join(base, "state-target.json")
+	if err := os.WriteFile(stateTarget, []byte("{\"version\":1,\"receipts\":[]}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(stateTarget, filepath.Join(stateRoot, "receipts.json")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := NewFileReceiptStore(stateRoot); err == nil {
+		t.Fatal("expected symlink persisted state to fail closed")
+	}
+}
+
+func TestFileReceiptStorePoisonsProcessStateWhenPostRenameDurabilityIsUnknown(t *testing.T) {
+	root := t.TempDir()
+	store, err := NewFileReceiptStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	originalSync := syncReceiptStoreDirectory
+	defer func() { syncReceiptStoreDirectory = originalSync }()
+	syncReceiptStoreDirectory = func(string) error { return errors.New("simulated directory sync failure") }
+	ctx := context.Background()
+	writeErr := store.PutReceipt(ctx, receipt("message-a", "conversation-a", "user-b", domain.ReceiptDelivered, 1))
+	if !errors.Is(writeErr, ErrReceiptDurabilityUnknown) {
+		t.Fatalf("expected durability-unknown error, got %v", writeErr)
+	}
+	if _, err := store.ListReceipts(ctx, "message-a"); !errors.Is(err, ErrReceiptDurabilityUnknown) {
+		t.Fatalf("expected poisoned store to refuse reads, got %v", err)
+	}
+	if err := store.PutReceipt(ctx, receipt("message-b", "conversation-b", "user-b", domain.ReceiptDelivered, 2)); !errors.Is(err, ErrReceiptDurabilityUnknown) {
+		t.Fatalf("expected poisoned store to refuse writes, got %v", err)
+	}
+
+	// Reopening is the explicit reconciliation boundary after an ambiguous post-rename failure.
+	syncReceiptStoreDirectory = originalSync
+	reopened, err := NewFileReceiptStore(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := reopened.ListReceipts(ctx, "message-a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].State != domain.ReceiptDelivered {
+		t.Fatalf("expected reopen to reconcile renamed durable state, got %#v", got)
 	}
 }
 
