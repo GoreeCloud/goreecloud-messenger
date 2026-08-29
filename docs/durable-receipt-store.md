@@ -2,7 +2,7 @@
 
 ## Development milestone
 
-This milestone provides a durable single-node implementation of the existing `ReceiptStore` contract for authenticated GoreeCloud Data delivery/read receipts, an explicit Data-runtime composition selector for choosing receipt persistence, and a hardened local filesystem durability boundary.
+This milestone provides a durable single-node implementation of the existing `ReceiptStore` contract for authenticated GoreeCloud Data delivery/read receipts, an explicit Data-runtime composition selector for choosing receipt persistence, a hardened local filesystem durability boundary, and an explicit executable environment-configuration contract.
 
 The store preserves the current receipt semantics:
 
@@ -44,12 +44,25 @@ This is fail-closed ambiguity containment, not a claim that a failed fsync magic
 
 An omitted mode, unknown mode, or file mode without a usable root fails closed. There is deliberately no silent fallback from durable to memory persistence.
 
-This closes the previous composition gap where `FileReceiptStore` existed but the Data runtime could only receive a receipt service that another caller had already assembled. The selection path is tested to reopen file-backed receipt state across store instances.
+This closes the earlier composition gap where `FileReceiptStore` existed but the Data runtime could only receive a receipt service that another caller had already assembled. The selection path is tested to reopen file-backed receipt state across store instances.
+
+## Executable environment configuration
+
+The development executable now derives receipt persistence from an explicit process-environment contract before it declares the Messenger development contract active.
+
+Required configuration:
+
+- `GOREECLOUD_MESSENGER_RECEIPT_PERSISTENCE=memory` selects the deterministic non-durable store and requires `GOREECLOUD_MESSENGER_RECEIPT_ROOT` to be unset or empty.
+- `GOREECLOUD_MESSENGER_RECEIPT_PERSISTENCE=file` requires `GOREECLOUD_MESSENGER_RECEIPT_ROOT` to be an absolute, non-root filesystem path.
+
+Missing mode, unsupported mode, file mode without a root, a relative file root, filesystem-root persistence, or an ignored durable root supplied alongside memory mode all fail closed. Mode parsing is case-insensitive and surrounding whitespace is removed. The returned file root is normalized with the platform path cleaner before it reaches runtime composition.
+
+This configuration parser is deliberately testable through an injected environment lookup and does not infer a fallback from host state, current working directory, or an automatically created default path.
 
 ## Explicit limitations
 
-This remains a Development single-node durability boundary. Parent-directory fsync, private-path checks, and ambiguity poisoning strengthen local persistence semantics but do not make the file store a production distributed database.
+This remains a Development single-node durability boundary. Parent-directory fsync, private-path checks, ambiguity poisoning, and explicit environment parsing strengthen local persistence semantics but do not make the file store a production distributed database.
 
-It is not replication, cross-region delivery state, multi-writer coordination, backup/restore acceptance, multi-device convergence, push delivery, a Privacy Shield read-receipt preference store, or a universal proof that a human read or understood a message.
+The command now validates and derives the receipt-persistence selection from its process environment, but the current `cmd/messenger` executable is still a development contract exerciser rather than the full Data HTTP server bootstrap. It does not yet construct the Data service, authentication, conversation access, attachment service, and `NewConfiguredDataRuntimeHandler` from one production-accepted process configuration.
 
-The repository command entrypoint does not yet derive this configuration from an accepted production configuration source, and no deployed process is claimed to be using file receipt persistence. Production process wiring, migration, monitoring, recovery, backup/restore evidence, distributed persistence, and deployment acceptance remain explicit later work.
+This work is not replication, cross-region delivery state, multi-writer coordination, backup/restore acceptance, multi-device convergence, push delivery, a Privacy Shield read-receipt preference store, or a universal proof that a human read or understood a message. Production server bootstrap, secrets/Identity configuration, migration, monitoring, recovery, backup/restore evidence, distributed persistence, and deployment acceptance remain explicit later work.
