@@ -11,11 +11,12 @@ This document defines the HTTP transport boundary for GoreeCloud Data messaging.
 - `POST /v1/data/messages/{messageID}/receipts` records an authenticated recipient delivery or read acknowledgement.
 - `GET /v1/data/messages/{messageID}/receipts` returns receipt state to an authorized conversation participant.
 - `POST /v1/data/attachments` accepts already-encrypted opaque attachment ciphertext plus bounded metadata.
-- `GET /v1/data/attachments/{attachmentID}` returns opaque ciphertext to an authorized conversation participant.
+- `GET /v1/data/attachments/{attachmentID}` returns opaque ciphertext as base64 JSON to an authorized conversation participant.
+- `GET /v1/data/attachments/{attachmentID}/ciphertext` returns the exact stored ciphertext bytes to an authorized conversation participant as `application/octet-stream`.
 - `GET /v1/data/conversations/{conversationID}/attachments` returns a bounded metadata-only attachment projection.
 - `DELETE /v1/data/attachments/{attachmentID}` removes retrievable ciphertext for an authorized participant and is idempotent for already-missing/deleted attachment identifiers.
 
-Message and attachment ciphertext is transported as standard base64 text inside JSON. The API does not accept plaintext message-body or plaintext attachment-content fields.
+Message and ordinary attachment JSON ciphertext is transported as standard base64 text. The raw ciphertext download endpoint transports encrypted bytes directly. The API does not accept plaintext message-body or plaintext attachment-content fields.
 
 ## Authentication boundary
 
@@ -35,10 +36,18 @@ The authenticated user is passed to service-layer authorization. The implementat
 - prevents receipt state from moving backwards from `read` to `delivered`;
 - rejects duplicate message and attachment identifiers;
 - rejects message and attachment client-nonce reuse;
-- authorizes attachment fetch/list/delete against conversation membership; and
+- authorizes attachment JSON fetch, raw ciphertext fetch, list, and delete operations against conversation membership; and
 - enforces the E2EE-only Data-envelope contract.
 
 The HTTP layer maps authorization failures to bounded non-success responses without returning internal error details.
+
+## Raw ciphertext download semantics
+
+`GET /v1/data/attachments/{attachmentID}/ciphertext` is a binary transport surface for E2EE clients that already possess the cryptographic context needed to decrypt the object. The server returns the stored ciphertext bytes unchanged and does not decode, decrypt, inspect, transcode, render, or content-sniff them.
+
+The response is always labeled `application/octet-stream`, even when attachment metadata records a sender-declared plaintext MIME type. It also uses `Cache-Control: no-store`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff`. Filename and plaintext MIME metadata remain separate client metadata and are not allowed to change how the server or browser interprets encrypted bytes.
+
+This endpoint is not an object-storage redirect, signed URL, CDN distribution contract, or evidence of production attachment storage. Those remain future deployment concerns.
 
 ## Attachment deletion semantics
 
@@ -59,10 +68,11 @@ The HTTP adapter:
 - accepts ciphertext rather than plaintext content;
 - rejects unknown JSON fields;
 - bounds request bodies, including attachment uploads;
-- sets `Cache-Control: no-store` on JSON responses;
+- sets `Cache-Control: no-store` on JSON and raw ciphertext responses;
 - sets `X-Content-Type-Options: nosniff`;
 - keeps SMS, MMS, and RCS outside the Data API;
 - authorizes receipt and attachment operations against server-side state;
+- transports raw attachment ciphertext as generic binary rather than sender-declared plaintext media;
 - removes attachment ciphertext before committing a privacy-minimized deletion tombstone; and
 - does not claim that a cryptographic session exists merely because the envelope contract records `e2ee`.
 
