@@ -12,6 +12,9 @@
 - Metadata-only attachment listing.
 - Replay-safe encrypted attachment deletion.
 - Exact raw ciphertext-byte download with generic binary transport and no content sniffing.
+- Immutable encrypted sent-message revision records on the current stacked Development branch.
+- Delete-for-everyone synchronization tombstones on the current stacked Development branch.
+- Direct reply references that preserve opaque message ciphertext and verify same-conversation targets on the current stacked Development branch.
 
 ## Planned / incomplete
 

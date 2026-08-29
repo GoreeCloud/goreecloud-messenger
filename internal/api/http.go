@@ -53,23 +53,25 @@ func (h *Handler) Routes() http.Handler {
 }
 
 type submitMessageRequest struct {
-	MessageID      string                 `json:"message_id"`
-	ConversationID string                 `json:"conversation_id"`
-	SenderID       string                 `json:"sender_id"`
-	ClientNonce    string                 `json:"client_nonce"`
-	Ciphertext     string                 `json:"ciphertext"`
-	Encryption     domain.EncryptionState `json:"encryption"`
-	CreatedAt      time.Time              `json:"created_at"`
+	MessageID        string                 `json:"message_id"`
+	ConversationID   string                 `json:"conversation_id"`
+	SenderID         string                 `json:"sender_id"`
+	ClientNonce      string                 `json:"client_nonce"`
+	ReplyToMessageID string                 `json:"reply_to_message_id,omitempty"`
+	Ciphertext       string                 `json:"ciphertext"`
+	Encryption       domain.EncryptionState `json:"encryption"`
+	CreatedAt        time.Time              `json:"created_at"`
 }
 
 type messageResponse struct {
-	MessageID      string                 `json:"message_id"`
-	ConversationID string                 `json:"conversation_id"`
-	SenderID       string                 `json:"sender_id"`
-	ClientNonce    string                 `json:"client_nonce"`
-	Ciphertext     string                 `json:"ciphertext"`
-	Encryption     domain.EncryptionState `json:"encryption"`
-	CreatedAt      time.Time              `json:"created_at"`
+	MessageID        string                 `json:"message_id"`
+	ConversationID   string                 `json:"conversation_id"`
+	SenderID         string                 `json:"sender_id"`
+	ClientNonce      string                 `json:"client_nonce"`
+	ReplyToMessageID string                 `json:"reply_to_message_id,omitempty"`
+	Ciphertext       string                 `json:"ciphertext"`
+	Encryption       domain.EncryptionState `json:"encryption"`
+	CreatedAt        time.Time              `json:"created_at"`
 }
 
 type receiptRequest struct {
@@ -114,13 +116,14 @@ func (h *Handler) submitMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	envelope := domain.DataEnvelope{
-		MessageID:      input.MessageID,
-		ConversationID: input.ConversationID,
-		SenderID:       input.SenderID,
-		ClientNonce:    input.ClientNonce,
-		Ciphertext:     ciphertext,
-		Encryption:     input.Encryption,
-		CreatedAt:      input.CreatedAt,
+		MessageID:        input.MessageID,
+		ConversationID:   input.ConversationID,
+		SenderID:         input.SenderID,
+		ClientNonce:      input.ClientNonce,
+		ReplyToMessageID: input.ReplyToMessageID,
+		Ciphertext:       ciphertext,
+		Encryption:       input.Encryption,
+		CreatedAt:        input.CreatedAt,
 	}
 
 	if err := h.service.Submit(r.Context(), userID, envelope); err != nil {
@@ -147,13 +150,14 @@ func (h *Handler) listConversation(w http.ResponseWriter, r *http.Request) {
 	response := make([]messageResponse, 0, len(messages))
 	for _, message := range messages {
 		response = append(response, messageResponse{
-			MessageID:      message.MessageID,
-			ConversationID: message.ConversationID,
-			SenderID:       message.SenderID,
-			ClientNonce:    message.ClientNonce,
-			Ciphertext:     base64.StdEncoding.EncodeToString(message.Ciphertext),
-			Encryption:     message.Encryption,
-			CreatedAt:      message.CreatedAt,
+			MessageID:        message.MessageID,
+			ConversationID:   message.ConversationID,
+			SenderID:         message.SenderID,
+			ClientNonce:      message.ClientNonce,
+			ReplyToMessageID: message.ReplyToMessageID,
+			Ciphertext:       base64.StdEncoding.EncodeToString(message.Ciphertext),
+			Encryption:       message.Encryption,
+			CreatedAt:        message.CreatedAt,
 		})
 	}
 
@@ -238,6 +242,8 @@ func writeServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusForbidden, "sender cannot acknowledge own message")
 	case errors.Is(err, messagingservice.ErrMessageNotFound):
 		writeError(w, http.StatusNotFound, "message not found")
+	case errors.Is(err, messagingservice.ErrReplyTargetUnavailable):
+		writeError(w, http.StatusBadRequest, "reply target unavailable")
 	case errors.Is(err, messagingservice.ErrDuplicateMessage), errors.Is(err, messagingservice.ErrNonceReuse), errors.Is(err, messagingservice.ErrReceiptRegression):
 		writeError(w, http.StatusConflict, "message conflicts with existing state")
 	default:
