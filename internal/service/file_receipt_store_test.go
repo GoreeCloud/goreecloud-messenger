@@ -110,7 +110,10 @@ func TestFileReceiptStoreFailsClosedOnCorruptUnsupportedOrUnsafeState(t *testing
 	}
 
 	valid := []byte("{\"version\":1,\"receipts\":[]}")
-	if err := os.WriteFile(path, valid, 0o644); err != nil {
+	if err := os.WriteFile(path, valid, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(path, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := NewFileReceiptStore(root); err == nil {
@@ -171,6 +174,7 @@ func TestFileReceiptStorePoisonsProcessStateWhenPostRenameDurabilityIsUnknown(t 
 	}
 
 	originalSync := syncReceiptStoreDirectory
+	defer func() { syncReceiptStoreDirectory = originalSync }()
 	syncReceiptStoreDirectory = func(string) error { return errors.New("simulated directory sync failure") }
 	ctx := context.Background()
 	writeErr := store.PutReceipt(ctx, receipt("message-a", "conversation-a", "user-b", domain.ReceiptDelivered, 1))
