@@ -97,6 +97,10 @@ func TestFileReceiptStoreFailsClosedOnCorruptOrUnsupportedState(t *testing.T) {
 	if err := os.WriteFile(path, []byte(`{"version":99,"receipts":[]}`), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	unsupported := []byte("{\"version\":99,\"receipts\":[]}")
+	if err := os.WriteFile(path, unsupported, 0o600); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := NewFileReceiptStore(root); err == nil {
 		t.Fatal("expected unsupported store version to fail closed")
 	}
