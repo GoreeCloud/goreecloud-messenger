@@ -14,6 +14,8 @@ GoreeCloud usernames are first-class identifiers. A user may have verified phone
 
 The Data transport is the GoreeCloud-controlled Internet messaging path and is the primary transport for usernames, end-to-end encryption, groups, attachments, voice calls, and video calls.
 
+The current HTTP implementation has an application-facing `DataRuntimeHandler` composition boundary that joins message, receipt, and encrypted-attachment routes under one required authenticator. The runtime handler composes established services; it does not become the Identity authority, cryptographic-session authority, persistence authority, or deployment configuration.
+
 ### Carrier adapters
 
 SMS, MMS, and RCS are adapters. Their availability depends on operating-system, device-role, carrier, and API support. A carrier adapter cannot redefine the security properties of the Data transport.

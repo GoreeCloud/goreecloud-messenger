@@ -45,11 +45,21 @@ func NewHandler(service *messagingservice.DataService, receipts *messagingservic
 
 func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+	return mux
+}
+
+// RegisterRoutes installs the Data message and receipt endpoints onto a caller-owned mux.
+// A shared mux lets the application compose these routes with attachment endpoints that use
+// the same /v1/data/conversations namespace without hiding one handler behind a prefix mount.
+func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	if mux == nil {
+		panic("HTTP mux is required")
+	}
 	mux.HandleFunc("POST /v1/data/messages", h.submitMessage)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/messages", h.listConversation)
 	mux.HandleFunc("POST /v1/data/messages/{messageID}/receipts", h.recordReceipt)
 	mux.HandleFunc("GET /v1/data/messages/{messageID}/receipts", h.listReceipts)
-	return mux
 }
 
 type submitMessageRequest struct {

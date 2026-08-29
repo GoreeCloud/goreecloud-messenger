@@ -38,12 +38,21 @@ func NewAttachmentHTTPHandler(service *messagingservice.AttachmentService, auth 
 
 func (h *AttachmentHTTPHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
+	return mux
+}
+
+// RegisterRoutes installs encrypted attachment routes onto a caller-owned mux so the
+// application can compose them with message routes that share the conversation namespace.
+func (h *AttachmentHTTPHandler) RegisterRoutes(mux *http.ServeMux) {
+	if mux == nil {
+		panic("HTTP mux is required")
+	}
 	mux.HandleFunc("POST /v1/data/attachments", h.submitAttachment)
 	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}", h.getAttachment)
 	mux.HandleFunc("GET /v1/data/attachments/{attachmentID}/ciphertext", h.getAttachmentCiphertext)
 	mux.HandleFunc("DELETE /v1/data/attachments/{attachmentID}", h.deleteAttachment)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/attachments", h.listAttachments)
-	return mux
 }
 
 type attachmentRequest struct {
