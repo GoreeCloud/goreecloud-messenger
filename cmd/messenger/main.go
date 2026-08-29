@@ -7,9 +7,15 @@ import (
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
+	"github.com/GoreeCloud/goreecloud-messenger/internal/runtimeconfig"
 )
 
 func main() {
+	receiptPersistence, err := runtimeconfig.ReceiptPersistenceFromEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
 	message := domain.Message{
 		ID:             "development-message",
 		ConversationID: "development-conversation",
@@ -25,5 +31,9 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Messenger development contract active: %s\n", message.ProvenanceLabel())
+	fmt.Printf(
+		"Messenger development contract active: %s receipt_persistence=%s\n",
+		message.ProvenanceLabel(),
+		receiptPersistence.Mode,
+	)
 }
