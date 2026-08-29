@@ -4,13 +4,15 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, encrypted-attachment, unified Data HTTP runtime-composition, hardened single-node receipt persistence, and explicit receipt-persistence environment-configuration foundations are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, complete server bootstrap, and client acceptance remain incomplete.
+Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, encrypted-attachment, unified Data HTTP runtime-composition, hardened single-node receipt persistence, explicit receipt-persistence environment configuration, and minimized startup-diagnostic foundations are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, complete server bootstrap, and client acceptance remain incomplete.
 
 The current foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. GoreeCloud Data adds encrypted-envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, persistence abstraction, authenticated delivery/read receipts, and opaque encrypted-attachment transport. The attachment surface can submit, fetch as JSON/base64, list metadata, delete with replay-safe tombstones, and download exact ciphertext bytes without asking the server to interpret plaintext media.
 
 The HTTP layer has one application-facing composition boundary that registers message, receipt, and attachment routes onto the same mux. This preserves both message and attachment listing routes under the shared `/v1/data/conversations/...` namespace and requires one injected authenticator across the composed surface. Receipt persistence can be explicitly selected as memory or hardened file-backed storage; there is no implicit durable-to-memory fallback.
 
-The development executable now also requires an explicit receipt-persistence environment selection. `memory` must not carry an ignored durable root. `file` requires an explicit absolute non-root persistence directory. Missing, unsupported, relative, root-level, or contradictory settings fail closed before the executable reports its development contract active. This is configuration validation, not a claim that the current command is a complete production Data HTTP server bootstrap.
+The development executable requires an explicit receipt-persistence environment selection. `memory` must not carry an ignored durable root. `file` requires an explicit absolute non-root persistence directory. Missing, unsupported, relative, root-level, or contradictory settings fail closed before the executable reports its development contract active.
+
+After configuration is accepted, the executable can report a minimized categorical diagnostic containing only receipt persistence mode, implemented durability class, and configuration source. File-mode diagnostics deliberately omit the configured receipt root and any message, receipt, conversation, credential, or cryptographic content. `single-node-durable` describes the selected implementation class only; it is not a distributed-durability or production-readiness claim.
 
 ## Product principles
 
@@ -23,6 +25,7 @@ The development executable now also requires an explicit receipt-persistence env
 - Voice and video calling remain distinguishable from carrier calling.
 - Delivery/read state is recipient-authenticated and is not presented as carrier or cryptographic proof.
 - Attachment services transport opaque ciphertext and do not decrypt user content.
+- Operational diagnostics must minimize sensitive configuration and communication data.
 - Glaze UI 2.0 or newer, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
 
 ## Repository layout
@@ -31,12 +34,13 @@ The development executable now also requires an explicit receipt-persistence env
 - `internal/domain/` — transport, encryption, identity, conversation, message, call, Data-envelope, receipt, and attachment contracts
 - `internal/service/` — GoreeCloud Data, receipt, attachment, persistence, and authorization boundaries
 - `internal/api/` — authenticated HTTP transport plus the unified application-facing Data route-composition boundary
-- `internal/runtimeconfig/` — fail-closed process configuration derivation for currently implemented runtime options
+- `internal/runtimeconfig/` — fail-closed process configuration derivation and minimized diagnostic projection for currently implemented runtime options
 - `docs/architecture.md` — product architecture and trust boundaries
 - `docs/security.md` — encryption and security constraints
 - `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
 - `docs/data-http-api.md` — HTTP API, authentication, authorization, receipt, attachment, runtime composition, and privacy boundary
 - `docs/durable-receipt-store.md` — file durability, runtime selection, and environment-configuration boundaries
+- `docs/runtime-diagnostics.md` — minimized runtime configuration diagnostic and non-disclosure boundary
 
 ## Planned clients
 
@@ -46,7 +50,7 @@ Native or platform-appropriate clients are planned for Android, tablets, desktop
 
 This repository remains Development. It does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, distributed message delivery, production object storage, push notification delivery, anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, Glaze UI client acceptance, or production deployment evidence.
 
-The unified Data handler is a composition boundary, and the command-level environment parser now supplies a strict receipt-persistence selection contract. The current executable still does not assemble the complete Data runtime dependencies, credentials/Identity boundaries, TLS, service lifecycle, monitoring, migration, and deployment configuration needed for a production server.
+The unified Data handler is a composition boundary, and the command-level environment parser supplies a strict receipt-persistence selection contract with a minimized categorical diagnostic. The current executable still does not assemble the complete Data runtime dependencies, credentials/Identity boundaries, TLS, service lifecycle, production health/readiness monitoring, migration, and deployment configuration needed for a production server.
 
 ## License
 
