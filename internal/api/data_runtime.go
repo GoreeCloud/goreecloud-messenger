@@ -14,11 +14,12 @@ import (
 // own credential validation, cryptographic sessions, or persistence authority;
 // those remain injected through the existing service and Authenticator boundaries.
 type DataRuntimeHandler struct {
-	messages          *Handler
-	attachments       *AttachmentHTTPHandler
-	auth              Authenticator
-	persistenceProbe  RuntimePersistenceProbe
-	cryptographyProbe RuntimeCryptographyProbe
+	messages                    *Handler
+	attachments                 *AttachmentHTTPHandler
+	auth                        Authenticator
+	persistenceProbe            RuntimePersistenceProbe
+	cryptographyProbe           RuntimeCryptographyProbe
+	cryptographySessionBoundary RuntimeCryptographySessionBoundary
 }
 
 func NewDataRuntimeHandler(
@@ -59,17 +60,32 @@ func (h *DataRuntimeHandler) WithRuntimePersistenceProbe(probe RuntimePersistenc
 	return &copy, nil
 }
 
-// WithRuntimeCryptographyProbe returns a copy of the composition handler with a
-// bounded, diagnostic-only cryptography dependency probe. The probe may report
-// only categorical availability through the minimized runtime projection; it
-// does not expose session, algorithm, key, credential, or identity details and
-// does not establish production cryptography readiness.
+// WithRuntimeCryptographyProbe preserves the dependency-level diagnostic from
+// the previous development slice. Prefer WithRuntimeCryptographySessionBoundary
+// when the composed cryptography implementation can validate an authenticated
+// user's session state without exporting session details.
 func (h *DataRuntimeHandler) WithRuntimeCryptographyProbe(probe RuntimeCryptographyProbe) (*DataRuntimeHandler, error) {
 	if h == nil || probe == nil {
 		return nil, errors.New("runtime handler and cryptography probe are required")
 	}
 	copy := *h
 	copy.cryptographyProbe = probe
+	return &copy, nil
+}
+
+// WithRuntimeCryptographySessionBoundary injects a bounded, authenticated-user
+// session check into the minimized runtime projection. The user identifier is
+// passed only to the injected boundary and is never serialized in the response.
+// This composition check is diagnostic development evidence, not E2EE or
+// production-readiness acceptance.
+func (h *DataRuntimeHandler) WithRuntimeCryptographySessionBoundary(
+	boundary RuntimeCryptographySessionBoundary,
+) (*DataRuntimeHandler, error) {
+	if h == nil || boundary == nil {
+		return nil, errors.New("runtime handler and cryptography session boundary are required")
+	}
+	copy := *h
+	copy.cryptographySessionBoundary = boundary
 	return &copy, nil
 }
 
