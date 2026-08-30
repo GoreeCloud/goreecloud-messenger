@@ -14,9 +14,10 @@ import (
 // own credential validation, cryptographic sessions, or persistence authority;
 // those remain injected through the existing service and Authenticator boundaries.
 type DataRuntimeHandler struct {
-	messages    *Handler
-	attachments *AttachmentHTTPHandler
-	auth        Authenticator
+	messages         *Handler
+	attachments      *AttachmentHTTPHandler
+	auth             Authenticator
+	persistenceProbe RuntimePersistenceProbe
 }
 
 func NewDataRuntimeHandler(
@@ -42,6 +43,19 @@ func NewDataRuntimeHandler(
 		attachments: attachmentHandler,
 		auth:        auth,
 	}, nil
+}
+
+// WithRuntimePersistenceProbe returns a copy of the composition handler with a
+// bounded, diagnostic-only persistence probe. The probe does not gain authority
+// over message, receipt, or attachment operations and is never treated as a
+// production-readiness decision.
+func (h *DataRuntimeHandler) WithRuntimePersistenceProbe(probe RuntimePersistenceProbe) (*DataRuntimeHandler, error) {
+	if h == nil || probe == nil {
+		return nil, errors.New("runtime handler and persistence probe are required")
+	}
+	copy := *h
+	copy.persistenceProbe = probe
+	return &copy, nil
 }
 
 // Routes returns one mux containing every currently implemented Data HTTP route.
