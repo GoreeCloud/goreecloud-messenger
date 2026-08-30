@@ -21,6 +21,18 @@ type RuntimePersistenceProbeFunc func(context.Context) error
 
 func (f RuntimePersistenceProbeFunc) Check(ctx context.Context) error { return f(ctx) }
 
+// RuntimeCryptographyProbe is equally narrow: it reports only whether the
+// composed cryptography/session dependency can complete a bounded diagnostic
+// check. Implementations must not return or project session identifiers, key
+// material, algorithms, ciphertext, credentials, user identifiers, or errors.
+type RuntimeCryptographyProbe interface {
+	Check(context.Context) error
+}
+
+type RuntimeCryptographyProbeFunc func(context.Context) error
+
+func (f RuntimeCryptographyProbeFunc) Check(ctx context.Context) error { return f(ctx) }
+
 type runtimeCompositionResponse struct {
 	Scope           string `json:"scope"`
 	Messages        string `json:"messages"`
@@ -28,6 +40,7 @@ type runtimeCompositionResponse struct {
 	Attachments     string `json:"attachments"`
 	Authentication  string `json:"authentication"`
 	Persistence     string `json:"persistence"`
+	Cryptography    string `json:"cryptography"`
 	ProductionReady bool   `json:"production_ready"`
 }
 
@@ -45,26 +58,28 @@ func (h *DataRuntimeHandler) runtimeProjection(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	persistence := "not-assessed"
-	if h.persistenceProbe != nil {
-		ctx, cancel := context.WithTimeout(r.Context(), runtimePersistenceProbeTimeout)
-		defer cancel()
-		if err := h.persistenceProbe.Check(ctx); err != nil {
-			persistence = "unavailable"
-		} else {
-			persistence = "available"
-		}
-	}
-
 	writeJSON(w, http.StatusOK, runtimeCompositionResponse{
 		Scope:           "development-composition",
 		Messages:        "configured",
 		Receipts:        "configured",
 		Attachments:     "configured",
 		Authentication:  "accepted",
-		Persistence:     persistence,
+		Persistence:     runRuntimeDependencyProbe(r.Context(), h.persistenceProbe),
+		Cryptography:    runRuntimeDependencyProbe(r.Context(), h.cryptographyProbe),
 		ProductionReady: false,
 	})
 }
 
-const runtimePersistenceProbeTimeout = 500 * time.Millisecond
+func runRuntimeDependencyProbe(ctx context.Context, probe interface{ Check(context.Context) error }) string {
+	if probe == nil {
+		return "not-assessed"
+	}
+	probeContext, cancel := context.WithTimeout(ctx, runtimeDependencyProbeTimeout)
+	defer cancel()
+	if err := probe.Check(probeContext); err != nil {
+		return "unavailable"
+	}
+	return "available"
+}
+
+const runtimeDependencyProbeTimeout = 500 * time.Millisecond
