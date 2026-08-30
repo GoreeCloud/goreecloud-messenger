@@ -16,6 +16,7 @@ import (
 type DataRuntimeHandler struct {
 	messages    *Handler
 	attachments *AttachmentHTTPHandler
+	auth        Authenticator
 }
 
 func NewDataRuntimeHandler(
@@ -36,7 +37,11 @@ func NewDataRuntimeHandler(
 	if err != nil {
 		return nil, err
 	}
-	return &DataRuntimeHandler{messages: messageHandler, attachments: attachmentHandler}, nil
+	return &DataRuntimeHandler{
+		messages: messageHandler,
+		attachments: attachmentHandler,
+		auth: auth,
+	}, nil
 }
 
 // Routes returns one mux containing every currently implemented Data HTTP route.
@@ -46,5 +51,6 @@ func (h *DataRuntimeHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	h.messages.RegisterRoutes(mux)
 	h.attachments.RegisterRoutes(mux)
+	h.registerRuntimeProjection(mux)
 	return mux
 }
