@@ -38,9 +38,9 @@ func NewDataRuntimeHandler(
 		return nil, err
 	}
 	return &DataRuntimeHandler{
-		messages: messageHandler,
+		messages:    messageHandler,
 		attachments: attachmentHandler,
-		auth: auth,
+		auth:        auth,
 	}, nil
 }
 
