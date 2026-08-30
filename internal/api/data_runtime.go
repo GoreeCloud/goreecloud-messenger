@@ -14,10 +14,11 @@ import (
 // own credential validation, cryptographic sessions, or persistence authority;
 // those remain injected through the existing service and Authenticator boundaries.
 type DataRuntimeHandler struct {
-	messages         *Handler
-	attachments      *AttachmentHTTPHandler
-	auth             Authenticator
-	persistenceProbe RuntimePersistenceProbe
+	messages          *Handler
+	attachments       *AttachmentHTTPHandler
+	auth              Authenticator
+	persistenceProbe  RuntimePersistenceProbe
+	cryptographyProbe RuntimeCryptographyProbe
 }
 
 func NewDataRuntimeHandler(
@@ -55,6 +56,20 @@ func (h *DataRuntimeHandler) WithRuntimePersistenceProbe(probe RuntimePersistenc
 	}
 	copy := *h
 	copy.persistenceProbe = probe
+	return &copy, nil
+}
+
+// WithRuntimeCryptographyProbe returns a copy of the composition handler with a
+// bounded, diagnostic-only cryptography dependency probe. The probe may report
+// only categorical availability through the minimized runtime projection; it
+// does not expose session, algorithm, key, credential, or identity details and
+// does not establish production cryptography readiness.
+func (h *DataRuntimeHandler) WithRuntimeCryptographyProbe(probe RuntimeCryptographyProbe) (*DataRuntimeHandler, error) {
+	if h == nil || probe == nil {
+		return nil, errors.New("runtime handler and cryptography probe are required")
+	}
+	copy := *h
+	copy.cryptographyProbe = probe
 	return &copy, nil
 }
 

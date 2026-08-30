@@ -47,6 +47,7 @@ func TestRuntimeProjectionRequiresAuthenticationAndStaysMinimized(t *testing.T) 
 		`"attachments":"configured"`,
 		`"authentication":"accepted"`,
 		`"persistence":"not-assessed"`,
+		`"cryptography":"not-assessed"`,
 		`"production_ready":false`,
 	} {
 		if !strings.Contains(body, expected) {
@@ -57,16 +58,7 @@ func TestRuntimeProjectionRequiresAuthenticationAndStaysMinimized(t *testing.T) 
 }
 
 func TestRuntimeProjectionReportsOnlyBoundedPersistenceState(t *testing.T) {
-	access := messagingservice.NewMemoryConversationAccess()
-	dataStore := messagingservice.NewMemoryDataStore()
-	data, _ := messagingservice.NewDataService(dataStore, access)
-	receipts, _ := messagingservice.NewReceiptService(dataStore, messagingservice.NewMemoryReceiptStore(), access)
-	attachments, _ := messagingservice.NewAttachmentService(messagingservice.NewMemoryAttachmentStore(), access)
-
-	base, err := NewDataRuntimeHandler(data, receipts, attachments, runtimeAuthenticator{userID: "user-a"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	base := newRuntimeProjectionHandler(t)
 	available, err := base.WithRuntimePersistenceProbe(RuntimePersistenceProbeFunc(func(context.Context) error { return nil }))
 	if err != nil {
 		t.Fatal(err)
@@ -93,9 +85,53 @@ func TestRuntimeProjectionReportsOnlyBoundedPersistenceState(t *testing.T) {
 	assertRuntimeProjectionMinimized(t, body)
 }
 
+func TestRuntimeProjectionReportsOnlyBoundedCryptographyState(t *testing.T) {
+	base := newRuntimeProjectionHandler(t)
+	available, err := base.WithRuntimeCryptographyProbe(RuntimeCryptographyProbeFunc(func(context.Context) error { return nil }))
+	if err != nil {
+		t.Fatal(err)
+	}
+	availableRecorder := httptest.NewRecorder()
+	available.Routes().ServeHTTP(availableRecorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
+	if !strings.Contains(availableRecorder.Body.String(), `"cryptography":"available"`) {
+		t.Fatalf("expected available cryptography state: %s", availableRecorder.Body.String())
+	}
+	assertRuntimeProjectionMinimized(t, availableRecorder.Body.String())
+
+	unavailable, err := base.WithRuntimeCryptographyProbe(RuntimeCryptographyProbeFunc(func(context.Context) error {
+		return errors.New("session=session-a algorithm=X25519 key=/private/keys/opaque ciphertext=secret")
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	unavailableRecorder := httptest.NewRecorder()
+	unavailable.Routes().ServeHTTP(unavailableRecorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
+	body := unavailableRecorder.Body.String()
+	if !strings.Contains(body, `"cryptography":"unavailable"`) {
+		t.Fatalf("expected unavailable cryptography state: %s", body)
+	}
+	assertRuntimeProjectionMinimized(t, body)
+}
+
+func newRuntimeProjectionHandler(t *testing.T) *DataRuntimeHandler {
+	t.Helper()
+	access := messagingservice.NewMemoryConversationAccess()
+	dataStore := messagingservice.NewMemoryDataStore()
+	data, _ := messagingservice.NewDataService(dataStore, access)
+	receipts, _ := messagingservice.NewReceiptService(dataStore, messagingservice.NewMemoryReceiptStore(), access)
+	attachments, _ := messagingservice.NewAttachmentService(messagingservice.NewMemoryAttachmentStore(), access)
+	base, err := NewDataRuntimeHandler(data, receipts, attachments, runtimeAuthenticator{userID: "user-a"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return base
+}
+
 func assertRuntimeProjectionMinimized(t *testing.T, body string) {
 	t.Helper()
-	for _, forbidden := range []string{"user-a", "root", "path", "ciphertext", "credential", "secret", "private", "key"} {
+	for _, forbidden := range []string{
+		"user-a", "root", "path", "ciphertext", "credential", "secret", "private", "key", "session-a", "x25519",
+	} {
 		if strings.Contains(strings.ToLower(body), forbidden) {
 			t.Fatalf("projection leaked forbidden detail %q in %s", forbidden, body)
 		}
