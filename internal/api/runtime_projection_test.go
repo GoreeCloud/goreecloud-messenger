@@ -48,6 +48,7 @@ func TestRuntimeProjectionRequiresAuthenticationAndStaysMinimized(t *testing.T) 
 		`"authentication":"accepted"`,
 		`"persistence":"not-assessed"`,
 		`"cryptography":"not-assessed"`,
+		`"cryptography_scope":"not-assessed"`,
 		`"production_ready":false`,
 	} {
 		if !strings.Contains(body, expected) {
@@ -85,30 +86,63 @@ func TestRuntimeProjectionReportsOnlyBoundedPersistenceState(t *testing.T) {
 	assertRuntimeProjectionMinimized(t, body)
 }
 
-func TestRuntimeProjectionReportsOnlyBoundedCryptographyState(t *testing.T) {
+func TestRuntimeProjectionRetainsDependencyLevelCryptographyProbe(t *testing.T) {
 	base := newRuntimeProjectionHandler(t)
 	available, err := base.WithRuntimeCryptographyProbe(RuntimeCryptographyProbeFunc(func(context.Context) error { return nil }))
 	if err != nil {
 		t.Fatal(err)
 	}
-	availableRecorder := httptest.NewRecorder()
-	available.Routes().ServeHTTP(availableRecorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
-	if !strings.Contains(availableRecorder.Body.String(), `"cryptography":"available"`) {
-		t.Fatalf("expected available cryptography state: %s", availableRecorder.Body.String())
+	recorder := httptest.NewRecorder()
+	available.Routes().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
+	body := recorder.Body.String()
+	if !strings.Contains(body, `"cryptography":"available"`) ||
+		!strings.Contains(body, `"cryptography_scope":"dependency"`) {
+		t.Fatalf("expected dependency cryptography state: %s", body)
 	}
-	assertRuntimeProjectionMinimized(t, availableRecorder.Body.String())
+	assertRuntimeProjectionMinimized(t, body)
+}
 
-	unavailable, err := base.WithRuntimeCryptographyProbe(RuntimeCryptographyProbeFunc(func(context.Context) error {
-		return errors.New("session=session-a algorithm=X25519 key=/private/keys/opaque ciphertext=secret")
-	}))
+func TestRuntimeProjectionUsesAuthenticatedUserOnlyInsideCryptographySessionBoundary(t *testing.T) {
+	base := newRuntimeProjectionHandler(t)
+	var receivedUser string
+	available, err := base.WithRuntimeCryptographySessionBoundary(RuntimeCryptographySessionBoundaryFunc(
+		func(_ context.Context, userID string) error {
+			receivedUser = userID
+			return nil
+		},
+	))
 	if err != nil {
 		t.Fatal(err)
 	}
-	unavailableRecorder := httptest.NewRecorder()
-	unavailable.Routes().ServeHTTP(unavailableRecorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
-	body := unavailableRecorder.Body.String()
-	if !strings.Contains(body, `"cryptography":"unavailable"`) {
-		t.Fatalf("expected unavailable cryptography state: %s", body)
+	recorder := httptest.NewRecorder()
+	available.Routes().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
+	body := recorder.Body.String()
+	if receivedUser != "user-a" {
+		t.Fatalf("expected authenticated user to reach session boundary, got %q", receivedUser)
+	}
+	if !strings.Contains(body, `"cryptography":"available"`) ||
+		!strings.Contains(body, `"cryptography_scope":"authenticated-session"`) {
+		t.Fatalf("expected authenticated-session cryptography state: %s", body)
+	}
+	assertRuntimeProjectionMinimized(t, body)
+}
+
+func TestRuntimeProjectionDoesNotLeakCryptographySessionFailureDetails(t *testing.T) {
+	base := newRuntimeProjectionHandler(t)
+	unavailable, err := base.WithRuntimeCryptographySessionBoundary(RuntimeCryptographySessionBoundaryFunc(
+		func(context.Context, string) error {
+			return errors.New("session=session-a algorithm=X25519 key=/private/keys/opaque ciphertext=secret credential=hidden")
+		},
+	))
+	if err != nil {
+		t.Fatal(err)
+	}
+	recorder := httptest.NewRecorder()
+	unavailable.Routes().ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/v1/data/runtime", nil))
+	body := recorder.Body.String()
+	if !strings.Contains(body, `"cryptography":"unavailable"`) ||
+		!strings.Contains(body, `"cryptography_scope":"authenticated-session"`) {
+		t.Fatalf("expected unavailable authenticated-session state: %s", body)
 	}
 	assertRuntimeProjectionMinimized(t, body)
 }
@@ -130,7 +164,7 @@ func newRuntimeProjectionHandler(t *testing.T) *DataRuntimeHandler {
 func assertRuntimeProjectionMinimized(t *testing.T, body string) {
 	t.Helper()
 	for _, forbidden := range []string{
-		"user-a", "root", "path", "ciphertext", "credential", "secret", "private", "key", "session-a", "x25519",
+		"user-a", "root", "path", "ciphertext", "credential", "secret", "private", "key", "session-a", "x25519", "opaque", "hidden",
 	} {
 		if strings.Contains(strings.ToLower(body), forbidden) {
 			t.Fatalf("projection leaked forbidden detail %q in %s", forbidden, body)
