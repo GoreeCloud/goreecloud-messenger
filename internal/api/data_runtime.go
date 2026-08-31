@@ -84,6 +84,25 @@ func (h *DataRuntimeHandler) WithTypingPrivacyPreferences(
 	return &copy, nil
 }
 
+// WithTypingPresence returns a copy of the runtime with both ephemeral typing
+// publication/observation and the matching authenticated privacy controls
+// composed together. Deployments can still opt into either surface separately,
+// but this helper prevents an application runtime from accidentally enabling
+// typing events while omitting the user-facing control surface.
+func (h *DataRuntimeHandler) WithTypingPresence(
+	typingService *messagingservice.TypingService,
+	preferenceService *messagingservice.TypingPrivacyPreferenceService,
+) (*DataRuntimeHandler, error) {
+	if h == nil || typingService == nil || preferenceService == nil {
+		return nil, errors.New("runtime handler, typing service, and typing privacy preference service are required")
+	}
+	withTyping, err := h.WithTypingIndicators(typingService)
+	if err != nil {
+		return nil, err
+	}
+	return withTyping.WithTypingPrivacyPreferences(preferenceService)
+}
+
 // WithRuntimePersistenceProbe returns a copy of the composition handler with a
 // bounded, diagnostic-only persistence probe. The probe does not gain authority
 // over message, receipt, or attachment operations and is never treated as a
