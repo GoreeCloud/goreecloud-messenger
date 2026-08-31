@@ -23,6 +23,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	typingPrivacyDurability, err := runtimeconfig.TypingPrivacyDurabilityStatusFor(typingPrivacyPersistence.Mode)
+	if err != nil {
+		panic(err)
+	}
 
 	message := domain.Message{
 		ID:             "development-message",
@@ -40,9 +44,9 @@ func main() {
 	}
 
 	fmt.Printf(
-		"Messenger development contract active: %s %s typing_privacy_persistence=%s\n",
+		"Messenger development contract active: %s %s %s\n",
 		message.ProvenanceLabel(),
 		receiptDiagnostic.LogLine(),
-		typingPrivacyPersistence.Mode,
+		typingPrivacyDurability.LogLine(),
 	)
 }
