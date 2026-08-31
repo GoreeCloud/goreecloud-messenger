@@ -31,6 +31,7 @@ func NewTypingPreferencesHTTPHandler(
 func (h *TypingPreferencesHTTPHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/typing/preferences", h.get)
 	mux.HandleFunc("PUT /v1/data/conversations/{conversationID}/typing/preferences", h.put)
+	mux.HandleFunc("DELETE /v1/data/conversations/{conversationID}/typing/preferences", h.reset)
 }
 
 type typingPreferencesRequest struct {
@@ -53,10 +54,7 @@ func (h *TypingPreferencesHTTPHandler) get(w http.ResponseWriter, r *http.Reques
 		writeTypingPreferenceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, typingPreferencesResponse{
-		PublishTyping: preferences.PublishTyping,
-		ObserveTyping: preferences.ObserveTyping,
-	})
+	writeTypingPreferences(w, preferences)
 }
 
 func (h *TypingPreferencesHTTPHandler) put(w http.ResponseWriter, r *http.Request) {
@@ -91,10 +89,20 @@ func (h *TypingPreferencesHTTPHandler) put(w http.ResponseWriter, r *http.Reques
 		writeTypingPreferenceError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, typingPreferencesResponse{
-		PublishTyping: preferences.PublishTyping,
-		ObserveTyping: preferences.ObserveTyping,
-	})
+	writeTypingPreferences(w, preferences)
+}
+
+func (h *TypingPreferencesHTTPHandler) reset(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.authenticate(w, r)
+	if !ok {
+		return
+	}
+	preferences, err := h.service.Reset(r.Context(), userID, strings.TrimSpace(r.PathValue("conversationID")))
+	if err != nil {
+		writeTypingPreferenceError(w, err)
+		return
+	}
+	writeTypingPreferences(w, preferences)
 }
 
 func (h *TypingPreferencesHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
@@ -104,6 +112,13 @@ func (h *TypingPreferencesHTTPHandler) authenticate(w http.ResponseWriter, r *ht
 		return "", false
 	}
 	return userID, true
+}
+
+func writeTypingPreferences(w http.ResponseWriter, preferences messagingservice.TypingPrivacyPreferences) {
+	writeJSON(w, http.StatusOK, typingPreferencesResponse{
+		PublishTyping: preferences.PublishTyping,
+		ObserveTyping: preferences.ObserveTyping,
+	})
 }
 
 func writeTypingPreferenceError(w http.ResponseWriter, err error) {
