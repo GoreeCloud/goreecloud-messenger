@@ -10,12 +10,14 @@ import (
 )
 
 // DataRuntimeHandler is the application-facing HTTP composition boundary for
-// GoreeCloud Data messaging, receipts, and encrypted attachments. It does not
-// own credential validation, cryptographic sessions, or persistence authority;
-// those remain injected through the existing service and Authenticator boundaries.
+// GoreeCloud Data messaging, receipts, encrypted attachments, and optional
+// privacy-controlled typing presence. It does not own credential validation,
+// cryptographic sessions, or persistence authority; those remain injected
+// through the existing service and Authenticator boundaries.
 type DataRuntimeHandler struct {
 	messages          *Handler
 	attachments       *AttachmentHTTPHandler
+	typing            *TypingHTTPHandler
 	auth              Authenticator
 	persistenceProbe  RuntimePersistenceProbe
 	cryptographyProbe RuntimeCryptographyProbe
@@ -46,6 +48,23 @@ func NewDataRuntimeHandler(
 	}, nil
 }
 
+// WithTypingIndicators returns a copy of the runtime with the already-authorized
+// typing service composed under the same Authenticator boundary. Typing remains
+// optional so deployments do not gain presence behavior merely by upgrading the
+// message runtime.
+func (h *DataRuntimeHandler) WithTypingIndicators(service *messagingservice.TypingService) (*DataRuntimeHandler, error) {
+	if h == nil || service == nil {
+		return nil, errors.New("runtime handler and typing service are required")
+	}
+	typing, err := NewTypingHTTPHandler(service, h.auth)
+	if err != nil {
+		return nil, err
+	}
+	copy := *h
+	copy.typing = typing
+	return &copy, nil
+}
+
 // WithRuntimePersistenceProbe returns a copy of the composition handler with a
 // bounded, diagnostic-only persistence probe. The probe does not gain authority
 // over message, receipt, or attachment operations and is never treated as a
@@ -73,13 +92,16 @@ func (h *DataRuntimeHandler) WithRuntimeCryptographyProbe(probe RuntimeCryptogra
 	return &copy, nil
 }
 
-// Routes returns one mux containing every currently implemented Data HTTP route.
-// Shared conversation prefixes are registered directly so message and attachment
-// listing endpoints remain simultaneously reachable.
+// Routes returns one mux containing every enabled Data HTTP route. Shared
+// conversation prefixes are registered directly so message, attachment, and
+// optional typing endpoints remain simultaneously reachable.
 func (h *DataRuntimeHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	h.messages.RegisterRoutes(mux)
 	h.attachments.RegisterRoutes(mux)
+	if h.typing != nil {
+		h.typing.RegisterRoutes(mux)
+	}
 	h.registerRuntimeProjection(mux)
 	return mux
 }
