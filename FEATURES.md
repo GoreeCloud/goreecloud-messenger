@@ -14,6 +14,9 @@
 - Exact raw ciphertext-byte download with generic binary transport and no content sniffing.
 - Content-free privacy-controlled typing/idle signals with authenticated self-publication, conversation-membership checks, independent publish/observe policy gates, monotonic sequencing, stale-signal rejection, and a 10-second server expiry.
 - Explicit optional composition of typing routes into the application-facing Data runtime under the same Authenticator boundary; typing is not enabled merely by constructing the base runtime.
+- Authenticated per-conversation typing privacy preferences for the current Development memory policy, allowing a participant to independently disable publishing or observing typing presence.
+- Strict typing-preference HTTP input that derives user identity from authentication and rejects request-body identity fields.
+- Explicit optional runtime composition of the mutable typing-preference route, separate from the base message runtime and separate from typing-signal composition.
 
 ## Planned / incomplete
 
@@ -22,7 +25,7 @@
 - Production E2EE session establishment, verification, rotation, and multi-device state.
 - Distributed message and attachment persistence/object storage.
 - Push delivery, production presence fan-out/offline synchronization, and production rate limiting.
-- Durable Privacy Shield-backed typing/presence preferences and native client typing presentation.
+- **Durable Privacy Shield-backed** typing/presence preference persistence and native client typing/privacy presentation. The current preference store is Development memory state only.
 - SMS/MMS/RCS carrier/platform adapters where legitimate APIs permit.
 - Voice/video call signaling and media transport.
 - Native client packaging and Glaze UI 2.0+ rendered acceptance.
