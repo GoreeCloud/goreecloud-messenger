@@ -29,10 +29,14 @@ func NewTypingHTTPHandler(service *messagingservice.TypingService, auth Authenti
 	return &TypingHTTPHandler{service: service, auth: auth}, nil
 }
 
-func (h *TypingHTTPHandler) Routes() http.Handler {
-	mux := http.NewServeMux()
+func (h *TypingHTTPHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/data/conversations/{conversationID}/typing", h.publish)
 	mux.HandleFunc("GET /v1/data/conversations/{conversationID}/typing", h.list)
+}
+
+func (h *TypingHTTPHandler) Routes() http.Handler {
+	mux := http.NewServeMux()
+	h.RegisterRoutes(mux)
 	return mux
 }
 
