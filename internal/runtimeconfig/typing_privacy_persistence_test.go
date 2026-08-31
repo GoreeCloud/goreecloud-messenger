@@ -20,6 +20,7 @@ func TestTypingPrivacyPersistenceFromLookup(t *testing.T) {
 		{name: "unsupported mode", env: map[string]string{typingPrivacyPersistenceEnv: "database"}, wantErr: true},
 		{name: "memory", env: map[string]string{typingPrivacyPersistenceEnv: " MEMORY "}, want: service.TypingPrivacyPersistenceConfig{Mode: service.TypingPrivacyPersistenceMemory, DefaultAllowed: false}},
 		{name: "memory rejects root", env: map[string]string{typingPrivacyPersistenceEnv: "memory", typingPrivacyRootEnv: "/private/typing"}, wantErr: true},
+		{name: "memory rejects explicitly blank root", env: map[string]string{typingPrivacyPersistenceEnv: "memory", typingPrivacyRootEnv: ""}, wantErr: true},
 		{name: "file requires root", env: map[string]string{typingPrivacyPersistenceEnv: "file"}, wantErr: true},
 		{name: "file rejects relative root", env: map[string]string{typingPrivacyPersistenceEnv: "file", typingPrivacyRootEnv: "private/typing"}, wantErr: true},
 		{name: "file rejects filesystem root", env: map[string]string{typingPrivacyPersistenceEnv: "file", typingPrivacyRootEnv: string(filepath.Separator)}, wantErr: true},
