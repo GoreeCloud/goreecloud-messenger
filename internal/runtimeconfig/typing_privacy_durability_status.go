@@ -19,8 +19,8 @@ const (
 // truthful persistence properties without exposing the configured file root or
 // implying cross-device or production Privacy Shield acceptance.
 type TypingPrivacyDurabilityStatus struct {
-	PersistenceMode    service.TypingPrivacyPersistenceMode
-	Level              TypingPrivacyDurabilityLevel
+	PersistenceMode     service.TypingPrivacyPersistenceMode
+	Level               TypingPrivacyDurabilityLevel
 	DurableAfterRestart bool
 	CrossDevice         bool
 	ProductionReady     bool
