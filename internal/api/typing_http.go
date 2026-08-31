@@ -41,7 +41,6 @@ func (h *TypingHTTPHandler) Routes() http.Handler {
 }
 
 type typingRequest struct {
-	UserID   string             `json:"user_id"`
 	Sequence uint64             `json:"sequence"`
 	State    domain.TypingState `json:"state"`
 }
@@ -71,9 +70,11 @@ func (h *TypingHTTPHandler) publish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// The authenticated runtime is the only authority for the typing actor.
+	// The request body intentionally carries no user identity field.
 	signal := domain.TypingSignal{
 		ConversationID: strings.TrimSpace(r.PathValue("conversationID")),
-		UserID:         input.UserID,
+		UserID:         userID,
 		Sequence:       input.Sequence,
 		State:          input.State,
 	}
