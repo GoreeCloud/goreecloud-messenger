@@ -18,6 +18,7 @@ type DataRuntimeHandler struct {
 	messages          *Handler
 	attachments       *AttachmentHTTPHandler
 	typing            *TypingHTTPHandler
+	typingPreferences *TypingPreferencesHTTPHandler
 	auth              Authenticator
 	persistenceProbe  RuntimePersistenceProbe
 	cryptographyProbe RuntimeCryptographyProbe
@@ -65,6 +66,24 @@ func (h *DataRuntimeHandler) WithTypingIndicators(service *messagingservice.Typi
 	return &copy, nil
 }
 
+// WithTypingPrivacyPreferences returns a copy of the runtime with authenticated
+// per-conversation typing privacy controls. This is independently optional so a
+// deployment must deliberately compose the mutable preference surface.
+func (h *DataRuntimeHandler) WithTypingPrivacyPreferences(
+	service *messagingservice.TypingPrivacyPreferenceService,
+) (*DataRuntimeHandler, error) {
+	if h == nil || service == nil {
+		return nil, errors.New("runtime handler and typing privacy preference service are required")
+	}
+	preferences, err := NewTypingPreferencesHTTPHandler(service, h.auth)
+	if err != nil {
+		return nil, err
+	}
+	copy := *h
+	copy.typingPreferences = preferences
+	return &copy, nil
+}
+
 // WithRuntimePersistenceProbe returns a copy of the composition handler with a
 // bounded, diagnostic-only persistence probe. The probe does not gain authority
 // over message, receipt, or attachment operations and is never treated as a
@@ -101,6 +120,9 @@ func (h *DataRuntimeHandler) Routes() http.Handler {
 	h.attachments.RegisterRoutes(mux)
 	if h.typing != nil {
 		h.typing.RegisterRoutes(mux)
+	}
+	if h.typingPreferences != nil {
+		h.typingPreferences.RegisterRoutes(mux)
 	}
 	h.registerRuntimeProjection(mux)
 	return mux
