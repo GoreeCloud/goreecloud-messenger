@@ -40,7 +40,7 @@ func typingPrivacyPersistenceFromLookup(lookup lookupEnvironment) (service.Typin
 
 	switch mode {
 	case service.TypingPrivacyPersistenceMemory:
-		if rootSet && root != "" {
+		if rootSet {
 			return service.TypingPrivacyPersistenceConfig{}, fmt.Errorf("%s must be unset in memory mode", typingPrivacyRootEnv)
 		}
 		return service.TypingPrivacyPersistenceConfig{
