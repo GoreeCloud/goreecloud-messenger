@@ -57,7 +57,7 @@ func TestDataRuntimeTypingIsExplicitlyEnabledAndSharesAuthentication(t *testing.
 	publishRequest := httptest.NewRequest(
 		http.MethodPost,
 		path,
-		strings.NewReader(`{"user_id":"user-a","sequence":1,"state":"typing"}`),
+		strings.NewReader(`{"sequence":1,"state":"typing"}`),
 	)
 	runtime.Routes().ServeHTTP(publish, publishRequest)
 	if publish.Code != http.StatusAccepted {

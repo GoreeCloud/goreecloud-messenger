@@ -51,7 +51,7 @@ func TestTypingHTTPPublishAndListMinimizedProjection(t *testing.T) {
 	publisher := newTypingHTTPHandler(t, service, "user-1")
 	observer := newTypingHTTPHandler(t, service, "user-2")
 
-	publish := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"user_id":"user-1","sequence":1,"state":"typing"}`))
+	publish := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"sequence":1,"state":"typing"}`))
 	publishRecorder := httptest.NewRecorder()
 	publisher.ServeHTTP(publishRecorder, publish)
 	if publishRecorder.Code != http.StatusAccepted {
@@ -81,8 +81,8 @@ func TestTypingHTTPIdleAndStaleSequence(t *testing.T) {
 	handler := newTypingHTTPHandler(t, service, "user-1")
 
 	for _, body := range []string{
-		`{"user_id":"user-1","sequence":2,"state":"typing"}`,
-		`{"user_id":"user-1","sequence":3,"state":"idle"}`,
+		`{"sequence":2,"state":"typing"}`,
+		`{"sequence":3,"state":"idle"}`,
 	} {
 		req := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(body))
 		recorder := httptest.NewRecorder()
@@ -92,7 +92,7 @@ func TestTypingHTTPIdleAndStaleSequence(t *testing.T) {
 		}
 	}
 
-	stale := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"user_id":"user-1","sequence":2,"state":"typing"}`))
+	stale := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"sequence":2,"state":"typing"}`))
 	staleRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(staleRecorder, stale)
 	if staleRecorder.Code != http.StatusConflict {
@@ -106,7 +106,7 @@ func TestTypingHTTPPrivacyAndStrictJSON(t *testing.T) {
 	policy.SetPublish("conversation-typing-http", "user-1", false)
 	handler := newTypingHTTPHandler(t, service, "user-1")
 
-	denied := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"user_id":"user-1","sequence":1,"state":"typing"}`))
+	denied := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"sequence":1,"state":"typing"}`))
 	deniedRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(deniedRecorder, denied)
 	if deniedRecorder.Code != http.StatusForbidden {
@@ -114,10 +114,27 @@ func TestTypingHTTPPrivacyAndStrictJSON(t *testing.T) {
 	}
 
 	policy.SetPublish("conversation-typing-http", "user-1", true)
-	unknown := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"user_id":"user-1","sequence":1,"state":"typing","draft":"secret"}`))
+	unknown := httptest.NewRequest(http.MethodPost, "/v1/data/conversations/conversation-typing-http/typing", strings.NewReader(`{"sequence":1,"state":"typing","draft":"secret"}`))
 	unknownRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(unknownRecorder, unknown)
 	if unknownRecorder.Code != http.StatusBadRequest {
 		t.Fatalf("unknown-field status = %d, body = %s", unknownRecorder.Code, unknownRecorder.Body.String())
+	}
+}
+
+func TestTypingHTTPRejectsCallerSuppliedUserIdentity(t *testing.T) {
+	now := time.Date(2026, 8, 30, 21, 10, 0, 0, time.UTC)
+	service, _ := newTypingHTTPTestService(t, &now)
+	handler := newTypingHTTPHandler(t, service, "user-1")
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/v1/data/conversations/conversation-typing-http/typing",
+		strings.NewReader(`{"user_id":"user-2","sequence":1,"state":"typing"}`),
+	)
+	recorder := httptest.NewRecorder()
+	handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("caller-supplied user identity status = %d, body = %s", recorder.Code, recorder.Body.String())
 	}
 }
