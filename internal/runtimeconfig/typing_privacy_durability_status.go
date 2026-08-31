@@ -26,6 +26,20 @@ type TypingPrivacyDurabilityStatus struct {
 	ProductionReady     bool
 }
 
+// LogLine returns only bounded categorical durability truth. It deliberately
+// excludes configured storage paths, preference contents, identities, and any
+// other user-derived value.
+func (status TypingPrivacyDurabilityStatus) LogLine() string {
+	return fmt.Sprintf(
+		"typing_privacy_persistence=%s typing_privacy_durability=%s typing_privacy_restart_durable=%t typing_privacy_cross_device=%t typing_privacy_production_ready=%t",
+		status.PersistenceMode,
+		status.Level,
+		status.DurableAfterRestart,
+		status.CrossDevice,
+		status.ProductionReady,
+	)
+}
+
 func TypingPrivacyDurabilityStatusFor(
 	mode service.TypingPrivacyPersistenceMode,
 ) (TypingPrivacyDurabilityStatus, error) {
