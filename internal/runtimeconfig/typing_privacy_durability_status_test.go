@@ -3,6 +3,7 @@
 package runtimeconfig
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/service"
@@ -34,6 +35,24 @@ func TestTypingPrivacyDurabilityStatusFileIsOnlySingleNodeDurable(t *testing.T) 
 	}
 	if status.CrossDevice || status.ProductionReady {
 		t.Fatalf("file status overclaimed distributed or production readiness: %+v", status)
+	}
+}
+
+func TestTypingPrivacyDurabilityStatusLogLineIsBounded(t *testing.T) {
+	status, err := TypingPrivacyDurabilityStatusFor(service.TypingPrivacyPersistenceFile)
+	if err != nil {
+		t.Fatalf("file durability status: %v", err)
+	}
+
+	line := status.LogLine()
+	want := "typing_privacy_persistence=file typing_privacy_durability=single-node-durable typing_privacy_restart_durable=true typing_privacy_cross_device=false typing_privacy_production_ready=false"
+	if line != want {
+		t.Fatalf("unexpected log line:\n got: %q\nwant: %q", line, want)
+	}
+	for _, forbidden := range []string{"/", "\\", "root", "preference", "user"} {
+		if strings.Contains(strings.ToLower(line), forbidden) {
+			t.Fatalf("diagnostic leaked forbidden detail %q: %q", forbidden, line)
+		}
 	}
 }
 
