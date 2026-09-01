@@ -67,6 +67,16 @@ func validateTypingPrivacyRecord(path string) error {
 	return nil
 }
 
+func typingPrivacyContextError(ctx context.Context) error {
+	if ctx == nil {
+		return errors.New("typing privacy operation context is required")
+	}
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("typing privacy operation context ended: %w", err)
+	}
+	return nil
+}
+
 // FileTypingPrivacyPolicy is a single-node durable Development adapter for the
 // minimized typing privacy preference contract. It stores only the two explicit
 // booleans. Conversation/user identifiers are used only to derive a SHA-256 file
@@ -106,10 +116,13 @@ func NewFileTypingPrivacyPolicy(rootDir string, defaultAllowed bool) (*FileTypin
 }
 
 func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
-	_ context.Context,
+	ctx context.Context,
 	conversationID,
 	userID string,
 ) (TypingPrivacyPreferences, error) {
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return TypingPrivacyPreferences{}, err
+	}
 	path, err := p.recordPath(conversationID, userID)
 	if err != nil {
 		return TypingPrivacyPreferences{}, err
@@ -117,6 +130,9 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 
 	p.mu.RLock()
 	defer p.mu.RUnlock()
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return TypingPrivacyPreferences{}, err
+	}
 	if err := validateTypingPrivacyDirectory(p.rootDir); err != nil {
 		return TypingPrivacyPreferences{}, fmt.Errorf("validate typing privacy persistence root: %w", err)
 	}
@@ -127,6 +143,9 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 		}, nil
 	} else if err != nil {
 		return TypingPrivacyPreferences{}, fmt.Errorf("validate typing privacy preference: %w", err)
+	}
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return TypingPrivacyPreferences{}, err
 	}
 	bytes, err := os.ReadFile(path)
 	if err != nil {
@@ -147,11 +166,14 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 }
 
 func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
-	_ context.Context,
+	ctx context.Context,
 	conversationID,
 	userID string,
 	preferences TypingPrivacyPreferences,
 ) error {
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return err
+	}
 	path, err := p.recordPath(conversationID, userID)
 	if err != nil {
 		return err
@@ -169,6 +191,9 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return err
+	}
 	if err := validateTypingPrivacyDirectory(p.rootDir); err != nil {
 		return fmt.Errorf("validate typing privacy persistence root: %w", err)
 	}
@@ -195,6 +220,9 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 	}
 	if err := temp.Close(); err != nil {
 		return fmt.Errorf("close typing privacy temporary record: %w", err)
+	}
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return err
 	}
 	if err := os.Rename(tempPath, path); err != nil {
 		return fmt.Errorf("commit typing privacy preference: %w", err)
