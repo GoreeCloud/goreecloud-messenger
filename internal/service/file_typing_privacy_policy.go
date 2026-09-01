@@ -23,6 +23,50 @@ type typingPrivacyRecord struct {
 	ObserveTyping bool `json:"observe_typing"`
 }
 
+func syncTypingPrivacyDirectory(path string) error {
+	directory, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer directory.Close()
+	return directory.Sync()
+}
+
+func validateTypingPrivacyDirectory(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
+		return errors.New("typing privacy persistence root is not a protected directory")
+	}
+	if info.Mode().Perm()&0o077 != 0 {
+		return errors.New("typing privacy persistence root permissions are broader than owner-only")
+	}
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return err
+	}
+	if filepath.Clean(resolved) != filepath.Clean(path) {
+		return errors.New("typing privacy persistence root no longer resolves to its canonical path")
+	}
+	return nil
+}
+
+func validateTypingPrivacyRecord(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
+		return errors.New("typing privacy preference is not a protected regular file")
+	}
+	if info.Mode().Perm()&0o077 != 0 {
+		return errors.New("typing privacy preference permissions are broader than owner-only")
+	}
+	return nil
+}
+
 // FileTypingPrivacyPolicy is a single-node durable Development adapter for the
 // minimized typing privacy preference contract. It stores only the two explicit
 // booleans. Conversation/user identifiers are used only to derive a SHA-256 file
@@ -51,7 +95,14 @@ func NewFileTypingPrivacyPolicy(rootDir string, defaultAllowed bool) (*FileTypin
 	if err := os.Chmod(absolute, 0o700); err != nil {
 		return nil, fmt.Errorf("protect typing privacy persistence root: %w", err)
 	}
-	return &FileTypingPrivacyPolicy{rootDir: absolute, defaultAllowed: defaultAllowed}, nil
+	resolved, err := filepath.EvalSymlinks(absolute)
+	if err != nil {
+		return nil, fmt.Errorf("resolve typing privacy persistence root links: %w", err)
+	}
+	if err := validateTypingPrivacyDirectory(resolved); err != nil {
+		return nil, fmt.Errorf("validate typing privacy persistence root: %w", err)
+	}
+	return &FileTypingPrivacyPolicy{rootDir: resolved, defaultAllowed: defaultAllowed}, nil
 }
 
 func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
@@ -66,13 +117,18 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 
 	p.mu.RLock()
 	defer p.mu.RUnlock()
-	bytes, err := os.ReadFile(path)
-	if errors.Is(err, os.ErrNotExist) {
+	if err := validateTypingPrivacyDirectory(p.rootDir); err != nil {
+		return TypingPrivacyPreferences{}, fmt.Errorf("validate typing privacy persistence root: %w", err)
+	}
+	if err := validateTypingPrivacyRecord(path); errors.Is(err, os.ErrNotExist) {
 		return TypingPrivacyPreferences{
 			PublishTyping: p.defaultAllowed,
 			ObserveTyping: p.defaultAllowed,
 		}, nil
+	} else if err != nil {
+		return TypingPrivacyPreferences{}, fmt.Errorf("validate typing privacy preference: %w", err)
 	}
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return TypingPrivacyPreferences{}, fmt.Errorf("read typing privacy preference: %w", err)
 	}
@@ -113,6 +169,9 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 
 	p.mu.Lock()
 	defer p.mu.Unlock()
+	if err := validateTypingPrivacyDirectory(p.rootDir); err != nil {
+		return fmt.Errorf("validate typing privacy persistence root: %w", err)
+	}
 	temp, err := os.CreateTemp(p.rootDir, ".typing-privacy-*")
 	if err != nil {
 		return fmt.Errorf("create typing privacy temporary record: %w", err)
@@ -141,6 +200,9 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 		return fmt.Errorf("commit typing privacy preference: %w", err)
 	}
 	removeTemp = false
+	if err := syncTypingPrivacyDirectory(p.rootDir); err != nil {
+		return fmt.Errorf("sync typing privacy persistence root: %w", err)
+	}
 	return nil
 }
 
