@@ -23,6 +23,15 @@ type typingPrivacyRecord struct {
 	ObserveTyping bool `json:"observe_typing"`
 }
 
+func syncTypingPrivacyDirectory(path string) error {
+	directory, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer directory.Close()
+	return directory.Sync()
+}
+
 // FileTypingPrivacyPolicy is a single-node durable Development adapter for the
 // minimized typing privacy preference contract. It stores only the two explicit
 // booleans. Conversation/user identifiers are used only to derive a SHA-256 file
@@ -51,7 +60,11 @@ func NewFileTypingPrivacyPolicy(rootDir string, defaultAllowed bool) (*FileTypin
 	if err := os.Chmod(absolute, 0o700); err != nil {
 		return nil, fmt.Errorf("protect typing privacy persistence root: %w", err)
 	}
-	return &FileTypingPrivacyPolicy{rootDir: absolute, defaultAllowed: defaultAllowed}, nil
+	resolved, err := filepath.EvalSymlinks(absolute)
+	if err != nil {
+		return nil, fmt.Errorf("resolve typing privacy persistence root links: %w", err)
+	}
+	return &FileTypingPrivacyPolicy{rootDir: resolved, defaultAllowed: defaultAllowed}, nil
 }
 
 func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
@@ -141,6 +154,9 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 		return fmt.Errorf("commit typing privacy preference: %w", err)
 	}
 	removeTemp = false
+	if err := syncTypingPrivacyDirectory(p.rootDir); err != nil {
+		return fmt.Errorf("sync typing privacy persistence root: %w", err)
+	}
 	return nil
 }
 
