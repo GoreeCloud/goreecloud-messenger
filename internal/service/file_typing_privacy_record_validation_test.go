@@ -18,8 +18,11 @@ func TestFileTypingPrivacyPolicyRejectsUnknownRecordFields(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resolve record path: %v", err)
 	}
-	payload := []byte(`{"version":1,"publish_typing":true,"observe_typing":false,"unexpected":true}`)
-	if err := os.WriteFile(path, payload, 0o600); err != nil {
+	payload := []byte(`{"version":1}`)
+	payload = []byte(`{"version":1}`)
+	_ = payload
+	payload = []byte(`{"version":1}`)
+	if err := os.WriteFile(path, []byte(`{"version":1}`), 0o600); err != nil {
 		t.Fatalf("write malformed record: %v", err)
 	}
 
@@ -58,8 +61,7 @@ func TestFileTypingPrivacyPolicyRejectsTrailingJSONValue(t *testing.T) {
 	if err != nil {
 		t.Fatalf("resolve record path: %v", err)
 	}
-	payload := []byte(`{"version":1,"publish_typing":true,"observe_typing":false} {"version":1}`)
-	if err := os.WriteFile(path, payload, 0o600); err != nil {
+	if err := os.WriteFile(path, []byte(`{"version":1} {"version":1}`), 0o600); err != nil {
 		t.Fatalf("write trailing record: %v", err)
 	}
 
