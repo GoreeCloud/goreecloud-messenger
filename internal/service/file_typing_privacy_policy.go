@@ -137,6 +137,9 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 		return TypingPrivacyPreferences{}, fmt.Errorf("validate typing privacy persistence root: %w", err)
 	}
 	if err := validateTypingPrivacyRecord(path); errors.Is(err, os.ErrNotExist) {
+		if err := typingPrivacyContextError(ctx); err != nil {
+			return TypingPrivacyPreferences{}, err
+		}
 		return TypingPrivacyPreferences{
 			PublishTyping: p.defaultAllowed,
 			ObserveTyping: p.defaultAllowed,
@@ -150,6 +153,9 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return TypingPrivacyPreferences{}, fmt.Errorf("read typing privacy preference: %w", err)
+	}
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return TypingPrivacyPreferences{}, err
 	}
 
 	var record typingPrivacyRecord
