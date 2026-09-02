@@ -15,10 +15,13 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 )
 
 const typingPrivacyRecordVersion = 1
 const typingPrivacyRecordMaxBytes int64 = 4096
+const typingPrivacyWriteLockPollInterval = 10 * time.Millisecond
+const typingPrivacyWriteLockMaxWait = 250 * time.Millisecond
 
 type typingPrivacyRecord struct {
 	Version       int  `json:"version"`
@@ -147,6 +150,59 @@ func typingPrivacyContextError(ctx context.Context) error {
 	return nil
 }
 
+func acquireTypingPrivacyWriteLock(ctx context.Context, recordPath string) (func() error, error) {
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return nil, err
+	}
+	lockPath := recordPath + ".lock"
+	deadline := time.Now().Add(typingPrivacyWriteLockMaxWait)
+
+	for {
+		if err := os.Mkdir(lockPath, 0o700); err == nil {
+			info, statErr := os.Lstat(lockPath)
+			if statErr != nil {
+				_ = os.Remove(lockPath)
+				return nil, fmt.Errorf("validate typing privacy write lock: %w", statErr)
+			}
+			if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() || info.Mode().Perm()&0o077 != 0 {
+				_ = os.Remove(lockPath)
+				return nil, errors.New("typing privacy write lock is not an owner-only directory")
+			}
+
+			released := false
+			return func() error {
+				if released {
+					return nil
+				}
+				released = true
+				if err := os.Remove(lockPath); err != nil {
+					return err
+				}
+				return nil
+			}, nil
+		} else if !errors.Is(err, os.ErrExist) {
+			return nil, fmt.Errorf("create typing privacy write lock: %w", err)
+		}
+
+		if err := typingPrivacyContextError(ctx); err != nil {
+			return nil, err
+		}
+		if !time.Now().Before(deadline) {
+			return nil, errors.New("typing privacy preference write lock is already held")
+		}
+
+		timer := time.NewTimer(typingPrivacyWriteLockPollInterval)
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return nil, typingPrivacyContextError(ctx)
+		case <-timer.C:
+		}
+	}
+}
+
 // FileTypingPrivacyPolicy is a single-node durable Development adapter for the
 // minimized typing privacy preference contract. It stores only the two explicit
 // booleans. Conversation/user identifiers are used only to derive a SHA-256 file
@@ -268,6 +324,20 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 	if err := validateTypingPrivacyDirectory(p.rootDir); err != nil {
 		return fmt.Errorf("validate typing privacy persistence root: %w", err)
 	}
+	releaseWriteLock, err := acquireTypingPrivacyWriteLock(ctx, path)
+	if err != nil {
+		return fmt.Errorf("acquire typing privacy write lock: %w", err)
+	}
+	writeLockHeld := true
+	defer func() {
+		if writeLockHeld {
+			_ = releaseWriteLock()
+		}
+	}()
+	if err := typingPrivacyContextError(ctx); err != nil {
+		return err
+	}
+
 	temp, err := os.CreateTemp(p.rootDir, ".typing-privacy-*")
 	if err != nil {
 		return fmt.Errorf("create typing privacy temporary record: %w", err)
@@ -302,6 +372,10 @@ func (p *FileTypingPrivacyPolicy) SetTypingPreferences(
 	if err := syncTypingPrivacyDirectory(p.rootDir); err != nil {
 		return fmt.Errorf("sync typing privacy persistence root: %w", err)
 	}
+	if err := releaseWriteLock(); err != nil {
+		return fmt.Errorf("release typing privacy write lock after commit: %w", err)
+	}
+	writeLockHeld = false
 	return nil
 }
 
