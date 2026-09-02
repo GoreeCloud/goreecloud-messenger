@@ -3,12 +3,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +18,7 @@ import (
 )
 
 const typingPrivacyRecordVersion = 1
+const typingPrivacyRecordMaxBytes int64 = 4096
 
 type typingPrivacyRecord struct {
 	Version       int  `json:"version"`
@@ -64,7 +67,41 @@ func validateTypingPrivacyRecord(path string) error {
 	if info.Mode().Perm()&0o077 != 0 {
 		return errors.New("typing privacy preference permissions are broader than owner-only")
 	}
+	if info.Size() > typingPrivacyRecordMaxBytes {
+		return errors.New("typing privacy preference exceeds the bounded record size")
+	}
 	return nil
+}
+
+func readTypingPrivacyRecord(path string) (typingPrivacyRecord, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return typingPrivacyRecord{}, err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(io.LimitReader(file, typingPrivacyRecordMaxBytes+1))
+	if err != nil {
+		return typingPrivacyRecord{}, err
+	}
+	if int64(len(data)) > typingPrivacyRecordMaxBytes {
+		return typingPrivacyRecord{}, errors.New("typing privacy preference exceeds the bounded record size")
+	}
+
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	var record typingPrivacyRecord
+	if err := decoder.Decode(&record); err != nil {
+		return typingPrivacyRecord{}, err
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
+		if err == nil {
+			return typingPrivacyRecord{}, errors.New("typing privacy preference contains trailing JSON data")
+		}
+		return typingPrivacyRecord{}, err
+	}
+	return record, nil
 }
 
 func typingPrivacyContextError(ctx context.Context) error {
@@ -150,17 +187,12 @@ func (p *FileTypingPrivacyPolicy) GetTypingPreferences(
 	if err := typingPrivacyContextError(ctx); err != nil {
 		return TypingPrivacyPreferences{}, err
 	}
-	bytes, err := os.ReadFile(path)
+	record, err := readTypingPrivacyRecord(path)
 	if err != nil {
-		return TypingPrivacyPreferences{}, fmt.Errorf("read typing privacy preference: %w", err)
+		return TypingPrivacyPreferences{}, fmt.Errorf("decode typing privacy preference: %w", err)
 	}
 	if err := typingPrivacyContextError(ctx); err != nil {
 		return TypingPrivacyPreferences{}, err
-	}
-
-	var record typingPrivacyRecord
-	if err := json.Unmarshal(bytes, &record); err != nil {
-		return TypingPrivacyPreferences{}, fmt.Errorf("decode typing privacy preference: %w", err)
 	}
 	if record.Version != typingPrivacyRecordVersion {
 		return TypingPrivacyPreferences{}, fmt.Errorf("unsupported typing privacy preference version %d", record.Version)
