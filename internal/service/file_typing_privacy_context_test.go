@@ -7,7 +7,24 @@ import (
 	"errors"
 	"os"
 	"testing"
+	"time"
 )
+
+type cancelOnErrCallContext struct {
+	calls    int
+	cancelOn int
+}
+
+func (c *cancelOnErrCallContext) Deadline() (time.Time, bool) { return time.Time{}, false }
+func (c *cancelOnErrCallContext) Done() <-chan struct{}       { return nil }
+func (c *cancelOnErrCallContext) Value(any) any               { return nil }
+func (c *cancelOnErrCallContext) Err() error {
+	c.calls++
+	if c.calls >= c.cancelOn {
+		return context.Canceled
+	}
+	return nil
+}
 
 func TestFileTypingPrivacyPolicyRejectsCanceledReadBeforeDefaultFallback(t *testing.T) {
 	policy, err := NewFileTypingPrivacyPolicy(t.TempDir(), true)
@@ -16,6 +33,38 @@ func TestFileTypingPrivacyPolicyRejectsCanceledReadBeforeDefaultFallback(t *test
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
+
+	if _, err := policy.GetTypingPreferences(ctx, "conversation-a", "user-a"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("GetTypingPreferences error = %v, want context.Canceled", err)
+	}
+}
+
+func TestFileTypingPrivacyPolicyRechecksCancellationBeforeMissingRecordDefault(t *testing.T) {
+	policy, err := NewFileTypingPrivacyPolicy(t.TempDir(), true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := &cancelOnErrCallContext{cancelOn: 3}
+
+	if _, err := policy.GetTypingPreferences(ctx, "conversation-a", "user-a"); !errors.Is(err, context.Canceled) {
+		t.Fatalf("GetTypingPreferences error = %v, want context.Canceled", err)
+	}
+}
+
+func TestFileTypingPrivacyPolicyRechecksCancellationAfterDurableRead(t *testing.T) {
+	policy, err := NewFileTypingPrivacyPolicy(t.TempDir(), false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := policy.SetTypingPreferences(
+		context.Background(),
+		"conversation-a",
+		"user-a",
+		TypingPrivacyPreferences{PublishTyping: true, ObserveTyping: false},
+	); err != nil {
+		t.Fatal(err)
+	}
+	ctx := &cancelOnErrCallContext{cancelOn: 4}
 
 	if _, err := policy.GetTypingPreferences(ctx, "conversation-a", "user-a"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("GetTypingPreferences error = %v, want context.Canceled", err)
