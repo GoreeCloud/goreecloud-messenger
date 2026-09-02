@@ -5,6 +5,7 @@ package service
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -66,5 +67,39 @@ func TestFileTypingPrivacyPolicyRejectsTrailingJSONValue(t *testing.T) {
 	_, err = policy.GetTypingPreferences(context.Background(), "conversation-3", "user-3")
 	if err == nil || !strings.Contains(err.Error(), "trailing JSON data") {
 		t.Fatalf("expected trailing-data rejection, got %v", err)
+	}
+}
+
+func TestReadTypingPrivacyRecordRejectsSymlinkPathEvenWhenTargetIsValid(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "target.json")
+	payload := []byte(`{"version":1,"publish_typing":true,"observe_typing":false}`)
+	if err := os.WriteFile(target, payload, 0o600); err != nil {
+		t.Fatalf("write target record: %v", err)
+	}
+	link := filepath.Join(root, "record.json")
+	if err := os.Symlink(target, link); err != nil {
+		t.Fatalf("create record symlink: %v", err)
+	}
+
+	_, err := readTypingPrivacyRecord(link)
+	if err == nil || !strings.Contains(err.Error(), "not a protected regular file") {
+		t.Fatalf("expected symlink rejection at read boundary, got %v", err)
+	}
+}
+
+func TestReadTypingPrivacyRecordRejectsBroadOpenedPermissions(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "record.json")
+	payload := []byte(`{"version":1,"publish_typing":true,"observe_typing":false}`)
+	if err := os.WriteFile(path, payload, 0o644); err != nil {
+		t.Fatalf("write broad-permission record: %v", err)
+	}
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatalf("set broad record permissions: %v", err)
+	}
+
+	_, err := readTypingPrivacyRecord(path)
+	if err == nil || !strings.Contains(err.Error(), "permissions are broader than owner-only") {
+		t.Fatalf("expected opened-record permission rejection, got %v", err)
 	}
 }
