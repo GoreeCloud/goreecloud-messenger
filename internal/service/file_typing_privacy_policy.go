@@ -56,11 +56,7 @@ func validateTypingPrivacyDirectory(path string) error {
 	return nil
 }
 
-func validateTypingPrivacyRecord(path string) error {
-	info, err := os.Lstat(path)
-	if err != nil {
-		return err
-	}
+func validateTypingPrivacyRecordInfo(info os.FileInfo) error {
 	if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
 		return errors.New("typing privacy preference is not a protected regular file")
 	}
@@ -73,8 +69,45 @@ func validateTypingPrivacyRecord(path string) error {
 	return nil
 }
 
-func readTypingPrivacyRecord(path string) (typingPrivacyRecord, error) {
+func validateTypingPrivacyRecord(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return err
+	}
+	return validateTypingPrivacyRecordInfo(info)
+}
+
+func openValidatedTypingPrivacyRecord(path string) (*os.File, error) {
+	expected, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateTypingPrivacyRecordInfo(expected); err != nil {
+		return nil, err
+	}
+
 	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	opened, err := file.Stat()
+	if err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	if err := validateTypingPrivacyRecordInfo(opened); err != nil {
+		_ = file.Close()
+		return nil, err
+	}
+	if !os.SameFile(expected, opened) {
+		_ = file.Close()
+		return nil, errors.New("typing privacy preference changed between validation and open")
+	}
+	return file, nil
+}
+
+func readTypingPrivacyRecord(path string) (typingPrivacyRecord, error) {
+	file, err := openValidatedTypingPrivacyRecord(path)
 	if err != nil {
 		return typingPrivacyRecord{}, err
 	}
