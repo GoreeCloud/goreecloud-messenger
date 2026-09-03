@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	TypingIndicatorTTL              = 10 * time.Second
-	TypingPublishMinInterval        = 250 * time.Millisecond
-	TypingPublishReservationLimit   = 4096
+	TypingIndicatorTTL            = 10 * time.Second
+	TypingPublishMinInterval      = 250 * time.Millisecond
+	TypingPublishReservationLimit = 4096
 )
 
 var (
