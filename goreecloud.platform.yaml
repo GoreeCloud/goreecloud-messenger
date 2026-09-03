@@ -21,7 +21,7 @@ api:
     - {id: data-attachment-ciphertext, method: GET, path: "/v1/data/attachments/{attachmentID}/ciphertext", purpose: Download exact authorized opaque attachment ciphertext bytes.}
     - {id: data-attachment-delete, method: DELETE, path: "/v1/data/attachments/{attachmentID}", purpose: Delete an authorized encrypted attachment through the replay-safe tombstone path.}
     - {id: data-conversation-attachments, method: GET, path: "/v1/data/conversations/{conversationID}/attachments", purpose: List authorized encrypted attachment metadata for a conversation.}
-    - {id: data-typing-publish, method: POST, path: "/v1/data/conversations/{conversationID}/typing", purpose: Publish optional participant-authorized content-free typing presence.}
+    - {id: data-typing-publish, method: POST, path: "/v1/data/conversations/{conversationID}/typing", purpose: Publish optional participant-authorized content-free typing presence with a process-local Development anti-flood guard.}
     - {id: data-typing-list, method: GET, path: "/v1/data/conversations/{conversationID}/typing", purpose: Observe optional privacy-gated content-free typing presence.}
     - {id: data-typing-preferences-get, method: GET, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Read the authenticated participant's minimized typing privacy choices.}
     - {id: data-typing-preferences-put, method: PUT, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Update the authenticated participant's minimized typing privacy choices.}
@@ -47,18 +47,22 @@ platform_systems:
       - messenger-typing-preferences-source
   wardveil_security:
     status: "Applicable — Nonconformant"
-    justification: Messenger has authorization, fail-closed persistence, opaque ciphertext, and minimized diagnostic safeguards, but these source controls do not establish accepted Wardveil Security integration.
+    justification: Messenger has authorization, fail-closed persistence, opaque ciphertext, minimized diagnostics, and a process-local content-free typing anti-flood guard, but these source controls do not establish accepted Wardveil Security integration or production abuse-control validation.
     evidence:
       - messenger-data-runtime-source
       - messenger-attachment-api-source
-      - messenger-ci-359
+      - messenger-typing-rate-source
+      - messenger-typing-rate-doc
+      - messenger-ci-365
   privacy_shield:
     status: "Applicable — Nonconformant"
-    justification: Typing presence is content-free and independently privacy-gated and durable preference storage is hardened, but production Privacy Shield integration, consent authority, and accepted preference persistence are not established.
+    justification: Typing presence is content-free and independently privacy-gated; the anti-flood guard retains only short-lived participant/conversation timing metadata and durable preference storage is hardened, but production Privacy Shield integration, consent authority, and accepted preference persistence are not established.
     evidence:
       - messenger-typing-source
       - messenger-typing-preferences-source
-      - messenger-ci-359
+      - messenger-typing-rate-source
+      - messenger-typing-rate-doc
+      - messenger-ci-365
   everkeep:
     status: "Applicable — Nonconformant"
     justification: Messenger has durable single-node Development stores for selected state, but accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
@@ -108,9 +112,11 @@ recovery:
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
+    - docs/development/typing-publish-rate-guard.md
   evidence:
     - messenger-readme
     - messenger-user-manual
+    - messenger-typing-rate-doc
 data_portability:
   export_capability: unknown
   export_formats: []
@@ -120,10 +126,11 @@ data_portability:
     - preserve encrypted content without exporting reusable key material unnecessarily
     - make device and key migration behavior explicit and independently validated
     - preserve delete-for-everyone, edit, reply, thread, reaction, receipt, and attachment semantics where those capabilities are accepted
-    - exclude ephemeral typing presence from durable exports
+    - exclude ephemeral typing presence and typing anti-flood timing state from durable exports
     - place any privacy preference portability under accepted Privacy Shield and Everkeep authority
   evidence:
     - messenger-readme
+    - messenger-typing-rate-doc
 external_dependencies: []
 compatibility:
   platform_releases: []
@@ -132,6 +139,7 @@ compatibility:
     - GoreeCloud Data messages claiming E2EE must remain encrypted envelopes and must not silently downgrade to SMS, MMS, or RCS.
     - Optional typing routes must not be enabled merely by constructing the base Data runtime.
     - Typing preference request bodies must not accept an acting user identity field.
+    - The Development typing publish route may return HTTP 429 for repeated authorized typing=true signals inside the process-local minimum interval; idle/stop signals must not be delayed by that guard.
   schema_requirements:
     - goreecloud.platform/1.0
     - messenger Data HTTP API v1
@@ -148,20 +156,20 @@ conformance:
   checks:
     - {id: glaze-ui, mandatory: true, status: pending, evidence: [messenger-readme], note: "No accepted Glaze UI 2.2.0 client exists in the current Development repository."}
     - {id: goreecloud-identity, mandatory: true, status: pending, evidence: [messenger-message-api-source, messenger-typing-preferences-source], note: "Injected authentication is not production GoreeCloud Identity integration."}
-    - {id: wardveil-security, mandatory: true, status: pending, evidence: [messenger-data-runtime-source, messenger-attachment-api-source, messenger-ci-359]}
-    - {id: privacy-shield, mandatory: true, status: pending, evidence: [messenger-typing-source, messenger-typing-preferences-source, messenger-ci-359]}
+    - {id: wardveil-security, mandatory: true, status: pending, evidence: [messenger-data-runtime-source, messenger-attachment-api-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "The new in-process anti-flood guard is Development hardening, not distributed abuse protection or Wardveil Security acceptance."}
+    - {id: privacy-shield, mandatory: true, status: pending, evidence: [messenger-typing-source, messenger-typing-preferences-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "Typing remains content-free and limiter state is ephemeral/minimized, but Privacy Shield platform acceptance remains pending."}
     - {id: everkeep-recovery, mandatory: true, status: pending, evidence: [messenger-readme]}
     - {id: mesh-registration, mandatory: true, status: pending, evidence: [messenger-data-runtime-source]}
-    - {id: api-compatibility, mandatory: true, status: pass, evidence: [messenger-message-api-source, messenger-attachment-api-source, messenger-typing-source, messenger-typing-preferences-source, messenger-data-runtime-source, messenger-ci-359], note: "The Development v1 HTTP route surface is explicit, authenticated, source-tested, and documented; this does not establish production deployment acceptance."}
+    - {id: api-compatibility, mandatory: true, status: pass, evidence: [messenger-message-api-source, messenger-attachment-api-source, messenger-typing-source, messenger-typing-preferences-source, messenger-data-runtime-source, messenger-typing-rate-source, messenger-ci-365], note: "The Development v1 HTTP route surface is explicit and authenticated; typing publication now has an explicit 429 anti-flood behavior while idle remains immediate. This does not establish production deployment or distributed rate-policy acceptance."}
     - {id: accessibility, mandatory: true, status: pending, evidence: [], note: "No accepted user-facing client is present yet."}
     - {id: platform-acceptance, mandatory: true, status: pending, evidence: []}
     - {id: backup, mandatory: true, status: pending, evidence: [messenger-readme]}
     - {id: restore, mandatory: true, status: pending, evidence: [messenger-readme]}
-    - {id: export-portability, mandatory: true, status: pending, evidence: [messenger-readme]}
-    - {id: security-validation, mandatory: true, status: pending, evidence: [messenger-ci-359], note: "Security-oriented source tests exist, but accepted Wardveil/production security validation is pending."}
-    - {id: privacy-validation, mandatory: true, status: pending, evidence: [messenger-typing-preferences-source, messenger-ci-359], note: "Privacy-minimized typing controls are tested, but accepted Privacy Shield validation is pending."}
-    - {id: required-documentation, mandatory: true, status: pass, evidence: [messenger-readme, messenger-user-manual]}
-    - {id: required-tests, mandatory: true, status: pass, evidence: [messenger-ci-359], note: "Messenger Foundation #359 passed format, go vet, and go test at the current typing-privacy hardening head."}
+    - {id: export-portability, mandatory: true, status: pending, evidence: [messenger-readme, messenger-typing-rate-doc], note: "Ephemeral typing and limiter timing state remain excluded from portability; encrypted communication portability is still unimplemented."}
+    - {id: security-validation, mandatory: true, status: pending, evidence: [messenger-ci-365, messenger-typing-rate-source, messenger-typing-rate-doc], note: "Security-oriented source tests and anti-flood hardening exist, but distributed/load validation and accepted Wardveil production security validation remain pending."}
+    - {id: privacy-validation, mandatory: true, status: pending, evidence: [messenger-typing-preferences-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "Privacy-minimized typing controls and ephemeral limiter state are source-tested, but accepted Privacy Shield validation remains pending."}
+    - {id: required-documentation, mandatory: true, status: pass, evidence: [messenger-readme, messenger-user-manual, messenger-typing-rate-doc]}
+    - {id: required-tests, mandatory: true, status: pending, evidence: [messenger-ci-365, messenger-typing-rate-tests, messenger-typing-rate-http-tests], note: "Messenger Foundation #365 passed the Platform Contract base at 0ac16c3fac6cf51a7822c2b196561fc38911895d; the new typing anti-flood source requires exact-head formatting, vet, and unit-test CI before this checkpoint can claim its tests passed."}
     - {id: release-evidence, mandatory: true, status: pending, evidence: [], note: "No production release/deployment acceptance exists for the current Messenger Development runtime."}
 evidence:
   acceptance:
@@ -203,10 +211,10 @@ evidence:
     - id: messenger-typing-source
       kind: source
       location: internal/api/typing_http.go
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
+      revision: null
       observed_at: null
       producer: GoreeCloud/goreecloud-messenger
-      description: Optional content-free participant-authorized typing publication and observation API.
+      description: Optional content-free participant-authorized typing publication/observation API; this candidate also maps the Development rate-limit sentinel to HTTP 429.
     - id: messenger-typing-preferences-source
       kind: source
       location: internal/api/typing_preferences_http.go
@@ -214,11 +222,39 @@ evidence:
       observed_at: null
       producer: GoreeCloud/goreecloud-messenger
       description: Authenticated per-conversation publish/observe typing privacy choices with acting identity excluded from request bodies.
-    - id: messenger-ci-359
+    - id: messenger-ci-365
       kind: automated_test
-      location: https://github.com/GoreeCloud/goreecloud-messenger/actions/runs/33610638473
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
+      location: https://github.com/GoreeCloud/goreecloud-messenger/actions/runs/33710680745
+      revision: 0ac16c3fac6cf51a7822c2b196561fc38911895d
       observed_at: null
       producer: GoreeCloud/goreecloud-messenger
-      description: Messenger Foundation #359 passed formatting, go vet, and go test on the typing-privacy context-boundary Development head.
+      description: Messenger Foundation #365 passed formatting, go vet, and go test on the corrected Platform Contract base before the new anti-flood source was added.
+    - id: messenger-typing-rate-source
+      kind: source
+      location: internal/service/typing_service.go
+      revision: null
+      observed_at: null
+      producer: GoreeCloud/goreecloud-messenger
+      description: Process-local per-conversation/per-participant Development rate guard for repeated content-free typing=true publications, with immediate idle behavior, stale-store reservation rollback, and TTL-based opportunistic limiter cleanup.
+    - id: messenger-typing-rate-doc
+      kind: documentation
+      location: docs/development/typing-publish-rate-guard.md
+      revision: null
+      observed_at: null
+      producer: GoreeCloud/goreecloud-messenger
+      description: Authorization order, timing behavior, minimized state, privacy, distributed-runtime limitation, HTTP 429, validation, and production-acceptance boundaries for the typing anti-flood guard.
+    - id: messenger-typing-rate-tests
+      kind: source
+      location: internal/service/typing_rate_limit_test.go
+      revision: null
+      observed_at: null
+      producer: GoreeCloud/goreecloud-messenger
+      description: Unit-test source covering rapid typing rejection, immediate idle, restart after idle, exact interval acceptance, and failed-reservation rollback. Test source is not itself evidence of a successful run.
+    - id: messenger-typing-rate-http-tests
+      kind: source
+      location: internal/api/typing_rate_limit_http_test.go
+      revision: null
+      observed_at: null
+      producer: GoreeCloud/goreecloud-messenger
+      description: Unit-test source covering HTTP 429 mapping for ErrTypingRateLimited. Test source is not itself evidence of a successful run.
   release: []
