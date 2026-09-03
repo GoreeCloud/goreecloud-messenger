@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	TypingIndicatorTTL       = 10 * time.Second
-	TypingPublishMinInterval = 250 * time.Millisecond
+	TypingIndicatorTTL            = 10 * time.Second
+	TypingPublishMinInterval      = 250 * time.Millisecond
+	TypingPublishReservationLimit = 4096
 )
 
 var (
@@ -162,7 +163,11 @@ func (s *TypingService) reserveTypingPublish(conversationID, userID string, now 
 	}
 
 	key := typingStateKey(conversationID, userID)
-	if lastPublish, ok := s.lastTypingPublish[key]; ok && now.Before(lastPublish.Add(TypingPublishMinInterval)) {
+	lastPublish, exists := s.lastTypingPublish[key]
+	if exists && now.Before(lastPublish.Add(TypingPublishMinInterval)) {
+		return false
+	}
+	if !exists && len(s.lastTypingPublish) >= TypingPublishReservationLimit {
 		return false
 	}
 	s.lastTypingPublish[key] = now
