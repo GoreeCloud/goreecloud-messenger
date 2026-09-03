@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	TypingIndicatorTTL        = 10 * time.Second
-	TypingPublishMinInterval  = 250 * time.Millisecond
+	TypingIndicatorTTL       = 10 * time.Second
+	TypingPublishMinInterval = 250 * time.Millisecond
 )
 
 var (
