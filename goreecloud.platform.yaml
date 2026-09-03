@@ -12,20 +12,20 @@ component:
 api:
   version: "v1"
   endpoints:
-    - {id: data-message-submit, method: POST, path: /v1/data/messages, purpose: Submit an authenticated encrypted GoreeCloud Data message envelope.}
-    - {id: data-conversation-messages, method: GET, path: /v1/data/conversations/{conversationID}/messages, purpose: List authorized encrypted Data messages for a conversation.}
-    - {id: data-receipt-record, method: POST, path: /v1/data/messages/{messageID}/receipts, purpose: Record an authenticated delivered or read receipt.}
-    - {id: data-receipt-list, method: GET, path: /v1/data/messages/{messageID}/receipts, purpose: List authorized receipt state for a Data message.}
-    - {id: data-attachment-submit, method: POST, path: /v1/data/attachments, purpose: Submit opaque encrypted attachment ciphertext.}
-    - {id: data-attachment-get, method: GET, path: /v1/data/attachments/{attachmentID}, purpose: Fetch an authorized encrypted attachment as JSON/base64.}
-    - {id: data-attachment-ciphertext, method: GET, path: /v1/data/attachments/{attachmentID}/ciphertext, purpose: Download exact authorized opaque attachment ciphertext bytes.}
-    - {id: data-attachment-delete, method: DELETE, path: /v1/data/attachments/{attachmentID}, purpose: Delete an authorized encrypted attachment through the replay-safe tombstone path.}
-    - {id: data-conversation-attachments, method: GET, path: /v1/data/conversations/{conversationID}/attachments, purpose: List authorized encrypted attachment metadata for a conversation.}
-    - {id: data-typing-publish, method: POST, path: /v1/data/conversations/{conversationID}/typing, purpose: Publish optional participant-authorized content-free typing presence.}
-    - {id: data-typing-list, method: GET, path: /v1/data/conversations/{conversationID}/typing, purpose: Observe optional privacy-gated content-free typing presence.}
-    - {id: data-typing-preferences-get, method: GET, path: /v1/data/conversations/{conversationID}/typing/preferences, purpose: Read the authenticated participant's minimized typing privacy choices.}
-    - {id: data-typing-preferences-put, method: PUT, path: /v1/data/conversations/{conversationID}/typing/preferences, purpose: Update the authenticated participant's minimized typing privacy choices.}
-    - {id: data-runtime-projection, method: GET, path: /v1/data/runtime, purpose: Return the authenticated minimized Development runtime composition projection without sensitive dependency details.}
+    - {id: data-message-submit, method: POST, path: "/v1/data/messages", purpose: Submit an authenticated encrypted GoreeCloud Data message envelope.}
+    - {id: data-conversation-messages, method: GET, path: "/v1/data/conversations/{conversationID}/messages", purpose: List authorized encrypted Data messages for a conversation.}
+    - {id: data-receipt-record, method: POST, path: "/v1/data/messages/{messageID}/receipts", purpose: Record an authenticated delivered or read receipt.}
+    - {id: data-receipt-list, method: GET, path: "/v1/data/messages/{messageID}/receipts", purpose: List authorized receipt state for a Data message.}
+    - {id: data-attachment-submit, method: POST, path: "/v1/data/attachments", purpose: Submit opaque encrypted attachment ciphertext.}
+    - {id: data-attachment-get, method: GET, path: "/v1/data/attachments/{attachmentID}", purpose: Fetch an authorized encrypted attachment as JSON/base64.}
+    - {id: data-attachment-ciphertext, method: GET, path: "/v1/data/attachments/{attachmentID}/ciphertext", purpose: Download exact authorized opaque attachment ciphertext bytes.}
+    - {id: data-attachment-delete, method: DELETE, path: "/v1/data/attachments/{attachmentID}", purpose: Delete an authorized encrypted attachment through the replay-safe tombstone path.}
+    - {id: data-conversation-attachments, method: GET, path: "/v1/data/conversations/{conversationID}/attachments", purpose: List authorized encrypted attachment metadata for a conversation.}
+    - {id: data-typing-publish, method: POST, path: "/v1/data/conversations/{conversationID}/typing", purpose: Publish optional participant-authorized content-free typing presence.}
+    - {id: data-typing-list, method: GET, path: "/v1/data/conversations/{conversationID}/typing", purpose: Observe optional privacy-gated content-free typing presence.}
+    - {id: data-typing-preferences-get, method: GET, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Read the authenticated participant's minimized typing privacy choices.}
+    - {id: data-typing-preferences-put, method: PUT, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Update the authenticated participant's minimized typing privacy choices.}
+    - {id: data-runtime-projection, method: GET, path: "/v1/data/runtime", purpose: Return the authenticated minimized Development runtime composition projection without sensitive dependency details.}
 glaze_ui:
   applicable: true
   required_version: "2.2.0"
