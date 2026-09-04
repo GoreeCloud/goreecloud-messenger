@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"sort"
@@ -15,9 +16,10 @@ import (
 )
 
 const (
-	TypingIndicatorTTL            = 10 * time.Second
-	TypingPublishMinInterval      = 250 * time.Millisecond
-	TypingPublishReservationLimit = 4096
+	TypingIndicatorTTL                       = 10 * time.Second
+	TypingPublishMinInterval                 = 250 * time.Millisecond
+	TypingPublishReservationLimit            = 4096
+	TypingPublishParticipantReservationLimit = 64
 )
 
 var (
@@ -167,11 +169,27 @@ func (s *TypingService) reserveTypingPublish(conversationID, userID string, now 
 	if exists && now.Before(lastPublish.Add(TypingPublishMinInterval)) {
 		return false
 	}
-	if !exists && len(s.lastTypingPublish) >= TypingPublishReservationLimit {
-		return false
+	if !exists {
+		if len(s.lastTypingPublish) >= TypingPublishReservationLimit {
+			return false
+		}
+		if participantTypingPublishReservationCount(s.lastTypingPublish, userID) >= TypingPublishParticipantReservationLimit {
+			return false
+		}
 	}
 	s.lastTypingPublish[key] = now
 	return true
+}
+
+func participantTypingPublishReservationCount(reservations map[string]time.Time, userID string) int {
+	participantSuffix := "." + typingStateComponent(userID)
+	count := 0
+	for key := range reservations {
+		if strings.HasSuffix(key, participantSuffix) {
+			count++
+		}
+	}
+	return count
 }
 
 func (s *TypingService) releaseTypingPublish(conversationID, userID string, reservedAt time.Time) {
@@ -230,7 +248,7 @@ func (s *MemoryTypingStore) ListActiveTyping(_ context.Context, conversationID s
 	defer s.mu.Unlock()
 
 	result := make([]domain.ActiveTyping, 0)
-	prefix := conversationID + "\x00"
+	prefix := typingStateComponent(conversationID) + "."
 	for key, indicator := range s.active {
 		if !indicator.ExpiresAt.After(now) {
 			delete(s.active, key)
@@ -294,6 +312,10 @@ func (p *MemoryTypingPrivacyPolicy) CanObserveTyping(_ context.Context, conversa
 	return allowed, nil
 }
 
+func typingStateComponent(value string) string {
+	return base64.RawURLEncoding.EncodeToString([]byte(value))
+}
+
 func typingStateKey(conversationID, userID string) string {
-	return conversationID + "\x00" + userID
+	return typingStateComponent(conversationID) + "." + typingStateComponent(userID)
 }

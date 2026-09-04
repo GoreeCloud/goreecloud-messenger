@@ -22,6 +22,7 @@ type DataRuntimeHandler struct {
 	auth              Authenticator
 	persistenceProbe  RuntimePersistenceProbe
 	cryptographyProbe RuntimeCryptographyProbe
+	readinessProbe    RuntimeReadinessProbe
 }
 
 func NewDataRuntimeHandler(
@@ -130,6 +131,19 @@ func (h *DataRuntimeHandler) WithRuntimeCryptographyProbe(probe RuntimeCryptogra
 	return &copy, nil
 }
 
+// WithRuntimeReadinessProbe returns a copy of the runtime with an explicit
+// fail-closed readiness authority. The public readiness response remains
+// categorical; implementations retain all dependency-specific detail inside
+// the injected probe boundary.
+func (h *DataRuntimeHandler) WithRuntimeReadinessProbe(probe RuntimeReadinessProbe) (*DataRuntimeHandler, error) {
+	if h == nil || probe == nil {
+		return nil, errors.New("runtime handler and readiness probe are required")
+	}
+	copy := *h
+	copy.readinessProbe = probe
+	return &copy, nil
+}
+
 // Routes returns one mux containing every enabled Data HTTP route. Shared
 // conversation prefixes are registered directly so message, attachment, and
 // optional typing endpoints remain simultaneously reachable.
@@ -144,5 +158,6 @@ func (h *DataRuntimeHandler) Routes() http.Handler {
 		h.typingPreferences.RegisterRoutes(mux)
 	}
 	h.registerRuntimeProjection(mux)
+	h.registerHealthRoutes(mux)
 	return mux
 }
