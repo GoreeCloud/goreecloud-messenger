@@ -119,3 +119,24 @@ func TestTypingPublishLimiterParticipantCapacityIsReleasedByIdleClear(t *testing
 		t.Fatal("participant reservation was not available after idle clear")
 	}
 }
+
+func TestTypingStateKeysRemainDistinctForDelimiterLikeIdentifiers(t *testing.T) {
+	first := typingStateKey("conversation\x00participant", "tail")
+	second := typingStateKey("conversation", "participant\x00tail")
+	if first == second {
+		t.Fatal("distinct conversation and participant identifier pairs produced the same typing state key")
+	}
+}
+
+func TestTypingPublishParticipantCountDoesNotAliasEncodedIdentifierSuffixes(t *testing.T) {
+	now := time.Date(2026, 9, 3, 7, 0, 0, 0, time.UTC)
+	reservations := map[string]time.Time{
+		typingStateKey("conversation-a", "user-a"):       now,
+		typingStateKey("conversation-b", "prefix.user-a"): now,
+		typingStateKey("conversation-c", "user-a\x00tail"): now,
+	}
+
+	if got := participantTypingPublishReservationCount(reservations, "user-a"); got != 1 {
+		t.Fatalf("participant reservation count = %d, want 1", got)
+	}
+}
