@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"sort"
@@ -181,7 +182,7 @@ func (s *TypingService) reserveTypingPublish(conversationID, userID string, now 
 }
 
 func participantTypingPublishReservationCount(reservations map[string]time.Time, userID string) int {
-	participantSuffix := "\x00" + userID
+	participantSuffix := "." + typingStateComponent(userID)
 	count := 0
 	for key := range reservations {
 		if strings.HasSuffix(key, participantSuffix) {
@@ -247,7 +248,7 @@ func (s *MemoryTypingStore) ListActiveTyping(_ context.Context, conversationID s
 	defer s.mu.Unlock()
 
 	result := make([]domain.ActiveTyping, 0)
-	prefix := conversationID + "\x00"
+	prefix := typingStateComponent(conversationID) + "."
 	for key, indicator := range s.active {
 		if !indicator.ExpiresAt.After(now) {
 			delete(s.active, key)
@@ -311,6 +312,10 @@ func (p *MemoryTypingPrivacyPolicy) CanObserveTyping(_ context.Context, conversa
 	return allowed, nil
 }
 
+func typingStateComponent(value string) string {
+	return base64.RawURLEncoding.EncodeToString([]byte(value))
+}
+
 func typingStateKey(conversationID, userID string) string {
-	return conversationID + "\x00" + userID
+	return typingStateComponent(conversationID) + "." + typingStateComponent(userID)
 }
