@@ -1,0 +1,39 @@
+name: Messenger Android Client
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  android-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Validate Development client authority boundary
+        run: python3 scripts/check_android_client_boundary.py
+
+      - name: Run client unit tests
+        run: gradle -p client/android :app:testDebugUnitTest --stacktrace
+
+      - name: Build client debug APK
+        run: gradle -p client/android :app:assembleDebug --stacktrace
