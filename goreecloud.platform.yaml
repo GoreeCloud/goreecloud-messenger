@@ -173,8 +173,7 @@ compatibility:
     - messenger-data-http-api-v1
 
 evidence:
-  acceptance_tests:
-    - internal/api/runtime_health_test.go
+  acceptance_tests: []
   release: []
 
 conformance:
