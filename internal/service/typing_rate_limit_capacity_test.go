@@ -130,11 +130,10 @@ func TestTypingStateKeysRemainDistinctForDelimiterLikeIdentifiers(t *testing.T) 
 
 func TestTypingPublishParticipantCountDoesNotAliasEncodedIdentifierSuffixes(t *testing.T) {
 	now := time.Date(2026, 9, 3, 7, 0, 0, 0, time.UTC)
-	reservations := map[string]time.Time{
-		typingStateKey("conversation-a", "user-a"):       now,
-		typingStateKey("conversation-b", "prefix.user-a"): now,
-		typingStateKey("conversation-c", "user-a\x00tail"): now,
-	}
+	reservations := make(map[string]time.Time)
+	reservations[typingStateKey("conversation-a", "user-a")] = now
+	reservations[typingStateKey("conversation-b", "prefix.user-a")] = now
+	reservations[typingStateKey("conversation-c", "user-a\x00tail")] = now
 
 	if got := participantTypingPublishReservationCount(reservations, "user-a"); got != 1 {
 		t.Fatalf("participant reservation count = %d, want 1", got)
