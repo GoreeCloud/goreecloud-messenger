@@ -1,260 +1,185 @@
-schema_version: "1.0"
+schema_version: "0.2"
+
 component:
-  id: goreecloud.messenger
+  type: application
+  id: goreecloud-messenger
   product_name: GoreeCloud Messenger
-  kind: application
   repository: GoreeCloud/goreecloud-messenger
-  lifecycle: Development
-  version: "0.1.0-dev"
-  supported_platforms:
-    - server
-  user_facing: true
+
+lifecycle: development
+version: "0.1.0-dev"
+
+supported_platforms:
+  - server
+
 api:
-  version: "v1"
+  versions:
+    - v1
   endpoints:
-    - {id: data-message-submit, method: POST, path: "/v1/data/messages", purpose: Submit an authenticated encrypted GoreeCloud Data message envelope.}
-    - {id: data-conversation-messages, method: GET, path: "/v1/data/conversations/{conversationID}/messages", purpose: List authorized encrypted Data messages for a conversation.}
-    - {id: data-receipt-record, method: POST, path: "/v1/data/messages/{messageID}/receipts", purpose: Record an authenticated delivered or read receipt.}
-    - {id: data-receipt-list, method: GET, path: "/v1/data/messages/{messageID}/receipts", purpose: List authorized receipt state for a Data message.}
-    - {id: data-attachment-submit, method: POST, path: "/v1/data/attachments", purpose: Submit opaque encrypted attachment ciphertext.}
-    - {id: data-attachment-get, method: GET, path: "/v1/data/attachments/{attachmentID}", purpose: Fetch an authorized encrypted attachment as JSON/base64.}
-    - {id: data-attachment-ciphertext, method: GET, path: "/v1/data/attachments/{attachmentID}/ciphertext", purpose: Download exact authorized opaque attachment ciphertext bytes.}
-    - {id: data-attachment-delete, method: DELETE, path: "/v1/data/attachments/{attachmentID}", purpose: Delete an authorized encrypted attachment through the replay-safe tombstone path.}
-    - {id: data-conversation-attachments, method: GET, path: "/v1/data/conversations/{conversationID}/attachments", purpose: List authorized encrypted attachment metadata for a conversation.}
-    - {id: data-typing-publish, method: POST, path: "/v1/data/conversations/{conversationID}/typing", purpose: Publish optional participant-authorized content-free typing presence with a process-local Development anti-flood guard.}
-    - {id: data-typing-list, method: GET, path: "/v1/data/conversations/{conversationID}/typing", purpose: Observe optional privacy-gated content-free typing presence.}
-    - {id: data-typing-preferences-get, method: GET, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Read the authenticated participant's minimized typing privacy choices.}
-    - {id: data-typing-preferences-put, method: PUT, path: "/v1/data/conversations/{conversationID}/typing/preferences", purpose: Update the authenticated participant's minimized typing privacy choices.}
-    - {id: data-runtime-projection, method: GET, path: "/v1/data/runtime", purpose: Return the authenticated minimized Development runtime composition projection without sensitive dependency details.}
-glaze_ui:
-  applicable: true
-  required_version: "2.2.0"
-  implemented_version: null
-  migration_status: required
-  evidence:
-    - messenger-readme
+    - name: data-message-submit
+      url: /v1/data/messages
+      purpose: POST an authenticated encrypted GoreeCloud Data message envelope.
+    - name: data-conversation-messages
+      url: /v1/data/conversations/{conversationID}/messages
+      purpose: GET authorized encrypted Data messages for a conversation.
+    - name: data-receipt-record
+      url: /v1/data/messages/{messageID}/receipts
+      purpose: POST an authenticated delivered or read receipt.
+    - name: data-receipt-list
+      url: /v1/data/messages/{messageID}/receipts
+      purpose: GET authorized receipt state for a Data message.
+    - name: data-attachment-submit
+      url: /v1/data/attachments
+      purpose: POST opaque encrypted attachment ciphertext.
+    - name: data-attachment-get
+      url: /v1/data/attachments/{attachmentID}
+      purpose: GET an authorized encrypted attachment as JSON and base64.
+    - name: data-attachment-ciphertext
+      url: /v1/data/attachments/{attachmentID}/ciphertext
+      purpose: GET exact authorized opaque attachment ciphertext bytes.
+    - name: data-attachment-delete
+      url: /v1/data/attachments/{attachmentID}
+      purpose: DELETE an authorized encrypted attachment through the replay-safe tombstone path.
+    - name: data-conversation-attachments
+      url: /v1/data/conversations/{conversationID}/attachments
+      purpose: GET authorized encrypted attachment metadata for a conversation.
+    - name: data-typing-publish
+      url: /v1/data/conversations/{conversationID}/typing
+      purpose: POST optional participant-authorized content-free typing presence with the process-local Development anti-flood guard.
+    - name: data-typing-list
+      url: /v1/data/conversations/{conversationID}/typing
+      purpose: GET optional privacy-gated content-free typing presence.
+    - name: data-typing-preferences-get
+      url: /v1/data/conversations/{conversationID}/typing/preferences
+      purpose: GET the authenticated participant's minimized typing privacy choices.
+    - name: data-typing-preferences-put
+      url: /v1/data/conversations/{conversationID}/typing/preferences
+      purpose: PUT the authenticated participant's minimized typing privacy choices.
+    - name: data-runtime-projection
+      url: /v1/data/runtime
+      purpose: GET the authenticated minimized Development runtime composition projection without sensitive dependency details.
+
 platform_systems:
   manager:
-    status: "Applicable — Nonconformant"
-    justification: The Messenger Development runtime has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
+    result: applicable-blocked
+    version: null
     evidence:
-      - messenger-readme
-  identity:
-    status: "Applicable — Nonconformant"
-    justification: HTTP handlers inject an Authenticator and derive acting identities from it, but production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
-    evidence:
-      - messenger-message-api-source
-      - messenger-typing-preferences-source
-  wardveil_security:
-    status: "Applicable — Nonconformant"
-    justification: Messenger has authorization, fail-closed persistence, opaque ciphertext, minimized diagnostics, and a process-local content-free typing anti-flood guard, but these source controls do not establish accepted Wardveil Security integration or production abuse-control validation.
-    evidence:
-      - messenger-data-runtime-source
-      - messenger-attachment-api-source
-      - messenger-typing-rate-source
-      - messenger-typing-rate-doc
-      - messenger-ci-365
+      - README.md
+    notes: The Messenger Development runtime has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
   privacy_shield:
-    status: "Applicable — Nonconformant"
-    justification: Typing presence is content-free and independently privacy-gated; the anti-flood guard retains only short-lived participant/conversation timing metadata and durable preference storage is hardened, but production Privacy Shield integration, consent authority, and accepted preference persistence are not established.
+    result: applicable-blocked
+    version: null
     evidence:
-      - messenger-typing-source
-      - messenger-typing-preferences-source
-      - messenger-typing-rate-source
-      - messenger-typing-rate-doc
-      - messenger-ci-365
+      - internal/api/typing_http.go
+      - internal/api/typing_preferences_http.go
+      - internal/service/typing_service.go
+      - docs/development/typing-publish-rate-guard.md
+    notes: Typing presence is content-free and independently privacy-gated, and limiter state is ephemeral and minimized, but accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
+  wardveil_security:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/data_runtime.go
+      - internal/api/attachment_http.go
+      - internal/service/typing_service.go
+      - docs/development/typing-publish-rate-guard.md
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, and a bounded process-local typing anti-flood guard, but accepted Wardveil Security integration and production abuse-control validation are not established.
   everkeep:
-    status: "Applicable — Nonconformant"
-    justification: Messenger has durable single-node Development stores for selected state, but accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
+    result: applicable-blocked
+    version: null
     evidence:
-      - messenger-readme
-  mesh:
-    status: "Applicable — Nonconformant"
-    justification: The current Data API is application-local Development transport; canonical GoreeCloud Mesh registration, service identity, event contracts, and compatibility acceptance are not established.
-    evidence:
-      - messenger-data-runtime-source
+      - README.md
+      - USER-MANUAL.md
+    notes: Messenger has durable single-node Development stores for selected state, but accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
   glaze_ui:
-    status: "Applicable — Migration Required"
-    justification: The current repository is a server/service foundation and does not yet contain an accepted user-facing Glaze UI 2.2.0 Messenger client.
+    result: applicable-migration-required
+    version: null
     evidence:
-      - messenger-readme
-mesh:
-  registration: required
-  capabilities:
-    - encrypted-data-messaging
-    - delivery-read-receipts
-    - opaque-encrypted-attachments
-    - privacy-controlled-typing-presence
-  dependencies:
-    - goreecloud.identity
-  published_events: []
-  consumed_events: []
-  evidence: []
+      - README.md
+    notes: The current repository is a server-first Development foundation and has no accepted user-facing Glaze client. The historical 2.2.0 target is superseded; any user-facing client must target and obtain application-specific acceptance against current Stable GLAZE UI V1.1 / 1.1.0.
+  mesh:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/data_runtime.go
+    notes: The current Data API is application-local Development transport; canonical GoreeCloud Mesh registration, service identity, event contracts, capability publication, and runtime acceptance are not established.
+    capabilities:
+      - encrypted-data-messaging
+      - delivery-read-receipts
+      - opaque-encrypted-attachments
+      - privacy-controlled-typing-presence
+    dependencies:
+      - goreecloud-identity
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/http.go
+      - internal/api/typing_preferences_http.go
+    notes: HTTP handlers inject an Authenticator and derive acting identities from it, but production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
+
 health:
-  liveness: []
-  readiness: []
-recovery:
-  backup_required: true
-  backup_status: required_missing
-  restore_required: true
-  restore_status: required_missing
-  last_verified_restore: null
-  recovery_dependencies:
-    - production encrypted message persistence
-    - production encrypted attachment persistence
-    - production GoreeCloud Identity device and session state
-    - accepted cryptographic device and key lifecycle
-    - accepted Privacy Shield preference authority
-    - accepted Everkeep recovery integration
-  documentation:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Define and accept backup scope for production encrypted message and attachment persistence, required configuration, privacy choices, and cryptographic recovery dependencies.
+      - Integrate approved Everkeep backup behavior before Stable or production-family acceptance.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-target recovery of authorized durable communication state without exposing reusable key material or bypassing GoreeCloud Identity ownership.
+      - Define cryptographic device and key recovery, failure, conflict, and rollback behavior before restore is claimed.
+  export:
+    required: true
+    requirements:
+      - Preserve encrypted content and accepted conversation semantics without unnecessarily exporting reusable key material.
+      - Exclude ephemeral typing presence and typing anti-flood timing state from durable export.
+  portability:
+    required: true
+    requirements:
+      - Preserve transport provenance without representing carrier and GoreeCloud Data transports as equivalent.
+      - Make device and key migration behavior explicit and independently validated.
+      - Preserve accepted edit, reply, thread, reaction, receipt, attachment, and deletion semantics where those capabilities are supported.
+      - Place any privacy-preference portability under accepted Privacy Shield and Everkeep authority.
+
+external_dependencies: []
+
+compatibility:
+  platform_contract: "0.2"
+  glaze_ui_required: "1.1.0"
+  requires:
+    - goreecloud-platform-contract==0.2
+    - glaze-ui==1.1.0
+  provides:
+    - messenger-data-http-api-v1
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
     - README.md
     - USER-MANUAL.md
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
     - docs/development/typing-publish-rate-guard.md
-  evidence:
-    - messenger-readme
-    - messenger-user-manual
-    - messenger-typing-rate-doc
-data_portability:
-  export_capability: unknown
-  export_formats: []
-  last_export_validation: null
-  portability_requirements:
-    - preserve conversation and message transport provenance without representing carrier and GoreeCloud Data transports as equivalent
-    - preserve encrypted content without exporting reusable key material unnecessarily
-    - make device and key migration behavior explicit and independently validated
-    - preserve delete-for-everyone, edit, reply, thread, reaction, receipt, and attachment semantics where those capabilities are accepted
-    - exclude ephemeral typing presence and typing anti-flood timing state from durable exports
-    - place any privacy preference portability under accepted Privacy Shield and Everkeep authority
-  evidence:
-    - messenger-readme
-    - messenger-typing-rate-doc
-external_dependencies: []
-compatibility:
-  platform_releases: []
-  api_requirements:
-    - All Data endpoints require an injected authenticated-user boundary before authorized operations are exposed.
-    - GoreeCloud Data messages claiming E2EE must remain encrypted envelopes and must not silently downgrade to SMS, MMS, or RCS.
-    - Optional typing routes must not be enabled merely by constructing the base Data runtime.
-    - Typing preference request bodies must not accept an acting user identity field.
-    - The Development typing publish route may return HTTP 429 for repeated authorized typing=true signals inside the process-local minimum interval; idle/stop signals must not be delayed by that guard.
-  schema_requirements:
-    - goreecloud.platform/1.0
-    - messenger Data HTTP API v1
-  component_requirements:
-    - production GoreeCloud Identity integration before Stable
-    - accepted cryptographic session and key lifecycle before Stable
-    - Wardveil Security and Privacy Shield accepted integration before Stable
-    - Everkeep accepted backup and restore integration before Stable
-    - GoreeCloud Mesh registration before platform acceptance
-    - Glaze UI 2.2.0 client implementation and acceptance before user-facing Stable
-conformance:
-  declared_state: migration_required
-  stable_eligible: false
-  checks:
-    - {id: glaze-ui, mandatory: true, status: pending, evidence: [messenger-readme], note: "No accepted Glaze UI 2.2.0 client exists in the current Development repository."}
-    - {id: goreecloud-identity, mandatory: true, status: pending, evidence: [messenger-message-api-source, messenger-typing-preferences-source], note: "Injected authentication is not production GoreeCloud Identity integration."}
-    - {id: wardveil-security, mandatory: true, status: pending, evidence: [messenger-data-runtime-source, messenger-attachment-api-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "The new in-process anti-flood guard is Development hardening, not distributed abuse protection or Wardveil Security acceptance."}
-    - {id: privacy-shield, mandatory: true, status: pending, evidence: [messenger-typing-source, messenger-typing-preferences-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "Typing remains content-free and limiter state is ephemeral/minimized, but Privacy Shield platform acceptance remains pending."}
-    - {id: everkeep-recovery, mandatory: true, status: pending, evidence: [messenger-readme]}
-    - {id: mesh-registration, mandatory: true, status: pending, evidence: [messenger-data-runtime-source]}
-    - {id: api-compatibility, mandatory: true, status: pass, evidence: [messenger-message-api-source, messenger-attachment-api-source, messenger-typing-source, messenger-typing-preferences-source, messenger-data-runtime-source, messenger-typing-rate-source, messenger-ci-365], note: "The Development v1 HTTP route surface is explicit and authenticated; typing publication now has an explicit 429 anti-flood behavior while idle remains immediate. This does not establish production deployment or distributed rate-policy acceptance."}
-    - {id: accessibility, mandatory: true, status: pending, evidence: [], note: "No accepted user-facing client is present yet."}
-    - {id: platform-acceptance, mandatory: true, status: pending, evidence: []}
-    - {id: backup, mandatory: true, status: pending, evidence: [messenger-readme]}
-    - {id: restore, mandatory: true, status: pending, evidence: [messenger-readme]}
-    - {id: export-portability, mandatory: true, status: pending, evidence: [messenger-readme, messenger-typing-rate-doc], note: "Ephemeral typing and limiter timing state remain excluded from portability; encrypted communication portability is still unimplemented."}
-    - {id: security-validation, mandatory: true, status: pending, evidence: [messenger-ci-365, messenger-typing-rate-source, messenger-typing-rate-doc], note: "Security-oriented source tests and anti-flood hardening exist, but distributed/load validation and accepted Wardveil production security validation remain pending."}
-    - {id: privacy-validation, mandatory: true, status: pending, evidence: [messenger-typing-preferences-source, messenger-typing-rate-source, messenger-typing-rate-doc, messenger-ci-365], note: "Privacy-minimized typing controls and ephemeral limiter state are source-tested, but accepted Privacy Shield validation remains pending."}
-    - {id: required-documentation, mandatory: true, status: pass, evidence: [messenger-readme, messenger-user-manual, messenger-typing-rate-doc]}
-    - {id: required-tests, mandatory: true, status: pending, evidence: [messenger-ci-365, messenger-typing-rate-tests, messenger-typing-rate-http-tests], note: "Messenger Foundation #365 passed the Platform Contract base at 0ac16c3fac6cf51a7822c2b196561fc38911895d; the new typing anti-flood source requires exact-head formatting, vet, and unit-test CI before this checkpoint can claim its tests passed."}
-    - {id: release-evidence, mandatory: true, status: pending, evidence: [], note: "No production release/deployment acceptance exists for the current Messenger Development runtime."}
-evidence:
-  acceptance:
-    - id: messenger-readme
-      kind: documentation
-      location: README.md
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Source-current Development status, architecture, platform requirements, and production limitations.
-    - id: messenger-user-manual
-      kind: documentation
-      location: USER-MANUAL.md
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Current Development user/operator behavior and explicit non-production boundaries.
-    - id: messenger-data-runtime-source
-      kind: source
-      location: internal/api/data_runtime.go
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Unified Data HTTP composition boundary with opt-in typing/privacy surfaces and injected authentication authority.
-    - id: messenger-message-api-source
-      kind: source
-      location: internal/api/http.go
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Authenticated encrypted Data message and recipient-authenticated receipt HTTP endpoints.
-    - id: messenger-attachment-api-source
-      kind: source
-      location: internal/api/attachment_http.go
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Participant-authorized opaque encrypted attachment submit, fetch, list, delete, and raw ciphertext routes.
-    - id: messenger-typing-source
-      kind: source
-      location: internal/api/typing_http.go
-      revision: null
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Optional content-free participant-authorized typing publication/observation API; this candidate also maps the Development rate-limit sentinel to HTTP 429.
-    - id: messenger-typing-preferences-source
-      kind: source
-      location: internal/api/typing_preferences_http.go
-      revision: 842545f3e0cc9755d66af436072a292d7a47cce9
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Authenticated per-conversation publish/observe typing privacy choices with acting identity excluded from request bodies.
-    - id: messenger-ci-365
-      kind: automated_test
-      location: https://github.com/GoreeCloud/goreecloud-messenger/actions/runs/33710680745
-      revision: 0ac16c3fac6cf51a7822c2b196561fc38911895d
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Messenger Foundation #365 passed formatting, go vet, and go test on the corrected Platform Contract base before the new anti-flood source was added.
-    - id: messenger-typing-rate-source
-      kind: source
-      location: internal/service/typing_service.go
-      revision: null
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Process-local per-conversation/per-participant Development rate guard for repeated content-free typing=true publications, with immediate idle behavior, stale-store reservation rollback, and TTL-based opportunistic limiter cleanup.
-    - id: messenger-typing-rate-doc
-      kind: documentation
-      location: docs/development/typing-publish-rate-guard.md
-      revision: null
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Authorization order, timing behavior, minimized state, privacy, distributed-runtime limitation, HTTP 429, validation, and production-acceptance boundaries for the typing anti-flood guard.
-    - id: messenger-typing-rate-tests
-      kind: source
-      location: internal/service/typing_rate_limit_test.go
-      revision: null
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Unit-test source covering rapid typing rejection, immediate idle, restart after idle, exact interval acceptance, and failed-reservation rollback. Test source is not itself evidence of a successful run.
-    - id: messenger-typing-rate-http-tests
-      kind: source
-      location: internal/api/typing_rate_limit_http_test.go
-      revision: null
-      observed_at: null
-      producer: GoreeCloud/goreecloud-messenger
-      description: Unit-test source covering HTTP 429 mapping for ErrTypingRateLimited. Test source is not itself evidence of a successful run.
-  release: []
+  blockers:
+    - No accepted user-facing GLAZE UI V1.1 / 1.1.0 Messenger client exists in the current Development repository.
+    - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
+    - Accepted cryptographic session and key lifecycle are not established for production.
+    - Wardveil Security integration and distributed production abuse-control acceptance are not established.
+    - Privacy Shield integration, consent authority, and accepted preference persistence are not established.
+    - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
+    - GoreeCloud Mesh registration, service identity, capability publication, event contracts, and runtime acceptance are not established.
+    - GoreeCloud Manager platform visibility and operational acceptance are not established.
+    - Production deployment, release evidence, and Stable qualification remain outstanding.
