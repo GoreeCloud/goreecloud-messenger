@@ -3,8 +3,11 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-CLIENT = ROOT / "client" / "android" / "app" / "src" / "main"
+ANDROID = ROOT / "client" / "android"
+CLIENT = ANDROID / "app" / "src" / "main"
 MANIFEST = CLIENT / "AndroidManifest.xml"
+STRINGS = CLIENT / "res" / "values" / "strings.xml"
+APP_BUILD = ANDROID / "app" / "build.gradle.kts"
 
 errors: list[str] = []
 
@@ -28,9 +31,10 @@ else:
     if 'android:allowBackup="false"' not in manifest:
         errors.append("Development client must keep Android backup disabled")
 
-for path in CLIENT.rglob("*"):
-    if not path.is_file() or path.suffix not in {".kt", ".xml"}:
-        continue
+# Network/storage implementation authority must not enter Kotlin source in this
+# disconnected Development shell. Android XML namespace URIs are intentionally
+# not treated as network authority.
+for path in CLIENT.rglob("*.kt"):
     text = path.read_text(encoding="utf-8")
     relative = path.relative_to(ROOT)
     forbidden_fragments = (
@@ -49,6 +53,16 @@ for path in CLIENT.rglob("*"):
         if fragment in text:
             errors.append(f"{relative}: forbidden Development client authority fragment {fragment!r}")
 
+if APP_BUILD.is_file():
+    build_text = APP_BUILD.read_text(encoding="utf-8").lower()
+    for dependency_fragment in ("okhttp", "retrofit", "ktor-client", "room-runtime"):
+        if dependency_fragment in build_text:
+            errors.append(
+                f"client/android/app/build.gradle.kts: forbidden Development client dependency {dependency_fragment!r}",
+            )
+else:
+    errors.append("Messenger Android client app build file is missing")
+
 activity = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client" / "MessengerClientActivity.kt"
 if not activity.is_file():
     errors.append("Messenger native Android Development Activity is missing")
@@ -57,9 +71,22 @@ else:
     for required in (
         "Development boundary",
         "Not Release Candidate",
-        "Provenance examples",
+        "R.string.provenance_heading",
     ):
         if required not in activity_text:
+            errors.append(f"Messenger client is missing required visible boundary reference {required!r}")
+
+if not STRINGS.is_file():
+    errors.append("Messenger Android client strings resource is missing")
+else:
+    strings_text = STRINGS.read_text(encoding="utf-8")
+    required_labels = (
+        "Native Android Development preview",
+        "Disconnected shell · No account · No network · No message storage",
+        "Provenance examples",
+    )
+    for required in required_labels:
+        if required not in strings_text:
             errors.append(f"Messenger client is missing required visible boundary label {required!r}")
 
 provenance = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client" / "CommunicationProvenance.kt"
