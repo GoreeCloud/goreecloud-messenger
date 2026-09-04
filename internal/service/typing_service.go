@@ -15,9 +15,10 @@ import (
 )
 
 const (
-	TypingIndicatorTTL            = 10 * time.Second
-	TypingPublishMinInterval      = 250 * time.Millisecond
-	TypingPublishReservationLimit = 4096
+	TypingIndicatorTTL                       = 10 * time.Second
+	TypingPublishMinInterval                 = 250 * time.Millisecond
+	TypingPublishReservationLimit            = 4096
+	TypingPublishParticipantReservationLimit = 64
 )
 
 var (
@@ -167,11 +168,27 @@ func (s *TypingService) reserveTypingPublish(conversationID, userID string, now 
 	if exists && now.Before(lastPublish.Add(TypingPublishMinInterval)) {
 		return false
 	}
-	if !exists && len(s.lastTypingPublish) >= TypingPublishReservationLimit {
-		return false
+	if !exists {
+		if len(s.lastTypingPublish) >= TypingPublishReservationLimit {
+			return false
+		}
+		if participantTypingPublishReservationCount(s.lastTypingPublish, userID) >= TypingPublishParticipantReservationLimit {
+			return false
+		}
 	}
 	s.lastTypingPublish[key] = now
 	return true
+}
+
+func participantTypingPublishReservationCount(reservations map[string]time.Time, userID string) int {
+	participantSuffix := "\x00" + userID
+	count := 0
+	for key := range reservations {
+		if strings.HasSuffix(key, participantSuffix) {
+			count++
+		}
+	}
+	return count
 }
 
 func (s *TypingService) releaseTypingPublish(conversationID, userID string, reservedAt time.Time) {
