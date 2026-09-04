@@ -58,6 +58,12 @@ api:
     - name: data-runtime-projection
       url: /v1/data/runtime
       purpose: GET the authenticated minimized Development runtime composition projection without sensitive dependency details.
+    - name: runtime-health
+      url: /healthz
+      purpose: GET categorical process liveness without authentication or dependency detail.
+    - name: runtime-readiness
+      url: /readyz
+      purpose: GET categorical fail-closed readiness; returns unavailable unless an explicit runtime readiness authority is composed and succeeds.
 
 platform_systems:
   manager:
@@ -65,7 +71,8 @@ platform_systems:
     version: null
     evidence:
       - README.md
-    notes: The Messenger Development runtime has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
+      - internal/api/runtime_health.go
+    notes: The Messenger Development runtime now exposes categorical health/readiness routes suitable for later platform visibility integration, but it has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
   privacy_shield:
     result: applicable-blocked
     version: null
@@ -73,19 +80,22 @@ platform_systems:
       - internal/api/typing_http.go
       - internal/api/typing_preferences_http.go
       - internal/service/typing_service.go
+      - internal/api/runtime_health.go
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Typing presence is content-free and independently privacy-gated, and limiter state is ephemeral and minimized with global and per-participant reservation bounds, but accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and public health/readiness responses expose only categorical state, but accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
   wardveil_security:
     result: applicable-blocked
     version: null
     evidence:
       - internal/api/data_runtime.go
       - internal/api/attachment_http.go
+      - internal/api/runtime_health.go
+      - internal/api/runtime_health_test.go
       - internal/service/typing_service.go
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, and a bounded process-local typing anti-flood guard with global and per-participant reservation ceilings, but accepted Wardveil Security integration and distributed production abuse-control validation are not established.
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, and a bounded process-local typing anti-flood guard with global and per-participant reservation ceilings, but accepted Wardveil Security integration and distributed production abuse-control validation are not established.
   everkeep:
     result: applicable-blocked
     version: null
@@ -98,12 +108,13 @@ platform_systems:
     version: null
     evidence:
       - README.md
-    notes: The current repository is a server-first Development foundation and has no accepted user-facing Glaze client. The historical 2.2.0 target is superseded; any user-facing client must target and obtain application-specific acceptance against current Stable GLAZE UI V1.1 / 1.1.0.
+    notes: The current repository is a server-first Development foundation and has no accepted user-facing Glaze client. The historical 2.2.0 target is superseded; any user-facing client must target and obtain application-specific acceptance against the current applicable Stable GLAZE UI baseline.
   mesh:
     result: applicable-blocked
     version: null
     evidence:
       - internal/api/data_runtime.go
+      - internal/api/runtime_health.go
     notes: The current Data API is application-local Development transport; canonical GoreeCloud Mesh registration, service identity, event contracts, capability publication, and runtime acceptance are not established.
     capabilities:
       - encrypted-data-messaging
@@ -123,8 +134,8 @@ platform_systems:
     notes: HTTP handlers inject an Authenticator and derive acting identities from it, but production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
 
 health:
-  health_endpoint: null
-  readiness_endpoint: null
+  health_endpoint: /healthz
+  readiness_endpoint: /readyz
 
 continuity:
   backup:
@@ -162,7 +173,8 @@ compatibility:
     - messenger-data-http-api-v1
 
 evidence:
-  acceptance_tests: []
+  acceptance_tests:
+    - internal/api/runtime_health_test.go
   release: []
 
 conformance:
@@ -174,15 +186,17 @@ conformance:
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
+    - internal/api/runtime_health.go
+    - internal/api/runtime_health_test.go
     - docs/development/typing-publish-rate-guard.md
     - docs/development/typing-publish-participant-cap.md
   blockers:
-    - No accepted user-facing GLAZE UI V1.1 / 1.1.0 Messenger client exists in the current Development repository.
+    - No accepted user-facing current-Stable GLAZE UI Messenger client exists in the current Development repository.
     - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
     - Accepted cryptographic session and key lifecycle are not established for production.
     - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
     - Privacy Shield integration, consent authority, and accepted preference persistence are not established.
     - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
     - GoreeCloud Mesh registration, service identity, capability publication, event contracts, and runtime acceptance are not established.
-    - GoreeCloud Manager platform visibility and operational acceptance are not established.
+    - GoreeCloud Manager platform visibility and operational acceptance are not established; the new health/readiness routes are only an application-local Development foundation.
     - Production deployment, release evidence, and Stable qualification remain outstanding.
