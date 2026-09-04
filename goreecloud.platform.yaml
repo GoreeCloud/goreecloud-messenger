@@ -11,6 +11,7 @@ version: "0.1.0-dev"
 
 supported_platforms:
   - server
+  - android
 
 api:
   versions:
@@ -72,7 +73,7 @@ platform_systems:
     evidence:
       - README.md
       - internal/api/runtime_health.go
-    notes: The Messenger Development runtime now exposes categorical health/readiness routes suitable for later platform visibility integration, but it has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
+    notes: The Messenger Development runtime exposes categorical health/readiness routes suitable for later platform visibility integration, but it has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
   privacy_shield:
     result: applicable-blocked
     version: null
@@ -81,9 +82,10 @@ platform_systems:
       - internal/api/typing_preferences_http.go
       - internal/service/typing_service.go
       - internal/api/runtime_health.go
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and public health/readiness responses expose only categorical state, but accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, the Android Development client exposes no live user data or message authority, and public health/readiness responses expose only categorical state; accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
   wardveil_security:
     result: applicable-blocked
     version: null
@@ -93,22 +95,28 @@ platform_systems:
       - internal/api/runtime_health.go
       - internal/api/runtime_health_test.go
       - internal/service/typing_service.go
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
+      - scripts/check_android_client_boundary.py
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, and a bounded process-local typing anti-flood guard with global and per-participant reservation ceilings, but accepted Wardveil Security integration and distributed production abuse-control validation are not established.
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, a bounded process-local typing anti-flood guard, and a disconnected Android client whose source boundary rejects carrier E2EE claims and network/storage authority; accepted Wardveil Security integration and distributed production abuse-control validation are not established.
   everkeep:
     result: applicable-blocked
     version: null
     evidence:
       - README.md
       - USER-MANUAL.md
-    notes: Messenger has durable single-node Development stores for selected state, but accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
+      - client/android/README.md
+    notes: Messenger has durable single-node Development stores for selected server state, while the Android Development client deliberately persists no message state; accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
   glaze_ui:
     result: applicable-migration-required
     version: null
     evidence:
       - README.md
-    notes: The current repository is a server-first Development foundation and has no accepted user-facing Glaze client. The historical 2.2.0 target is superseded; any user-facing client must target and obtain application-specific acceptance against the current applicable Stable GLAZE UI baseline.
+      - client/android/README.md
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
+    notes: A first native Android Development client now exists and builds, but it is only a disconnected source/design mapping and has no application-specific rendered or accessibility acceptance. The declared current Stable requirement remains GLAZE UI V1.1 / 1.1.0, whose known immutable import-closure defect prevents accepted downstream conformance; a corrected immutable Stable release, explicit re-pin, and fresh Messenger client acceptance remain required.
   mesh:
     result: applicable-blocked
     version: null
@@ -131,7 +139,8 @@ platform_systems:
     evidence:
       - internal/api/http.go
       - internal/api/typing_preferences_http.go
-    notes: HTTP handlers inject an Authenticator and derive acting identities from it, but production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
+      - client/android/README.md
+    notes: Server HTTP handlers inject an Authenticator and derive acting identities from it, while the native Android Development client intentionally has no account/session integration; production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
 
 health:
   health_endpoint: /healthz
@@ -187,15 +196,20 @@ conformance:
     - docs/data-http-api.md
     - internal/api/runtime_health.go
     - internal/api/runtime_health_test.go
+    - client/android/README.md
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
+    - scripts/check_android_client_boundary.py
     - docs/development/typing-publish-rate-guard.md
     - docs/development/typing-publish-participant-cap.md
   blockers:
-    - No accepted user-facing current-Stable GLAZE UI Messenger client exists in the current Development repository.
+    - The native Android Development client is disconnected and has no accepted current-Stable GLAZE UI rendered/accessibility/device acceptance or real Data messaging integration.
     - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
-    - Accepted cryptographic session and key lifecycle are not established for production.
+    - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
     - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
     - Privacy Shield integration, consent authority, and accepted preference persistence are not established.
     - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
     - GoreeCloud Mesh registration, service identity, capability publication, event contracts, and runtime acceptance are not established.
-    - GoreeCloud Manager platform visibility and operational acceptance are not established; the new health/readiness routes are only an application-local Development foundation.
-    - Production deployment, release evidence, and Stable qualification remain outstanding.
+    - GoreeCloud Manager platform visibility and operational acceptance are not established; the health/readiness routes are only an application-local Development foundation.
+    - Production deployment, protected signing/provenance, representative-device acceptance, release evidence, and Release Candidate/Stable qualification remain outstanding.
