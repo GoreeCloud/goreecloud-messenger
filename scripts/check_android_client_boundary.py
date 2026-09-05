@@ -105,18 +105,21 @@ if not READINESS.is_file():
 else:
     readiness_text = READINESS.read_text(encoding="utf-8")
     for required in (
-        "val verifiedConversationId: String? = null",
-        "evidence.verifiedConversationId",
-        "?.trim()",
-        "?.takeIf { it.isNotEmpty() }",
+        "val authorizedConversationId: String? = null",
+        "val e2eeConversationId: String? = null",
+        "evidence.authorizedConversationId",
+        "evidence.e2eeConversationId",
+        "authorizedConversationId == null",
+        "e2eeConversationId == null",
+        "e2eeConversationId != authorizedConversationId",
         "evidence.conversationAccess != ConversationAccessState.VERIFIED_PARTICIPANT",
-        "verifiedConversationId == null",
+        "evidence.cryptography != CryptographicState.E2EE_ACTIVE",
         "val verifiedConversationId: String,",
-        "Result.Ready(verifiedConversationId = checkNotNull(verifiedConversationId))",
+        "Result.Ready(verifiedConversationId = checkNotNull(authorizedConversationId))",
     ):
         if required not in readiness_text:
             errors.append(
-                f"Messenger readiness contract is missing conversation-scope guard {required!r}",
+                f"Messenger readiness contract is missing scoped authority guard {required!r}",
             )
 
 if not COORDINATOR.is_file():
