@@ -1,6 +1,7 @@
 package com.goreecloud.messenger.client
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,7 +25,7 @@ class DataMessageReceiptProjectionStoreTest {
     fun registeredProjectionAdvancesAndCanBeExplicitlyRemoved() {
         val store = DataMessageReceiptProjectionStore(capacity = 2)
         assertTrue(
-            store.register(" message-1 ", " conversation-1 ") is
+            store.register("message-1", "conversation-1") is
                 DataMessageReceiptProjectionStore.RegisterResult.Registered,
         )
 
@@ -44,6 +45,24 @@ class DataMessageReceiptProjectionStoreTest {
 
         assertTrue(store.remove("message-1", "conversation-1"))
         assertNull(store.projectionFor("message-1", "conversation-1"))
+    }
+
+    @Test
+    fun alteredLookupCannotAliasCanonicalRegisteredScope() {
+        val store = DataMessageReceiptProjectionStore(capacity = 2)
+        store.register("message-1", "conversation-1")
+
+        assertNull(store.projectionFor(" message-1 ", "conversation-1"))
+        assertNull(store.projectionFor("message-1", "conversation-1 "))
+        assertFalse(store.remove(" message-1 ", "conversation-1"))
+        assertTrue(store.projectionFor("message-1", "conversation-1") != null)
+
+        try {
+            store.register(" message-1 ", "conversation-1")
+            throw AssertionError("trim-dependent registration was accepted")
+        } catch (_: IllegalArgumentException) {
+            // Exact scope registration must fail closed.
+        }
     }
 
     @Test
