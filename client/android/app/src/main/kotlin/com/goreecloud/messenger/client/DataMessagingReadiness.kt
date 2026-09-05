@@ -7,8 +7,9 @@ package com.goreecloud.messenger.client
  * derive cryptographic state, hold keys, encrypt content, persist messages, or send anything. It
  * only combines independently verified states supplied by their responsible runtime authorities.
  *
- * Conversation authorization is deliberately scoped to one exact conversation identifier. A bare
- * VERIFIED_PARTICIPANT enum without that scope is insufficient readiness evidence and fails closed.
+ * Conversation authorization and E2EE readiness each carry their own exact conversation scope.
+ * A bare positive enum without its authority-owned scope is insufficient, and the two scopes must
+ * agree before this boundary can declare one conversation Ready.
  *
  * The Development Android client currently supplies none of those production authorities, so this
  * contract must not be interpreted as a working message composer or E2EE implementation.
@@ -44,7 +45,8 @@ object DataMessagingReadiness {
         val conversationAccess: ConversationAccessState,
         val transport: DataTransportState,
         val cryptography: CryptographicState,
-        val verifiedConversationId: String? = null,
+        val authorizedConversationId: String? = null,
+        val e2eeConversationId: String? = null,
     )
 
     enum class BlockReason {
@@ -70,12 +72,16 @@ object DataMessagingReadiness {
      * Require every independently owned prerequisite before a future client may expose an eligible
      * encrypted GoreeCloud Data send operation.
      *
-     * All missing, negative, unavailable, unknown, or unscoped states fail closed. There is
-     * deliberately no downgrade to carrier messaging and no conversion from transport availability
-     * to E2EE state.
+     * All missing, negative, unavailable, unknown, or unscoped states fail closed. Positive
+     * conversation-access and E2EE authorities must also identify the same exact conversation.
+     * There is deliberately no downgrade to carrier messaging and no conversion from transport
+     * availability to E2EE state.
      */
     fun evaluate(evidence: Evidence): Result {
-        val verifiedConversationId = evidence.verifiedConversationId
+        val authorizedConversationId = evidence.authorizedConversationId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+        val e2eeConversationId = evidence.e2eeConversationId
             ?.trim()
             ?.takeIf { it.isNotEmpty() }
 
@@ -85,20 +91,24 @@ object DataMessagingReadiness {
             }
             if (
                 evidence.conversationAccess != ConversationAccessState.VERIFIED_PARTICIPANT ||
-                verifiedConversationId == null
+                authorizedConversationId == null
             ) {
                 add(BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED)
             }
             if (evidence.transport != DataTransportState.AVAILABLE) {
                 add(BlockReason.DATA_TRANSPORT_NOT_AVAILABLE)
             }
-            if (evidence.cryptography != CryptographicState.E2EE_ACTIVE) {
+            if (
+                evidence.cryptography != CryptographicState.E2EE_ACTIVE ||
+                e2eeConversationId == null ||
+                (authorizedConversationId != null && e2eeConversationId != authorizedConversationId)
+            ) {
                 add(BlockReason.E2EE_NOT_VERIFIED_ACTIVE)
             }
         }
 
         return if (reasons.isEmpty()) {
-            Result.Ready(verifiedConversationId = checkNotNull(verifiedConversationId))
+            Result.Ready(verifiedConversationId = checkNotNull(authorizedConversationId))
         } else {
             Result.Blocked(reasons)
         }
