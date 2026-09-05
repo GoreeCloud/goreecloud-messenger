@@ -61,6 +61,47 @@ class DataMessageReceiptProjectionStoreTest {
     }
 
     @Test
+    fun recipientCapacityFailsClosedWithoutDroppingExistingRecipientState() {
+        val store = DataMessageReceiptProjectionStore(capacity = 1, recipientCapacity = 1)
+        store.register("message-1", "conversation-1")
+        store.apply(
+            DataReceiptEvent.create(
+                messageId = "message-1",
+                conversationId = "conversation-1",
+                recipientId = "recipient-1",
+                stage = DataReceiptEvent.Stage.DELIVERED,
+            ),
+        )
+
+        val overflow = store.apply(
+            DataReceiptEvent.create(
+                messageId = "message-1",
+                conversationId = "conversation-1",
+                recipientId = "recipient-2",
+                stage = DataReceiptEvent.Stage.READ,
+            ),
+        )
+        assertTrue(
+            overflow is DataMessageReceiptProjectionStore.ApplyResult.RecipientCapacityReached,
+        )
+        assertEquals(
+            DataReceiptEvent.Stage.DELIVERED,
+            store.projectionFor("message-1", "conversation-1")?.stageFor("recipient-1"),
+        )
+        assertNull(store.projectionFor("message-1", "conversation-1")?.stageFor("recipient-2"))
+
+        val existingRecipientAdvance = store.apply(
+            DataReceiptEvent.create(
+                messageId = "message-1",
+                conversationId = "conversation-1",
+                recipientId = "recipient-1",
+                stage = DataReceiptEvent.Stage.READ,
+            ),
+        )
+        assertTrue(existingRecipientAdvance is DataMessageReceiptProjectionStore.ApplyResult.Applied)
+    }
+
+    @Test
     fun sameMessageIdInAnotherConversationDoesNotShareState() {
         val store = DataMessageReceiptProjectionStore(capacity = 2)
         store.register("message-1", "conversation-1")
