@@ -1,12 +1,39 @@
 package com.goreecloud.messenger.client
 
+internal object DataReceiptIdentifierPolicy {
+    const val MAX_IDENTIFIER_LENGTH = 512
+
+    fun requireCanonical(value: String, label: String): String {
+        require(value.isNotEmpty()) { "$label must not be blank" }
+        require(value == value.trim()) { "$label must already be canonical" }
+        require(value.isNotBlank()) { "$label must not be blank" }
+        require(value.length <= MAX_IDENTIFIER_LENGTH) {
+            "$label must not exceed $MAX_IDENTIFIER_LENGTH UTF-16 code units"
+        }
+        require(value.none { character ->
+            character.code in 0x00..0x1f || character.code == 0x7f
+        }) { "$label must not contain control characters" }
+        return value
+    }
+
+    fun canonicalOrNull(value: String): String? {
+        if (value.isEmpty() || value != value.trim() || value.isBlank()) return null
+        if (value.length > MAX_IDENTIFIER_LENGTH) return null
+        if (value.any { character -> character.code in 0x00..0x1f || character.code == 0x7f }) {
+            return null
+        }
+        return value
+    }
+}
+
 /**
  * A delivery/read receipt event that has already crossed the future transport/authentication
  * boundary.
  *
  * This value does not authenticate a recipient and must not be constructed from untrusted network
- * input directly. Its only responsibility is carrying the already-derived scope needed by the
- * local projection so state for one message/conversation cannot be reused for another.
+ * input directly. Its only responsibility is carrying the already-derived exact bounded scope
+ * needed by the local projection so state for one message/conversation cannot be reused for
+ * another. Identifiers remain opaque: internal spaces and punctuation are preserved exactly.
  */
 data class DataReceiptEvent private constructor(
     val messageId: String,
@@ -25,18 +52,15 @@ data class DataReceiptEvent private constructor(
             conversationId: String,
             recipientId: String,
             stage: Stage,
-        ): DataReceiptEvent {
-            require(messageId.isNotBlank()) { "messageId must not be blank" }
-            require(conversationId.isNotBlank()) { "conversationId must not be blank" }
-            require(recipientId.isNotBlank()) { "recipientId must not be blank" }
-
-            return DataReceiptEvent(
-                messageId = messageId.trim(),
-                conversationId = conversationId.trim(),
-                recipientId = recipientId.trim(),
-                stage = stage,
-            )
-        }
+        ): DataReceiptEvent = DataReceiptEvent(
+            messageId = DataReceiptIdentifierPolicy.requireCanonical(messageId, "messageId"),
+            conversationId = DataReceiptIdentifierPolicy.requireCanonical(
+                conversationId,
+                "conversationId",
+            ),
+            recipientId = DataReceiptIdentifierPolicy.requireCanonical(recipientId, "recipientId"),
+            stage = stage,
+        )
     }
 }
 
@@ -77,8 +101,11 @@ class DataMessageReceiptProjection private constructor(
         CONVERSATION_SCOPE_MISMATCH,
     }
 
-    fun stageFor(recipientId: String): DataReceiptEvent.Stage? =
-        recipientStages[recipientId.trim()]
+    fun stageFor(recipientId: String): DataReceiptEvent.Stage? {
+        val canonicalRecipientId = DataReceiptIdentifierPolicy.canonicalOrNull(recipientId)
+            ?: return null
+        return recipientStages[canonicalRecipientId]
+    }
 
     fun snapshot(): Map<String, DataReceiptEvent.Stage> = recipientStages.toMap()
 
@@ -113,15 +140,13 @@ class DataMessageReceiptProjection private constructor(
         fun empty(
             messageId: String,
             conversationId: String,
-        ): DataMessageReceiptProjection {
-            require(messageId.isNotBlank()) { "messageId must not be blank" }
-            require(conversationId.isNotBlank()) { "conversationId must not be blank" }
-
-            return DataMessageReceiptProjection(
-                messageId = messageId.trim(),
-                conversationId = conversationId.trim(),
-                recipientStages = emptyMap(),
-            )
-        }
+        ): DataMessageReceiptProjection = DataMessageReceiptProjection(
+            messageId = DataReceiptIdentifierPolicy.requireCanonical(messageId, "messageId"),
+            conversationId = DataReceiptIdentifierPolicy.requireCanonical(
+                conversationId,
+                "conversationId",
+            ),
+            recipientStages = emptyMap(),
+        )
     }
 }
