@@ -16,12 +16,20 @@ class DataMessageReceiptProjectionStore(
         val conversationId: String,
     ) {
         companion object {
-            fun create(messageId: String, conversationId: String): Scope {
-                val normalizedMessageId = messageId.trim()
-                val normalizedConversationId = conversationId.trim()
-                require(normalizedMessageId.isNotEmpty()) { "messageId must not be blank" }
-                require(normalizedConversationId.isNotEmpty()) { "conversationId must not be blank" }
-                return Scope(normalizedMessageId, normalizedConversationId)
+            fun create(messageId: String, conversationId: String): Scope = Scope(
+                messageId = DataReceiptIdentifierPolicy.requireCanonical(messageId, "messageId"),
+                conversationId = DataReceiptIdentifierPolicy.requireCanonical(
+                    conversationId,
+                    "conversationId",
+                ),
+            )
+
+            fun lookup(messageId: String, conversationId: String): Scope? {
+                val canonicalMessageId = DataReceiptIdentifierPolicy.canonicalOrNull(messageId)
+                    ?: return null
+                val canonicalConversationId = DataReceiptIdentifierPolicy.canonicalOrNull(conversationId)
+                    ?: return null
+                return Scope(canonicalMessageId, canonicalConversationId)
             }
         }
     }
@@ -67,7 +75,9 @@ class DataMessageReceiptProjectionStore(
 
     @Synchronized
     fun apply(event: DataReceiptEvent): ApplyResult {
-        val scope = Scope.create(event.messageId, event.conversationId)
+        // DataReceiptEvent construction already proves these identifiers are canonical. Avoid any
+        // normalization at the store boundary so altered spellings cannot collapse onto a scope.
+        val scope = Scope(event.messageId, event.conversationId)
         val current = projections[scope] ?: return ApplyResult.UnknownScope
         val isNewRecipient = current.stageFor(event.recipientId) == null
         if (isNewRecipient && current.snapshot().size >= recipientCapacity) {
@@ -88,12 +98,16 @@ class DataMessageReceiptProjectionStore(
     }
 
     @Synchronized
-    fun projectionFor(messageId: String, conversationId: String): DataMessageReceiptProjection? =
-        projections[Scope.create(messageId, conversationId)]
+    fun projectionFor(messageId: String, conversationId: String): DataMessageReceiptProjection? {
+        val scope = Scope.lookup(messageId, conversationId) ?: return null
+        return projections[scope]
+    }
 
     @Synchronized
-    fun remove(messageId: String, conversationId: String): Boolean =
-        projections.remove(Scope.create(messageId, conversationId)) != null
+    fun remove(messageId: String, conversationId: String): Boolean {
+        val scope = Scope.lookup(messageId, conversationId) ?: return false
+        return projections.remove(scope) != null
+    }
 
     @Synchronized
     fun registeredCount(): Int = projections.size
