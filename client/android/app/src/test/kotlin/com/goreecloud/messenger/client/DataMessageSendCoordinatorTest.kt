@@ -138,6 +138,36 @@ class DataMessageSendCoordinatorTest {
         assertArrayEquals(byteArrayOf(1, 2, 3, 4), prepared.ciphertextCopy())
     }
 
+    @Test
+    fun preparedMessageRequiresExactBoundedOpaqueIdentifiers() {
+        val oversized = "x".repeat(DataReceiptIdentifierPolicy.MAX_IDENTIFIER_LENGTH + 1)
+        val invalid = listOf(" conversation-1", "conversation-1 ", "conversation\n1", oversized)
+
+        invalid.forEach { conversationId ->
+            try {
+                PreparedEncryptedDataMessage.create(
+                    messageId = "message-1",
+                    conversationId = conversationId,
+                    clientNonce = "nonce-1",
+                    ciphertext = byteArrayOf(1),
+                )
+                throw AssertionError("invalid conversation identifier was accepted: $conversationId")
+            } catch (_: IllegalArgumentException) {
+                // Expected fail-closed construction.
+            }
+        }
+
+        val prepared = PreparedEncryptedDataMessage.create(
+            messageId = "message / opaque",
+            conversationId = "conversation:one/two",
+            clientNonce = "nonce / opaque",
+            ciphertext = byteArrayOf(1),
+        )
+        assertEquals("message / opaque", prepared.messageId)
+        assertEquals("conversation:one/two", prepared.conversationId)
+        assertEquals("nonce / opaque", prepared.clientNonce)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun preparedMessageRejectsEmptyCiphertext() {
         message(ciphertext = byteArrayOf())
