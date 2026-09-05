@@ -30,12 +30,15 @@ internal object DataReceiptIdentifierPolicy {
  * A delivery/read receipt event that has already crossed the future transport/authentication
  * boundary.
  *
+ * This is deliberately not a data class: a generated copy() method would allow a caller to replace
+ * one of the factory-validated identifiers without re-running the canonical identifier boundary.
+ *
  * This value does not authenticate a recipient and must not be constructed from untrusted network
  * input directly. Its only responsibility is carrying the already-derived exact bounded scope
  * needed by the local projection so state for one message/conversation cannot be reused for
  * another. Identifiers remain opaque: internal spaces and punctuation are preserved exactly.
  */
-data class DataReceiptEvent private constructor(
+class DataReceiptEvent private constructor(
     val messageId: String,
     val conversationId: String,
     val recipientId: String,
