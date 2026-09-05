@@ -11,6 +11,7 @@ class DataMessageSendCoordinatorTest {
         conversationAccess = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         transport = DataMessagingReadiness.DataTransportState.AVAILABLE,
         cryptography = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
+        verifiedConversationId = "conversation-1",
     )
 
     @Test
@@ -33,6 +34,30 @@ class DataMessageSendCoordinatorTest {
         val blocked = result as DataMessageSendCoordinator.Result.Blocked
         assertTrue(
             DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE in blocked.reasons,
+        )
+    }
+
+    @Test
+    fun conversationAuthorizationForDifferentTargetNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = DataMessageSendCoordinator(
+            transport = EncryptedDataMessageTransport {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+        val wrongConversationEvidence = readyEvidence.copy(
+            verifiedConversationId = "conversation-2",
+        )
+
+        val result = coordinator.submit(wrongConversationEvidence, message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+            ),
+            result,
         )
     }
 
