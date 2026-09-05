@@ -8,6 +8,9 @@ CLIENT = ANDROID / "app" / "src" / "main"
 MANIFEST = CLIENT / "AndroidManifest.xml"
 STRINGS = CLIENT / "res" / "values" / "strings.xml"
 APP_BUILD = ANDROID / "app" / "build.gradle.kts"
+CLIENT_KOTLIN = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client"
+READINESS = CLIENT_KOTLIN / "DataMessagingReadiness.kt"
+COORDINATOR = CLIENT_KOTLIN / "DataMessageSendCoordinator.kt"
 
 errors: list[str] = []
 
@@ -63,7 +66,7 @@ if APP_BUILD.is_file():
 else:
     errors.append("Messenger Android client app build file is missing")
 
-activity = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client" / "MessengerClientActivity.kt"
+activity = CLIENT_KOTLIN / "MessengerClientActivity.kt"
 if not activity.is_file():
     errors.append("Messenger native Android Development Activity is missing")
 else:
@@ -89,13 +92,46 @@ else:
         if required not in strings_text:
             errors.append(f"Messenger client is missing required visible boundary label {required!r}")
 
-provenance = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client" / "CommunicationProvenance.kt"
+provenance = CLIENT_KOTLIN / "CommunicationProvenance.kt"
 if not provenance.is_file():
     errors.append("Messenger communication provenance contract is missing")
 else:
     provenance_text = provenance.read_text(encoding="utf-8")
     if "E2EE_ACTIVE || transport == CommunicationTransport.DATA" not in provenance_text:
         errors.append("Messenger provenance contract does not fail closed on carrier E2EE claims")
+
+if not READINESS.is_file():
+    errors.append("Messenger Data messaging readiness contract is missing")
+else:
+    readiness_text = READINESS.read_text(encoding="utf-8")
+    for required in (
+        "val verifiedConversationId: String? = null",
+        "evidence.verifiedConversationId",
+        "?.trim()",
+        "?.takeIf { it.isNotEmpty() }",
+        "evidence.conversationAccess != ConversationAccessState.VERIFIED_PARTICIPANT",
+        "verifiedConversationId == null",
+        "val verifiedConversationId: String,",
+        "Result.Ready(verifiedConversationId = checkNotNull(verifiedConversationId))",
+    ):
+        if required not in readiness_text:
+            errors.append(
+                f"Messenger readiness contract is missing conversation-scope guard {required!r}",
+            )
+
+if not COORDINATOR.is_file():
+    errors.append("Messenger Data message send coordinator is missing")
+else:
+    coordinator_text = COORDINATOR.read_text(encoding="utf-8")
+    for required in (
+        "readiness.verifiedConversationId != message.conversationId",
+        "DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED",
+        "transport.submit(message)",
+    ):
+        if required not in coordinator_text:
+            errors.append(
+                f"Messenger send coordinator is missing conversation-bound transport guard {required!r}",
+            )
 
 if errors:
     print("Messenger Android Development client boundary FAILED:", file=sys.stderr)
