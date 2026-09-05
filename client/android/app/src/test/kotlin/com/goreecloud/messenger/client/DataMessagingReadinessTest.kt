@@ -10,6 +10,7 @@ class DataMessagingReadinessTest {
         conversationAccess = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         transport = DataMessagingReadiness.DataTransportState.AVAILABLE,
         cryptography = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
+        verifiedConversationId = "conversation-1",
     )
 
     @Test
@@ -18,9 +19,34 @@ class DataMessagingReadinessTest {
 
         assertTrue(result is DataMessagingReadiness.Result.Ready)
         val ready = result as DataMessagingReadiness.Result.Ready
+        assertEquals("conversation-1", ready.verifiedConversationId)
         assertEquals(CommunicationTransport.DATA, ready.provenance.transport)
         assertEquals(CommunicationProtection.E2EE_ACTIVE, ready.provenance.protection)
         assertEquals("Data · E2EE", ready.provenance.displayLabel())
+    }
+
+    @Test
+    fun verifiedConversationScopeIsNormalizedBeforeReadiness() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(verifiedConversationId = "  conversation-1  "),
+        )
+
+        assertEquals(
+            "conversation-1",
+            (result as DataMessagingReadiness.Result.Ready).verifiedConversationId,
+        )
+    }
+
+    @Test
+    fun participantStateWithoutConversationScopeFailsClosed() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(verifiedConversationId = "   "),
+        )
+
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
     }
 
     @Test
