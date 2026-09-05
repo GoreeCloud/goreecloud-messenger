@@ -10,7 +10,8 @@ class DataMessagingReadinessTest {
         conversationAccess = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         transport = DataMessagingReadiness.DataTransportState.AVAILABLE,
         cryptography = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
-        verifiedConversationId = "conversation-1",
+        authorizedConversationId = "conversation-1",
+        e2eeConversationId = "conversation-1",
     )
 
     @Test
@@ -26,9 +27,12 @@ class DataMessagingReadinessTest {
     }
 
     @Test
-    fun verifiedConversationScopeIsNormalizedBeforeReadiness() {
+    fun independentConversationScopesAreNormalizedBeforeReadiness() {
         val result = DataMessagingReadiness.evaluate(
-            fullyReady.copy(verifiedConversationId = "  conversation-1  "),
+            fullyReady.copy(
+                authorizedConversationId = "  conversation-1  ",
+                e2eeConversationId = "\tconversation-1\n",
+            ),
         )
 
         assertEquals(
@@ -38,13 +42,40 @@ class DataMessagingReadinessTest {
     }
 
     @Test
-    fun participantStateWithoutConversationScopeFailsClosed() {
+    fun participantStateWithoutAuthorizationScopeFailsClosed() {
         val result = DataMessagingReadiness.evaluate(
-            fullyReady.copy(verifiedConversationId = "   "),
+            fullyReady.copy(authorizedConversationId = "   "),
         )
 
         assertEquals(
-            setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+            setOf(
+                DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED,
+                DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE,
+            ),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun activeE2eeWithoutCryptographicConversationScopeFailsClosed() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(e2eeConversationId = "   "),
+        )
+
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun authorizationAndE2eeScopesMustIdentifySameConversation() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(e2eeConversationId = "conversation-2"),
+        )
+
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
             (result as DataMessagingReadiness.Result.Blocked).reasons,
         )
     }
