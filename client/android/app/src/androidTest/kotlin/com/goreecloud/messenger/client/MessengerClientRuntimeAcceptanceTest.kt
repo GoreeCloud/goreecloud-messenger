@@ -43,17 +43,36 @@ class MessengerClientRuntimeAcceptanceTest {
 
         ActivityScenario.launch(MessengerClientActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
-                val visibleText = collectText(activity.window.decorView)
-                assertTrue(visibleText.any { it.contains("Native Android Development preview") })
-                assertTrue(visibleText.any { it.contains("Disconnected shell") })
-                assertTrue(visibleText.any { it.contains("Development boundary") })
-                assertTrue(visibleText.any { it.contains("Not Release Candidate") })
-                assertTrue(visibleText.any { it.contains("Provenance examples") })
-
-                // A disconnected provenance preview must not grow a live message-send control.
-                assertFalse(visibleText.any { it.trim().equals("Send", ignoreCase = true) })
+                assertDisconnectedDevelopmentBoundary(activity.window.decorView)
             }
         }
+    }
+
+    @Test
+    fun activityRecreationRetainsDisconnectedDevelopmentBoundary() {
+        ActivityScenario.launch(MessengerClientActivity::class.java).use { scenario ->
+            scenario.onActivity { activity ->
+                assertDisconnectedDevelopmentBoundary(activity.window.decorView)
+            }
+
+            scenario.recreate()
+
+            scenario.onActivity { activity ->
+                assertDisconnectedDevelopmentBoundary(activity.window.decorView)
+            }
+        }
+    }
+
+    private fun assertDisconnectedDevelopmentBoundary(root: View) {
+        val visibleText = collectText(root)
+        assertTrue(visibleText.any { it.contains("Native Android Development preview") })
+        assertTrue(visibleText.any { it.contains("Disconnected shell") })
+        assertTrue(visibleText.any { it.contains("Development boundary") })
+        assertTrue(visibleText.any { it.contains("Not Release Candidate") })
+        assertTrue(visibleText.any { it.contains("Provenance examples") })
+
+        // A disconnected provenance preview must not grow a live message-send control.
+        assertFalse(visibleText.any { it.trim().equals("Send", ignoreCase = true) })
     }
 
     private fun collectText(view: View): List<String> = when (view) {
