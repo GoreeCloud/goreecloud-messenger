@@ -7,6 +7,9 @@ package com.goreecloud.messenger.client
  * derive cryptographic state, hold keys, encrypt content, persist messages, or send anything. It
  * only combines independently verified states supplied by their responsible runtime authorities.
  *
+ * Conversation authorization is deliberately scoped to one exact conversation identifier. A bare
+ * VERIFIED_PARTICIPANT enum without that scope is insufficient readiness evidence and fails closed.
+ *
  * The Development Android client currently supplies none of those production authorities, so this
  * contract must not be interpreted as a working message composer or E2EE implementation.
  */
@@ -41,6 +44,7 @@ object DataMessagingReadiness {
         val conversationAccess: ConversationAccessState,
         val transport: DataTransportState,
         val cryptography: CryptographicState,
+        val verifiedConversationId: String? = null,
     )
 
     enum class BlockReason {
@@ -52,6 +56,7 @@ object DataMessagingReadiness {
 
     sealed interface Result {
         data class Ready(
+            val verifiedConversationId: String,
             val provenance: CommunicationProvenance = CommunicationProvenance(
                 transport = CommunicationTransport.DATA,
                 protection = CommunicationProtection.E2EE_ACTIVE,
@@ -65,15 +70,23 @@ object DataMessagingReadiness {
      * Require every independently owned prerequisite before a future client may expose an eligible
      * encrypted GoreeCloud Data send operation.
      *
-     * All missing, negative, unavailable, or unknown states fail closed. There is deliberately no
-     * downgrade to carrier messaging and no conversion from transport availability to E2EE state.
+     * All missing, negative, unavailable, unknown, or unscoped states fail closed. There is
+     * deliberately no downgrade to carrier messaging and no conversion from transport availability
+     * to E2EE state.
      */
     fun evaluate(evidence: Evidence): Result {
+        val verifiedConversationId = evidence.verifiedConversationId
+            ?.trim()
+            ?.takeIf { it.isNotEmpty() }
+
         val reasons = buildSet {
             if (evidence.identity != IdentityState.AUTHENTICATED) {
                 add(BlockReason.IDENTITY_NOT_AUTHENTICATED)
             }
-            if (evidence.conversationAccess != ConversationAccessState.VERIFIED_PARTICIPANT) {
+            if (
+                evidence.conversationAccess != ConversationAccessState.VERIFIED_PARTICIPANT ||
+                verifiedConversationId == null
+            ) {
                 add(BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED)
             }
             if (evidence.transport != DataTransportState.AVAILABLE) {
@@ -84,6 +97,10 @@ object DataMessagingReadiness {
             }
         }
 
-        return if (reasons.isEmpty()) Result.Ready() else Result.Blocked(reasons)
+        return if (reasons.isEmpty()) {
+            Result.Ready(verifiedConversationId = checkNotNull(verifiedConversationId))
+        } else {
+            Result.Blocked(reasons)
+        }
     }
 }
