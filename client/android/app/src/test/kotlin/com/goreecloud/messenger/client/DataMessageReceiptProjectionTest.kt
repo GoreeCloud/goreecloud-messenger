@@ -1,6 +1,7 @@
 package com.goreecloud.messenger.client
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -159,5 +160,10 @@ class DataMessageReceiptProjectionTest {
         assertEquals("message/with internal space", opaque.messageId)
         assertEquals("conversation:one/two", opaque.conversationId)
         assertEquals("recipient / opaque", opaque.recipientId)
+    }
+
+    @Test
+    fun receiptEventDoesNotExposeGeneratedCopyBypass() {
+        assertFalse(DataReceiptEvent::class.java.declaredMethods.any { it.name == "copy" })
     }
 }
