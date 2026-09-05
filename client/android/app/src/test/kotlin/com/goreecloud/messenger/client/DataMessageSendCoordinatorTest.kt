@@ -11,7 +11,8 @@ class DataMessageSendCoordinatorTest {
         conversationAccess = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         transport = DataMessagingReadiness.DataTransportState.AVAILABLE,
         cryptography = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
-        verifiedConversationId = "conversation-1",
+        authorizedConversationId = "conversation-1",
+        e2eeConversationId = "conversation-1",
     )
 
     @Test
@@ -38,7 +39,7 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
-    fun conversationAuthorizationForDifferentTargetNeverInvokesTransport() {
+    fun mismatchedAuthorizationAndE2eeScopesNeverInvokeTransport() {
         var calls = 0
         val coordinator = DataMessageSendCoordinator(
             transport = EncryptedDataMessageTransport {
@@ -46,11 +47,36 @@ class DataMessageSendCoordinatorTest {
                 EncryptedDataMessageTransport.Submission.Accepted
             },
         )
-        val wrongConversationEvidence = readyEvidence.copy(
-            verifiedConversationId = "conversation-2",
+        val mismatchedEvidence = readyEvidence.copy(
+            e2eeConversationId = "conversation-2",
         )
 
-        val result = coordinator.submit(wrongConversationEvidence, message())
+        val result = coordinator.submit(mismatchedEvidence, message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun verifiedDifferentConversationNeverInvokesTransportForPreparedTarget() {
+        var calls = 0
+        val coordinator = DataMessageSendCoordinator(
+            transport = EncryptedDataMessageTransport {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+        val differentConversationEvidence = readyEvidence.copy(
+            authorizedConversationId = "conversation-2",
+            e2eeConversationId = "conversation-2",
+        )
+
+        val result = coordinator.submit(differentConversationEvidence, message())
 
         assertEquals(0, calls)
         assertEquals(
