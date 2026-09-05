@@ -6,6 +6,9 @@ package com.goreecloud.messenger.client
  * This type contains ciphertext and protocol identifiers only. It deliberately does not carry a
  * caller-authored sender identity, credential, key, plaintext body, carrier fallback, or transport
  * endpoint. Authenticated identity remains owned by the runtime authentication authority.
+ *
+ * Message, conversation, and nonce identifiers must already be exact bounded opaque values. This
+ * preparation boundary never trims external identifier text into a different transport scope.
  */
 class PreparedEncryptedDataMessage private constructor(
     val messageId: String,
@@ -27,15 +30,15 @@ class PreparedEncryptedDataMessage private constructor(
             clientNonce: String,
             ciphertext: ByteArray,
         ): PreparedEncryptedDataMessage {
-            require(messageId.isNotBlank()) { "messageId must not be blank" }
-            require(conversationId.isNotBlank()) { "conversationId must not be blank" }
-            require(clientNonce.isNotBlank()) { "clientNonce must not be blank" }
             require(ciphertext.isNotEmpty()) { "ciphertext must not be empty" }
 
             return PreparedEncryptedDataMessage(
-                messageId = messageId.trim(),
-                conversationId = conversationId.trim(),
-                clientNonce = clientNonce.trim(),
+                messageId = DataReceiptIdentifierPolicy.requireCanonical(messageId, "messageId"),
+                conversationId = DataReceiptIdentifierPolicy.requireCanonical(
+                    conversationId,
+                    "conversationId",
+                ),
+                clientNonce = DataReceiptIdentifierPolicy.requireCanonical(clientNonce, "clientNonce"),
                 ciphertext = ciphertext,
             )
         }
