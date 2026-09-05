@@ -70,9 +70,13 @@ fun interface EncryptedDataMessageTransport {
  * Enforces the fail-closed readiness policy at the final client seam before any injected Data
  * transport can be invoked.
  *
+ * Conversation authorization must be verified for the exact conversation carried by the prepared
+ * message. A valid participant decision for another conversation cannot be reused at this seam.
+ *
  * This coordinator does not authenticate, authorize, encrypt, persist, retry, queue, synchronize,
  * or send on its own. It simply refuses to call the supplied transport unless all four independent
- * readiness authorities are positively verified for the attempted operation.
+ * readiness authorities are positively verified and the authorization scope matches the attempted
+ * operation.
  */
 class DataMessageSendCoordinator(
     private val transport: EncryptedDataMessageTransport,
@@ -95,13 +99,20 @@ class DataMessageSendCoordinator(
     ): Result =
         when (val readiness = DataMessagingReadiness.evaluate(evidence)) {
             is DataMessagingReadiness.Result.Blocked -> Result.Blocked(readiness.reasons)
-            is DataMessagingReadiness.Result.Ready ->
-                when (val submission = transport.submit(message)) {
-                    EncryptedDataMessageTransport.Submission.Accepted ->
-                        Result.Submitted(readiness.provenance)
+            is DataMessagingReadiness.Result.Ready -> {
+                if (readiness.verifiedConversationId != message.conversationId) {
+                    Result.Blocked(
+                        setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+                    )
+                } else {
+                    when (val submission = transport.submit(message)) {
+                        EncryptedDataMessageTransport.Submission.Accepted ->
+                            Result.Submitted(readiness.provenance)
 
-                    is EncryptedDataMessageTransport.Submission.Rejected ->
-                        Result.TransportRejected(submission.reason)
+                        is EncryptedDataMessageTransport.Submission.Rejected ->
+                            Result.TransportRejected(submission.reason)
+                    }
                 }
+            }
         }
 }
