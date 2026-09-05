@@ -43,9 +43,10 @@ class DataMessageReceiptProjectionTest {
 
         val duplicate = afterRead.apply(read)
         assertTrue(duplicate is DataMessageReceiptProjection.ApplyResult.Ignored)
+        val ignoredDuplicate = duplicate as DataMessageReceiptProjection.ApplyResult.Ignored
         assertEquals(
             DataMessageReceiptProjection.IgnoreReason.DUPLICATE,
-            (duplicate as DataMessageReceiptProjection.ApplyResult.Ignored).reason,
+            ignoredDuplicate.reason,
         )
 
         val stale = afterRead.apply(
@@ -57,11 +58,12 @@ class DataMessageReceiptProjectionTest {
             ),
         )
         assertTrue(stale is DataMessageReceiptProjection.ApplyResult.Ignored)
+        val ignoredStale = stale as DataMessageReceiptProjection.ApplyResult.Ignored
         assertEquals(
             DataMessageReceiptProjection.IgnoreReason.STALE,
-            (stale as DataMessageReceiptProjection.ApplyResult.Ignored).reason,
+            ignoredStale.reason,
         )
-        assertEquals(DataReceiptEvent.Stage.READ, stale.projection.stageFor("recipient-1"))
+        assertEquals(DataReceiptEvent.Stage.READ, ignoredStale.projection.stageFor("recipient-1"))
     }
 
     @Test
