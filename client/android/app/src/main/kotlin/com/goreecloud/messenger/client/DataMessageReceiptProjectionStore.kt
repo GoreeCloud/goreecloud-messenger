@@ -9,6 +9,7 @@ package com.goreecloud.messenger.client
  */
 class DataMessageReceiptProjectionStore(
     private val capacity: Int = DEFAULT_CAPACITY,
+    private val recipientCapacity: Int = DEFAULT_RECIPIENT_CAPACITY,
 ) {
     data class Scope(
         val messageId: String,
@@ -39,6 +40,7 @@ class DataMessageReceiptProjectionStore(
         ) : ApplyResult
         data class Rejected(val reason: DataMessageReceiptProjection.RejectReason) : ApplyResult
         data object UnknownScope : ApplyResult
+        data object RecipientCapacityReached : ApplyResult
     }
 
     private val projections = LinkedHashMap<Scope, DataMessageReceiptProjection>()
@@ -46,6 +48,9 @@ class DataMessageReceiptProjectionStore(
     init {
         require(capacity in 1..MAX_CAPACITY) {
             "capacity must be between 1 and $MAX_CAPACITY"
+        }
+        require(recipientCapacity in 1..MAX_RECIPIENT_CAPACITY) {
+            "recipientCapacity must be between 1 and $MAX_RECIPIENT_CAPACITY"
         }
     }
 
@@ -64,6 +69,11 @@ class DataMessageReceiptProjectionStore(
     fun apply(event: DataReceiptEvent): ApplyResult {
         val scope = Scope.create(event.messageId, event.conversationId)
         val current = projections[scope] ?: return ApplyResult.UnknownScope
+        val isNewRecipient = current.stageFor(event.recipientId) == null
+        if (isNewRecipient && current.snapshot().size >= recipientCapacity) {
+            return ApplyResult.RecipientCapacityReached
+        }
+
         return when (val result = current.apply(event)) {
             is DataMessageReceiptProjection.ApplyResult.Applied -> {
                 projections[scope] = result.projection
@@ -91,5 +101,7 @@ class DataMessageReceiptProjectionStore(
     companion object {
         const val DEFAULT_CAPACITY = 256
         const val MAX_CAPACITY = 4096
+        const val DEFAULT_RECIPIENT_CAPACITY = 256
+        const val MAX_RECIPIENT_CAPACITY = 4096
     }
 }
