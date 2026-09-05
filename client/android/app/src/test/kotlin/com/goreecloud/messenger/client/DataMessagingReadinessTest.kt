@@ -48,10 +48,7 @@ class DataMessagingReadinessTest {
         )
 
         assertEquals(
-            setOf(
-                DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED,
-                DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE,
-            ),
+            setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
             (result as DataMessagingReadiness.Result.Blocked).reasons,
         )
     }
