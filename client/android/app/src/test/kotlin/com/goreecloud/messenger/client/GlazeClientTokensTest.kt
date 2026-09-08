@@ -7,20 +7,24 @@ import org.junit.Test
 
 class GlazeClientTokensTest {
     @Test
-    fun sourceMappingTargetsCurrentStableV12Authority() {
-        assertEquals("1.2.0", GlazeClientTokens.Version)
+    fun sourceMappingTargetsCurrentStableV13Authority() {
+        assertEquals("1.3.0", GlazeClientTokens.Version)
+        assertEquals("Adaptive Resonance", GlazeClientTokens.ReleaseTheme)
         assertEquals(
-            "f285b9145e27e6e7027b075c37299d101945c272",
+            "fc7cc91d2eace8da2371371c2855c24cbcb326a1",
             GlazeClientTokens.StableReleaseRevision,
-        )
-        assertEquals(
-            "b0eadf9a60f73d45caffb62ffc7e9e0334cddc97",
-            GlazeClientTokens.SourceQualificationAnchor,
         )
         assertEquals(
             "tokens/glaze-v1.2-optical-foundation.candidate.json",
             GlazeClientTokens.OpticalContract,
         )
+        assertEquals(
+            "contracts/v1.3/adaptive-resonance.plan.json",
+            GlazeClientTokens.AdaptiveContract,
+        )
+        assertEquals("css/glaze-v1.3.0.css", GlazeClientTokens.StableWebEntrypoint)
+        assertEquals("js/glaze-v1.3.0.mjs", GlazeClientTokens.StableRuntimeEntrypoint)
+        assertEquals("1.2.0", GlazeClientTokens.RollbackBaselineVersion)
         assertEquals(
             "neutral-glass-is-material-color-is-accent",
             GlazeClientTokens.MaterialRule,
@@ -28,7 +32,7 @@ class GlazeClientTokensTest {
     }
 
     @Test
-    fun interactionFloorsPreserveV12AccessibilityTargets() {
+    fun interactionFloorsPreserveV13AccessibilityTargets() {
         assertEquals(48, GlazeClientTokens.InteractionFloorDp)
         assertEquals(56, GlazeClientTokens.TouchAssistanceFloorDp)
     }
