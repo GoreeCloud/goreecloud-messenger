@@ -123,13 +123,13 @@ platform_systems:
     notes: Messenger has durable single-node Development stores for selected server state, while the Android Development client deliberately persists no message state; accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
   glaze_ui:
     result: applicable-migration-required
-    version: null
+    version: "1.2.0"
     evidence:
       - README.md
       - client/android/README.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
-    notes: A first native Android Development client now exists and builds, but it is only a disconnected source/design mapping and has no application-specific rendered or accessibility acceptance. The declared current Stable requirement remains GLAZE UI V1.1 / 1.1.0, whose known immutable import-closure defect prevents accepted downstream conformance; a corrected immutable Stable release, explicit re-pin, and fresh Messenger client acceptance remain required.
+    notes: The native Android Development client explicitly targets current Stable GLAZE UI V1.2 / 1.2.0 source semantics at the exact Stable authority. It remains disconnected and requires fresh application-specific rendered, accessibility, adaptive, representative-device, and Human Visual Excellence acceptance before conformance can be claimed.
   mesh:
     result: applicable-blocked
     version: null
@@ -191,10 +191,10 @@ external_dependencies: []
 
 compatibility:
   platform_contract: "0.2"
-  glaze_ui_required: "1.1.0"
+  glaze_ui_required: "1.2.0"
   requires:
     - goreecloud-platform-contract==0.2
-    - glaze-ui==1.1.0
+    - glaze-ui==1.2.0
   provides:
     - messenger-data-http-api-v1
 
