@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GoreeCloud Messenger</string>
+    <string name="development_title">Native Android Development preview</string>
+    <string name="development_summary">Disconnected shell · No account · No network · No message storage</string>
+    <string name="development_detail">This build validates Messenger client structure and communication provenance only. Messaging, calling, Identity sessions, key establishment, and end-to-end encryption are not active.</string>
+    <string name="readiness_heading">Data messaging readiness</string>
+    <string name="readiness_summary">The client evaluates Identity, conversation authorization, GoreeCloud Data transport, and E2EE as separate prerequisites. Missing or unknown evidence fails closed.</string>
+    <string name="provenance_heading">Provenance examples</string>
+    <string name="provenance_summary">Examples demonstrate how the client must label actual transport and verified protection. They are not live conversations or service state.</string>
+    <string name="platform_heading">RC integration boundary</string>
+    <string name="platform_summary">Current release qualification still requires accepted GoreeCloud Identity, Wardveil Security, Privacy Shield, Everkeep, Mesh, Manager, corrected Stable GLAZE UI re-pin, representative-device accessibility, recovery, signing, and release evidence.</string>
+</resources>
