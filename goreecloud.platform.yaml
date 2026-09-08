@@ -1,0 +1,199 @@
+schema_version: "0.2"
+
+component:
+  type: application
+  id: goreecloud-messenger
+  product_name: GoreeCloud Messenger
+  repository: GoreeCloud/goreecloud-messenger
+
+lifecycle: development
+version: "0.1.0-dev"
+
+supported_platforms:
+  - server
+
+api:
+  versions:
+    - v1
+  endpoints:
+    - name: data-message-submit
+      url: /v1/data/messages
+      purpose: POST an authenticated encrypted GoreeCloud Data message envelope.
+    - name: data-conversation-messages
+      url: /v1/data/conversations/{conversationID}/messages
+      purpose: GET authorized encrypted Data messages for a conversation.
+    - name: data-receipt-record
+      url: /v1/data/messages/{messageID}/receipts
+      purpose: POST an authenticated delivered or read receipt.
+    - name: data-receipt-list
+      url: /v1/data/messages/{messageID}/receipts
+      purpose: GET authorized receipt state for a Data message.
+    - name: data-attachment-submit
+      url: /v1/data/attachments
+      purpose: POST opaque encrypted attachment ciphertext.
+    - name: data-attachment-get
+      url: /v1/data/attachments/{attachmentID}
+      purpose: GET an authorized encrypted attachment as JSON and base64.
+    - name: data-attachment-ciphertext
+      url: /v1/data/attachments/{attachmentID}/ciphertext
+      purpose: GET exact authorized opaque attachment ciphertext bytes.
+    - name: data-attachment-delete
+      url: /v1/data/attachments/{attachmentID}
+      purpose: DELETE an authorized encrypted attachment through the replay-safe tombstone path.
+    - name: data-conversation-attachments
+      url: /v1/data/conversations/{conversationID}/attachments
+      purpose: GET authorized encrypted attachment metadata for a conversation.
+    - name: data-typing-publish
+      url: /v1/data/conversations/{conversationID}/typing
+      purpose: POST optional participant-authorized content-free typing presence.
+    - name: data-typing-list
+      url: /v1/data/conversations/{conversationID}/typing
+      purpose: GET optional privacy-gated content-free typing presence.
+    - name: data-typing-preferences-get
+      url: /v1/data/conversations/{conversationID}/typing/preferences
+      purpose: GET the authenticated participant's minimized typing privacy choices.
+    - name: data-typing-preferences-put
+      url: /v1/data/conversations/{conversationID}/typing/preferences
+      purpose: PUT the authenticated participant's minimized typing privacy choices.
+    - name: data-runtime-projection
+      url: /v1/data/runtime
+      purpose: GET the authenticated minimized Development runtime composition projection without sensitive dependency details.
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+      - docs/runtime-diagnostics.md
+    notes: Messenger has bounded Development runtime diagnostics, but no accepted GoreeCloud Manager registration, lifecycle, deployment, health/readiness publication, or operational visibility integration.
+  privacy_shield:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/typing_http.go
+      - internal/api/typing_preferences_http.go
+      - internal/service/typing_preferences.go
+      - docs/development/typing-presence-bundle.md
+    notes: Typing presence is content-free and independently preference-gated, but accepted Privacy Shield consent/policy authority, durable preference acceptance, and production privacy validation are not established.
+  wardveil_security:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/response_hardening.go
+      - internal/api/attachment_http.go
+      - internal/service/attachment_service.go
+      - docs/development/http-response-hardening.md
+      - docs/security.md
+    notes: Current Development source has authorization boundaries, opaque ciphertext handling, hardened mutation responses, replay-safe attachment deletion behavior, and minimized diagnostics, but accepted Wardveil Security runtime integration, distributed abuse controls, security-event provenance, and production security acceptance are not established.
+  everkeep:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/service/file_receipt_store.go
+      - internal/service/file_attachment_store.go
+      - docs/durable-receipt-store.md
+      - README.md
+    notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
+  glaze_ui:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - README.md
+      - SPECIFICATIONS.md
+    notes: The authoritative repository is currently a server-first Development foundation and has no accepted user-facing Glaze client. Any first-party client must target the current governed Stable Glaze consumer line and pass application-specific rendered, accessibility, adaptive, representative-device, and Human Visual Excellence acceptance. Current governed Stable consumer authority is V1.1 / 1.1.0, whose known immutable import-closure defect still requires a corrected governed Stable release before downstream conformance can be claimed.
+  mesh:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/data_runtime.go
+      - internal/api/runtime_projection.go
+      - docs/architecture.md
+    notes: Current Data API transport and runtime projection are application-local Development behavior; canonical GoreeCloud Mesh registration, service identity, authenticated discovery/transport, event contracts, capability publication, and runtime acceptance are not established.
+    capabilities:
+      - encrypted-data-messaging
+      - delivery-read-receipts
+      - opaque-encrypted-attachments
+      - privacy-controlled-typing-presence
+    dependencies:
+      - goreecloud-identity
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - internal/api/http.go
+      - internal/api/typing_preferences_http.go
+      - docs/development/auth-derived-typing-publish.md
+    notes: Current handlers derive acting identities through an injected authentication boundary instead of caller-supplied mutation identities, but production GoreeCloud Identity credential issuance, session validation, device identity, account/profile isolation, revocation, and username resolution are not implemented or accepted.
+
+health:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Define and accept the complete backup scope for production encrypted message, receipt, attachment, preference, configuration, and required cryptographic recovery dependencies.
+      - Integrate approved Everkeep behavior before Release Candidate recovery qualification or Stable acceptance.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-target recovery of authorized durable communication state without exposing reusable key material or bypassing GoreeCloud Identity ownership.
+      - Define cryptographic device/key recovery, migration, failure, conflict, rollback, and post-restore verification behavior before restore is claimed.
+  export:
+    required: true
+    requirements:
+      - Preserve encrypted content and accepted conversation semantics without unnecessarily exporting reusable key material.
+      - Exclude ephemeral typing presence and other transient presence state from durable export.
+  portability:
+    required: true
+    requirements:
+      - Preserve transport provenance without representing carrier and GoreeCloud Data transports as equivalent.
+      - Make device and key migration behavior explicit and independently validated.
+      - Preserve accepted message, receipt, attachment, typing-preference, and deletion semantics where supported.
+
+external_dependencies: []
+
+compatibility:
+  platform_contract: "0.2"
+  glaze_ui_required: "1.1.0"
+  requires:
+    - goreecloud-platform-contract==0.2
+    - glaze-ui==1.1.0
+  provides:
+    - messenger-data-http-api-v1
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - USER-MANUAL.md
+    - SPECIFICATIONS.md
+    - docs/PLATFORM_CONFORMANCE.md
+    - docs/architecture.md
+    - docs/security.md
+    - docs/data-http-api.md
+    - docs/runtime-diagnostics.md
+    - docs/development/auth-derived-typing-publish.md
+    - docs/development/http-response-hardening.md
+    - docs/development/typing-presence-bundle.md
+    - docs/durable-receipt-store.md
+  blockers:
+    - No accepted first-party user-facing GoreeCloud Messenger client currently exists in authoritative main.
+    - Current governed Stable Glaze consumer authority is V1.1 / 1.1.0, and its known immutable import-closure defect requires a corrected governed Stable release plus downstream Messenger re-pin and fresh acceptance before Glaze conformance can be claimed.
+    - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
+    - Accepted production cryptographic session and key lifecycle are not established.
+    - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.
+    - Privacy Shield policy/consent authority, accepted durable preference behavior, and production privacy acceptance are not established.
+    - Everkeep integration plus accepted backup, restore, recovery, migration, rollback, and encrypted-communication portability are not established.
+    - GoreeCloud Mesh registration, service identity, authenticated discovery/transport, capability/event publication, and runtime acceptance are not established.
+    - GoreeCloud Manager health/readiness, platform visibility, operational integration, and acceptance are not established.
+    - Representative target-environment performance, resilience, upgrade/rollback, signing/deployment, release provenance, and Release Candidate acceptance remain outstanding.
