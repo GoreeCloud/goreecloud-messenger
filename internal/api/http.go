@@ -138,7 +138,7 @@ func (h *Handler) submitMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusAccepted)
+	writeAccepted(w)
 }
 
 func (h *Handler) listConversation(w http.ResponseWriter, r *http.Request) {
@@ -200,7 +200,7 @@ func (h *Handler) recordReceipt(w http.ResponseWriter, r *http.Request) {
 		writeServiceError(w, err)
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	writeAccepted(w)
 }
 
 func (h *Handler) listReceipts(w http.ResponseWriter, r *http.Request) {
