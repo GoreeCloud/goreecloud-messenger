@@ -39,16 +39,32 @@ class MessengerClientActivity : Activity() {
             )
         }
 
-        content.addView(text("GoreeCloud Messenger", 30f, colors.text, Typeface.BOLD))
-        content.addView(spacer(8))
+        content.addView(text(getString(R.string.app_name), 30f, colors.text, Typeface.BOLD))
+        content.addView(spacer(10))
+        content.addView(
+            statusPill(
+                label = getString(R.string.preview_status),
+                colors = colors,
+            ),
+        )
+        content.addView(spacer(18))
         content.addView(text(getString(R.string.development_title), 17f, colors.text, Typeface.BOLD))
         content.addView(spacer(4))
         content.addView(text(getString(R.string.development_summary), 15f, colors.muted, Typeface.NORMAL))
         content.addView(spacer(14))
         content.addView(
             surface(
-                title = "Development boundary",
+                title = getString(R.string.development_boundary_title),
                 body = getString(R.string.development_detail),
+                colors = colors,
+            ),
+        )
+
+        content.addView(spacer(22))
+        content.addView(
+            surface(
+                title = getString(R.string.conversations_empty_title),
+                body = getString(R.string.conversations_empty_summary),
                 colors = colors,
             ),
         )
@@ -60,7 +76,7 @@ class MessengerClientActivity : Activity() {
         content.addView(spacer(12))
         content.addView(
             surface(
-                title = "Data send unavailable",
+                title = getString(R.string.data_send_unavailable),
                 body = readinessExplanation(disconnectedReadiness()),
                 colors = colors,
             ),
@@ -106,7 +122,7 @@ class MessengerClientActivity : Activity() {
         content.addView(spacer(10))
         content.addView(
             surface(
-                title = "Not Release Candidate",
+                title = getString(R.string.not_release_candidate),
                 body = getString(R.string.platform_summary),
                 colors = colors,
             ),
@@ -154,6 +170,25 @@ class MessengerClientActivity : Activity() {
         }
     }
 
+    private fun statusPill(label: String, colors: Palette): View =
+        TextView(this).apply {
+            text = label
+            textSize = 13f
+            setTextColor(colors.accent)
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            minimumHeight = dp(GlazeClientTokens.InteractionFloorDp)
+            setPadding(dp(16), dp(8), dp(16), dp(8))
+            elevation = dp(2).toFloat()
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(GlazeClientTokens.PillRadiusDp).toFloat()
+                setColor(colors.surface)
+                setStroke(dp(2), colors.accent)
+            }
+            elevation = dp(2).toFloat()
+        }
+
     private fun surface(title: String, body: String, colors: Palette): View =
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -198,6 +233,7 @@ class MessengerClientActivity : Activity() {
             text = GlazeClientTokens.DarkText.toInt(),
             muted = GlazeClientTokens.DarkMutedText.toInt(),
             border = GlazeClientTokens.DarkBorder.toInt(),
+            accent = GlazeClientTokens.DarkAccent.toInt(),
         )
     } else {
         Palette(
@@ -206,6 +242,7 @@ class MessengerClientActivity : Activity() {
             text = GlazeClientTokens.LightText.toInt(),
             muted = GlazeClientTokens.LightMutedText.toInt(),
             border = GlazeClientTokens.LightBorder.toInt(),
+            accent = GlazeClientTokens.LightAccent.toInt(),
         )
     }
 
@@ -215,5 +252,6 @@ class MessengerClientActivity : Activity() {
         val text: Int,
         val muted: Int,
         val border: Int,
+        val accent: Int,
     )
 }
