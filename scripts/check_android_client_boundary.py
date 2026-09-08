@@ -72,8 +72,10 @@ if not activity.is_file():
 else:
     activity_text = activity.read_text(encoding="utf-8")
     for required in (
-        "Development boundary",
-        "Not Release Candidate",
+        "R.string.development_boundary_title",
+        "R.string.not_release_candidate",
+        "R.string.conversations_empty_title",
+        "R.string.preview_status",
         "R.string.provenance_heading",
     ):
         if required not in activity_text:
@@ -87,6 +89,11 @@ else:
         "Native Android Development preview",
         "Disconnected shell · No account · No network · No message storage",
         "Provenance examples",
+        "Development boundary",
+        "Not Release Candidate",
+        "Offline preview · Glaze UI V1.2",
+        "Your conversations will appear here",
+        "No example people or messages are fabricated",
     )
     for required in required_labels:
         if required not in strings_text:
