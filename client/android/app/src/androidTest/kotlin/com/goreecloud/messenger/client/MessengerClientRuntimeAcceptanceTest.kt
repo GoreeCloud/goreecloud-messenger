@@ -65,6 +65,10 @@ class MessengerClientRuntimeAcceptanceTest {
 
     private fun assertDisconnectedDevelopmentBoundary(root: View) {
         val visibleText = collectText(root)
+        assertTrue(visibleText.any { it.contains("Offline preview") })
+        assertTrue(visibleText.any { it.contains("Glaze UI V1.2") })
+        assertTrue(visibleText.any { it.contains("Your conversations will appear here") })
+        assertTrue(visibleText.any { it.contains("No example people or messages are fabricated") })
         assertTrue(visibleText.any { it.contains("Native Android Development preview") })
         assertTrue(visibleText.any { it.contains("Disconnected shell") })
         assertTrue(visibleText.any { it.contains("Development boundary") })

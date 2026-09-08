@@ -18,6 +18,7 @@ object GlazeClientTokens {
     const val TouchAssistanceFloorDp = 56
     const val ScreenGutterDp = 20
     const val SurfaceRadiusDp = 22f
+    const val PillRadiusDp = 999f
     const val SectionSpacingDp = 14
 
     // This Development shell currently renders only Android System Light/Dark. Deep Dark remains a
@@ -27,11 +28,13 @@ object GlazeClientTokens {
     const val LightText = 0xFF182126
     const val LightMutedText = 0xFF5B666C
     const val LightBorder = 0x33727E84
+    const val LightAccent = 0xFF246B72
     const val DarkCanvas = 0xFF101619
     const val DarkSurface = 0xE61B2327
     const val DarkText = 0xFFF3F6F7
     const val DarkMutedText = 0xFFB6C0C5
     const val DarkBorder = 0x337E8A90
+    const val DarkAccent = 0xFF8FD6D2
 
     /** V1.2 base material should remain neutral rather than becoming semantic/accent color. */
     fun isNeutralSubstrate(argb: Long, maximumChannelSpread: Int = 16): Boolean {

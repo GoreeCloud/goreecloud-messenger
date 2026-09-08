@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GoreeCloud Messenger</string>
+    <string name="preview_status">Offline preview · Glaze UI V1.2</string>
+    <string name="development_boundary_title">Development boundary</string>
+    <string name="conversations_empty_title">Your conversations will appear here</string>
+    <string name="conversations_empty_summary">No example people or messages are fabricated. Connect only after Identity, transport, and encryption prerequisites are independently verified.</string>
+    <string name="data_send_unavailable">Data send unavailable</string>
+    <string name="not_release_candidate">Not Release Candidate</string>
     <string name="development_title">Native Android Development preview</string>
     <string name="development_summary">Disconnected shell · No account · No network · No message storage</string>
     <string name="development_detail">This build validates Messenger client structure and communication provenance only. Messaging, calling, Identity sessions, key establishment, and end-to-end encryption are not active.</string>

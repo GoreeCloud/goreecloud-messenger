@@ -7,9 +7,10 @@ package com.goreecloud.messenger.client
  * derive cryptographic state, hold keys, encrypt content, persist messages, or send anything. It
  * only combines independently verified states supplied by their responsible runtime authorities.
  *
- * Conversation authorization and E2EE readiness each carry their own exact conversation scope.
- * A bare positive enum without its authority-owned scope is insufficient, and the two scopes must
- * agree before this boundary can declare one conversation Ready.
+ * Conversation authorization and E2EE readiness each carry their own exact bounded canonical
+ * conversation scope. A bare positive enum without its authority-owned scope is insufficient, and
+ * the two scopes must agree exactly before this boundary can declare one conversation Ready.
+ * Noncanonical authority text is rejected rather than trimmed into a different transport scope.
  *
  * The Development Android client currently supplies none of those production authorities, so this
  * contract must not be interpreted as a working message composer or E2EE implementation.
@@ -72,18 +73,16 @@ object DataMessagingReadiness {
      * Require every independently owned prerequisite before a future client may expose an eligible
      * encrypted GoreeCloud Data send operation.
      *
-     * All missing, negative, unavailable, unknown, or unscoped states fail closed. Positive
-     * conversation-access and E2EE authorities must also identify the same exact conversation.
-     * There is deliberately no downgrade to carrier messaging and no conversion from transport
-     * availability to E2EE state.
+     * All missing, negative, unavailable, unknown, unscoped, or noncanonical states fail closed.
+     * Positive conversation-access and E2EE authorities must also identify the same exact bounded
+     * canonical conversation. There is deliberately no whitespace normalization, downgrade to
+     * carrier messaging, or conversion from transport availability to E2EE state.
      */
     fun evaluate(evidence: Evidence): Result {
         val authorizedConversationId = evidence.authorizedConversationId
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+            ?.let(DataReceiptIdentifierPolicy::canonicalOrNull)
         val e2eeConversationId = evidence.e2eeConversationId
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+            ?.let(DataReceiptIdentifierPolicy::canonicalOrNull)
 
         val reasons = buildSet {
             if (evidence.identity != IdentityState.AUTHENTICATED) {
