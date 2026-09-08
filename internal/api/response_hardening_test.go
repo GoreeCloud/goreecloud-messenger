@@ -20,6 +20,15 @@ func assertAcceptedResponseHardening(t *testing.T, recorder *httptest.ResponseRe
 	if got := recorder.Header().Get("X-Content-Type-Options"); got != "nosniff" {
 		t.Fatalf("X-Content-Type-Options = %q, want nosniff", got)
 	}
+	for name, want := range map[string]string{
+		"Referrer-Policy": "no-referrer",
+		"Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+		"Cross-Origin-Resource-Policy": "same-origin",
+	} {
+		if got := recorder.Header().Get(name); got != want {
+			t.Fatalf("%s = %q, want %q", name, got, want)
+		}
+	}
 	if recorder.Body.Len() != 0 {
 		t.Fatalf("accepted mutation response must be bodyless, got %q", recorder.Body.String())
 	}
