@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -52,6 +53,23 @@ class MessengerClientActivity : Activity() {
                 colors = colors,
             ),
         )
+
+        content.addView(spacer(22))
+        content.addView(text("Conversations", 20f, colors.text, Typeface.BOLD))
+        content.addView(spacer(5))
+        content.addView(
+            text(
+                "Native conversation-list structure using Development-only presentation records. No live account or message history is loaded.",
+                14f,
+                colors.muted,
+                Typeface.NORMAL,
+            ),
+        )
+        content.addView(spacer(12))
+        DevelopmentConversationCatalog.previews().forEachIndexed { index, preview ->
+            content.addView(conversationRow(preview, colors))
+            if (index != DevelopmentConversationCatalog.previews().lastIndex) content.addView(spacer(10))
+        }
 
         content.addView(spacer(22))
         content.addView(text(getString(R.string.readiness_heading), 20f, colors.text, Typeface.BOLD))
@@ -115,6 +133,52 @@ class MessengerClientActivity : Activity() {
         root.addView(content)
         return root
     }
+
+    private fun conversationRow(preview: ConversationPreview, colors: Palette): View =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            val padding = dp(16)
+            setPadding(padding, padding, padding, padding)
+            minimumHeight = dp(GlazeClientTokens.InteractionFloorDp)
+            contentDescription = preview.accessibilitySummary()
+            isClickable = false
+            isFocusable = true
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(GlazeClientTokens.SurfaceRadiusDp).toFloat()
+                setColor(colors.surface)
+                setStroke(dp(1), colors.border)
+            }
+
+            val heading = LinearLayout(this@MessengerClientActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            heading.addView(
+                text(preview.displayName, 16f, colors.text, Typeface.BOLD),
+                LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f),
+            )
+            heading.addView(text(preview.timestampLabel, 12f, colors.muted, Typeface.NORMAL))
+            addView(heading)
+
+            preview.secondaryIdentity?.let {
+                addView(spacer(3))
+                addView(text(it, 13f, colors.muted, Typeface.NORMAL))
+            }
+
+            addView(spacer(7))
+            addView(text(preview.previewText, 14f, colors.text, Typeface.NORMAL))
+            addView(spacer(7))
+
+            val stateParts = buildList {
+                add(preview.provenance.displayLabel())
+                if (preview.unreadCount > 0) add("${preview.unreadCount} unread")
+                if (preview.isPinned) add("Pinned")
+                if (preview.isMuted) add("Muted")
+                add("Development preview")
+            }
+            addView(text(stateParts.joinToString(" · "), 12f, colors.muted, Typeface.BOLD))
+        }
 
     /**
      * This Development shell intentionally has no live authorities to supply these prerequisites.
