@@ -68,6 +68,12 @@ class MessengerClientRuntimeAcceptanceTest {
         assertTrue(visibleText.any { it.contains("Native Android Development preview") })
         assertTrue(visibleText.any { it.contains("Disconnected shell") })
         assertTrue(visibleText.any { it.contains("Development boundary") })
+        assertTrue(visibleText.any { it.trim() == "Conversations" })
+        assertTrue(visibleText.any { it.contains("Native conversation-list structure") })
+        assertTrue(visibleText.any { it.trim() == "Alex" })
+        assertTrue(visibleText.any { it.trim() == "@alex" })
+        assertTrue(visibleText.any { it.contains("2 unread") && it.contains("Pinned") })
+        assertTrue(visibleText.any { it.contains("SMS") && it.contains("Muted") })
         assertTrue(visibleText.any { it.contains("Data messaging readiness") })
         assertTrue(visibleText.any { it.contains("Data send unavailable") })
         assertTrue(visibleText.any { it.contains("Identity authentication") })
@@ -77,7 +83,7 @@ class MessengerClientRuntimeAcceptanceTest {
         assertTrue(visibleText.any { it.contains("Not Release Candidate") })
         assertTrue(visibleText.any { it.contains("Provenance examples") })
 
-        // A disconnected provenance/readiness preview must not grow a live message-send control.
+        // A disconnected conversation/readiness preview must not grow a live message-send control.
         assertFalse(visibleText.any { it.trim().equals("Send", ignoreCase = true) })
     }
 
