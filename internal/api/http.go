@@ -261,8 +261,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
+	setPrivateResponseHeaders(w)
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
 }
