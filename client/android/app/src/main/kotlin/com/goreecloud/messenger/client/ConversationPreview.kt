@@ -34,8 +34,8 @@ data class ConversationPreview(
 
 /**
  * Static Development-only presentation data. These records are not accounts, persisted messages,
- * server state, or evidence that a transport is available. They exist solely to exercise the
- * native conversation-list information architecture while live client authorities remain absent.
+ * server state, transport availability, or cryptographic evidence. They exist solely to exercise
+ * the native conversation-list information architecture while live client authorities remain absent.
  */
 object DevelopmentConversationCatalog {
     fun previews(): List<ConversationPreview> = listOf(
@@ -47,7 +47,7 @@ object DevelopmentConversationCatalog {
             timestampLabel = "6:02 PM",
             provenance = CommunicationProvenance(
                 CommunicationTransport.DATA,
-                CommunicationProtection.E2EE_ACTIVE,
+                CommunicationProtection.UNKNOWN,
             ),
             unreadCount = 2,
             isPinned = true,
