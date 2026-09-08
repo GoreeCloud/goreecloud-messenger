@@ -123,14 +123,14 @@ platform_systems:
     notes: Messenger has durable single-node Development stores for selected server state, while the Android Development client deliberately persists no message state; accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
   glaze_ui:
     result: applicable-migration-required
-    version: "1.2.0"
+    version: "1.3.0"
     evidence:
       - README.md
       - client/android/README.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeClientTokensTest.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
-    notes: The native Android Development client targets current Stable GLAZE UI V1.2 / 1.2.0 at promotion revision f285b9145e27e6e7027b075c37299d101945c272, with neutral Light/Dark material contracts and 48/56 dp interaction floors. It remains a disconnected source/design mapping without complete application-specific rendered, accessibility, adaptive, representative-device, Human Visual Excellence, release, or production acceptance.
+    notes: The native Android Development client now targets current Stable GLAZE UI V1.3 / 1.3.0 Adaptive Resonance at exact Stable integration revision fc7cc91d2eace8da2371371c2855c24cbcb326a1. It retains the inherited neutral Light/Dark V1.2 material foundation, records the V1.3 adaptive contract and Stable entrypoints, preserves 48/56 dp interaction floors, and records V1.2.0 as rollback baseline. Complete rendered, interaction, accessibility, adaptive/form-factor, representative-device, workflow, performance, rollback, Human Visual Excellence, release, and production acceptance remain independent gates.
   mesh:
     result: applicable-blocked
     version: null
@@ -192,10 +192,10 @@ external_dependencies: []
 
 compatibility:
   platform_contract: "0.2"
-  glaze_ui_required: "1.2.0"
+  glaze_ui_required: "1.3.0"
   requires:
     - goreecloud-platform-contract==0.2
-    - glaze-ui==1.2.0
+    - glaze-ui==1.3.0
   provides:
     - messenger-data-http-api-v1
 
@@ -228,7 +228,7 @@ conformance:
     - docs/development/typing-publish-rate-guard.md
     - docs/development/typing-publish-participant-cap.md
   blockers:
-    - The native Android Development client is disconnected and has no accepted current-Stable GLAZE UI rendered/accessibility/device acceptance or real Data messaging integration; no production conversation-authorization or E2EE-scope provider is composed even though the pre-transport policy now requires those independent positive authorities to agree on one exact conversation.
+    - The native Android Development client is still disconnected and has no accepted V1.3 rendered/accessibility/device acceptance or real Data messaging integration; no production conversation-authorization or E2EE-scope provider is composed even though the pre-transport policy requires those independent positive authorities to agree on one exact conversation.
     - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
     - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
     - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
