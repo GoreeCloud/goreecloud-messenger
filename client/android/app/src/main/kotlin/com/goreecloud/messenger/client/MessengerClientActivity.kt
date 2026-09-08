@@ -179,7 +179,6 @@ class MessengerClientActivity : Activity() {
             gravity = android.view.Gravity.CENTER_VERTICAL
             minimumHeight = dp(GlazeClientTokens.InteractionFloorDp)
             setPadding(dp(16), dp(8), dp(16), dp(8))
-            elevation = dp(2).toFloat()
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(GlazeClientTokens.PillRadiusDp).toFloat()
@@ -201,6 +200,7 @@ class MessengerClientActivity : Activity() {
                 setColor(colors.surface)
                 setStroke(dp(1), colors.border)
             }
+            elevation = dp(2).toFloat()
             addView(text(title, 16f, colors.text, Typeface.BOLD))
             addView(spacer(6))
             addView(text(body, 14f, colors.muted, Typeface.NORMAL))
