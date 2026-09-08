@@ -37,8 +37,8 @@ class ConversationPreviewTest {
 
         assertEquals(3, previews.size)
         assertEquals("development-alex", previews.first().conversationId)
-        assertEquals("Data", previews[0].provenance.displayLabel())
-        assertEquals("Data", previews[1].provenance.displayLabel())
+        assertEquals("Data · Protection not verified", previews[0].provenance.displayLabel())
+        assertEquals("Data · Protection not verified", previews[1].provenance.displayLabel())
         assertEquals("SMS", previews[2].provenance.displayLabel())
         assertTrue(previews.none { it.provenance.protection == CommunicationProtection.E2EE_ACTIVE })
     }
