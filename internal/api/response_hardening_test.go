@@ -21,8 +21,8 @@ func assertAcceptedResponseHardening(t *testing.T, recorder *httptest.ResponseRe
 		t.Fatalf("X-Content-Type-Options = %q, want nosniff", got)
 	}
 	for name, want := range map[string]string{
-		"Referrer-Policy": "no-referrer",
-		"Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
+		"Referrer-Policy":             "no-referrer",
+		"Content-Security-Policy":      "default-src 'none'; frame-ancestors 'none'",
 		"Cross-Origin-Resource-Policy": "same-origin",
 	} {
 		if got := recorder.Header().Get(name); got != want {
