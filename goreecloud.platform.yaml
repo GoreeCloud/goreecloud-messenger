@@ -11,6 +11,7 @@ version: "0.1.0-dev"
 
 supported_platforms:
   - server
+  - android
 
 api:
   versions:
@@ -45,7 +46,7 @@ api:
       purpose: GET authorized encrypted attachment metadata for a conversation.
     - name: data-typing-publish
       url: /v1/data/conversations/{conversationID}/typing
-      purpose: POST optional participant-authorized content-free typing presence.
+      purpose: POST optional participant-authorized content-free typing presence with the bounded process-local Development anti-flood guard.
     - name: data-typing-list
       url: /v1/data/conversations/{conversationID}/typing
       purpose: GET optional privacy-gated content-free typing presence.
@@ -58,6 +59,12 @@ api:
     - name: data-runtime-projection
       url: /v1/data/runtime
       purpose: GET the authenticated minimized Development runtime composition projection without sensitive dependency details.
+    - name: runtime-health
+      url: /healthz
+      purpose: GET categorical process liveness without authentication or dependency detail.
+    - name: runtime-readiness
+      url: /readyz
+      purpose: GET categorical fail-closed readiness; returns unavailable unless an explicit runtime readiness authority is composed and succeeds.
 
 platform_systems:
   manager:
@@ -65,51 +72,71 @@ platform_systems:
     version: null
     evidence:
       - README.md
-      - docs/runtime-diagnostics.md
-    notes: Messenger has bounded Development runtime diagnostics, but no accepted GoreeCloud Manager registration, lifecycle, deployment, health/readiness publication, or operational visibility integration.
+      - internal/api/runtime_health.go
+    notes: The Messenger Development runtime exposes categorical health/readiness routes suitable for later platform visibility integration, but it has no accepted GoreeCloud Manager registration, lifecycle, deployment, or operational visibility integration.
   privacy_shield:
     result: applicable-blocked
     version: null
     evidence:
       - internal/api/typing_http.go
       - internal/api/typing_preferences_http.go
-      - internal/service/typing_preferences.go
-      - docs/development/typing-presence-bundle.md
-    notes: Typing presence is content-free and independently preference-gated, but accepted Privacy Shield consent/policy authority, durable preference acceptance, and production privacy validation are not established.
+      - internal/service/typing_service.go
+      - internal/api/runtime_health.go
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
+      - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
+      - scripts/check_android_client_boundary.py
+      - docs/development/native-android-client.md
+      - docs/development/typing-publish-rate-guard.md
+      - docs/development/typing-publish-participant-cap.md
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. Its future Data-send readiness boundary fails closed unless Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE are independently positive. Authorization and E2EE scopes must identify the same conversation before readiness becomes positive, and the pre-transport coordinator then requires that unified scope to exactly match the prepared encrypted message target. Public health/readiness responses expose only categorical state; accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
   wardveil_security:
     result: applicable-blocked
     version: null
     evidence:
-      - internal/api/response_hardening.go
+      - internal/api/data_runtime.go
       - internal/api/attachment_http.go
-      - internal/service/attachment_service.go
-      - docs/development/http-response-hardening.md
-      - docs/security.md
-    notes: Current Development source has authorization boundaries, opaque ciphertext handling, hardened mutation responses, replay-safe attachment deletion behavior, and minimized diagnostics, but accepted Wardveil Security runtime integration, distributed abuse controls, security-event provenance, and production security acceptance are not established.
+      - internal/api/runtime_health.go
+      - internal/api/runtime_health_test.go
+      - internal/service/typing_service.go
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
+      - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
+      - scripts/check_android_client_boundary.py
+      - docs/development/native-android-client.md
+      - docs/development/typing-publish-rate-guard.md
+      - docs/development/typing-publish-participant-cap.md
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, a bounded process-local typing anti-flood guard, and a disconnected Android client whose source boundary rejects carrier E2EE claims, network/storage authority, unscoped conversation-participant readiness, unscoped E2EE readiness, mismatched authorization/cryptographic conversation scopes, cross-conversation reuse of a verified operation scope, and Data-send readiness unless each independent security/authorization prerequisite is verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
   everkeep:
     result: applicable-blocked
     version: null
     evidence:
-      - internal/service/file_receipt_store.go
-      - internal/service/file_attachment_store.go
-      - docs/durable-receipt-store.md
       - README.md
-    notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
+      - USER-MANUAL.md
+      - client/android/README.md
+    notes: Messenger has durable single-node Development stores for selected server state, while the Android Development client deliberately persists no message state; accepted backup, restore, recovery, portability, and continuity behavior for encrypted communication is not implemented.
   glaze_ui:
     result: applicable-migration-required
     version: null
     evidence:
       - README.md
-      - SPECIFICATIONS.md
-    notes: The authoritative repository is currently a server-first Development foundation and has no accepted user-facing Glaze client. Any first-party client must target the current governed Stable Glaze consumer line and pass application-specific rendered, accessibility, adaptive, representative-device, and Human Visual Excellence acceptance. Current governed Stable consumer authority is V1.1 / 1.1.0, whose known immutable import-closure defect still requires a corrected governed Stable release before downstream conformance can be claimed.
+      - client/android/README.md
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
+    notes: A first native Android Development client now exists and builds, but it is only a disconnected source/design mapping and has no application-specific rendered or accessibility acceptance. The declared current Stable requirement remains GLAZE UI V1.1 / 1.1.0, whose known immutable import-closure defect prevents accepted downstream conformance; a corrected immutable Stable release, explicit re-pin, and fresh Messenger client acceptance remain required.
   mesh:
     result: applicable-blocked
     version: null
     evidence:
       - internal/api/data_runtime.go
-      - internal/api/runtime_projection.go
-      - docs/architecture.md
-    notes: Current Data API transport and runtime projection are application-local Development behavior; canonical GoreeCloud Mesh registration, service identity, authenticated discovery/transport, event contracts, capability publication, and runtime acceptance are not established.
+      - internal/api/runtime_health.go
+    notes: The current Data API is application-local Development transport; canonical GoreeCloud Mesh registration, service identity, event contracts, capability publication, and runtime acceptance are not established.
     capabilities:
       - encrypted-data-messaging
       - delivery-read-receipts
@@ -125,35 +152,40 @@ platform_systems:
     evidence:
       - internal/api/http.go
       - internal/api/typing_preferences_http.go
-      - docs/development/auth-derived-typing-publish.md
-    notes: Current handlers derive acting identities through an injected authentication boundary instead of caller-supplied mutation identities, but production GoreeCloud Identity credential issuance, session validation, device identity, account/profile isolation, revocation, and username resolution are not implemented or accepted.
+      - client/android/README.md
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
+    notes: Server HTTP handlers inject an Authenticator and derive acting identities from it, while the native Android Development client intentionally has no account/session integration and explicitly blocks future Data-send readiness when Identity state is not independently authenticated. Conversation authorization remains a separate authority and must carry its exact verified conversation. Cryptographic readiness remains a separate authority and must independently carry the same conversation before the client can consider the operation ready. Production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
 
 health:
-  health_endpoint: null
-  readiness_endpoint: null
+  health_endpoint: /healthz
+  readiness_endpoint: /readyz
 
 continuity:
   backup:
     required: true
     requirements:
-      - Define and accept the complete backup scope for production encrypted message, receipt, attachment, preference, configuration, and required cryptographic recovery dependencies.
-      - Integrate approved Everkeep behavior before Release Candidate recovery qualification or Stable acceptance.
+      - Define and accept backup scope for production encrypted message and attachment persistence, required configuration, privacy choices, and cryptographic recovery dependencies.
+      - Integrate approved Everkeep backup behavior before Stable or production-family acceptance.
   restore:
     required: true
     requirements:
       - Validate clean-target recovery of authorized durable communication state without exposing reusable key material or bypassing GoreeCloud Identity ownership.
-      - Define cryptographic device/key recovery, migration, failure, conflict, rollback, and post-restore verification behavior before restore is claimed.
+      - Define cryptographic device and key recovery, failure, conflict, and rollback behavior before restore is claimed.
   export:
     required: true
     requirements:
       - Preserve encrypted content and accepted conversation semantics without unnecessarily exporting reusable key material.
-      - Exclude ephemeral typing presence and other transient presence state from durable export.
+      - Exclude ephemeral typing presence and all typing anti-flood reservation/timing state from durable export.
   portability:
     required: true
     requirements:
       - Preserve transport provenance without representing carrier and GoreeCloud Data transports as equivalent.
       - Make device and key migration behavior explicit and independently validated.
-      - Preserve accepted message, receipt, attachment, typing-preference, and deletion semantics where supported.
+      - Preserve accepted edit, reply, thread, reaction, receipt, attachment, and deletion semantics where those capabilities are supported.
+      - Place any privacy-preference portability under accepted Privacy Shield and Everkeep authority.
 
 external_dependencies: []
 
@@ -176,24 +208,31 @@ conformance:
   evidence:
     - README.md
     - USER-MANUAL.md
-    - SPECIFICATIONS.md
-    - docs/PLATFORM_CONFORMANCE.md
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
-    - docs/runtime-diagnostics.md
-    - docs/development/auth-derived-typing-publish.md
-    - docs/development/http-response-hardening.md
-    - docs/development/typing-presence-bundle.md
-    - docs/durable-receipt-store.md
+    - internal/api/runtime_health.go
+    - internal/api/runtime_health_test.go
+    - client/android/README.md
+    - docs/development/native-android-client.md
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
+    - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+    - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
+    - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
+    - scripts/check_android_client_boundary.py
+    - docs/development/typing-publish-rate-guard.md
+    - docs/development/typing-publish-participant-cap.md
   blockers:
-    - No accepted first-party user-facing GoreeCloud Messenger client currently exists in authoritative main.
-    - Current governed Stable Glaze consumer authority is V1.1 / 1.1.0, and its known immutable import-closure defect requires a corrected governed Stable release plus downstream Messenger re-pin and fresh acceptance before Glaze conformance can be claimed.
-    - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
-    - Accepted production cryptographic session and key lifecycle are not established.
-    - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.
-    - Privacy Shield policy/consent authority, accepted durable preference behavior, and production privacy acceptance are not established.
-    - Everkeep integration plus accepted backup, restore, recovery, migration, rollback, and encrypted-communication portability are not established.
-    - GoreeCloud Mesh registration, service identity, authenticated discovery/transport, capability/event publication, and runtime acceptance are not established.
-    - GoreeCloud Manager health/readiness, platform visibility, operational integration, and acceptance are not established.
-    - Representative target-environment performance, resilience, upgrade/rollback, signing/deployment, release provenance, and Release Candidate acceptance remain outstanding.
+    - The native Android Development client is disconnected and has no accepted current-Stable GLAZE UI rendered/accessibility/device acceptance or real Data messaging integration; no production conversation-authorization or E2EE-scope provider is composed even though the pre-transport policy now requires those independent positive authorities to agree on one exact conversation.
+    - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
+    - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
+    - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
+    - Privacy Shield integration, consent authority, and accepted preference persistence are not established.
+    - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
+    - GoreeCloud Mesh registration, service identity, capability publication, event contracts, and runtime acceptance are not established.
+    - GoreeCloud Manager platform visibility and operational acceptance are not established; the health/readiness routes are only an application-local Development foundation.
+    - Production deployment, protected signing/provenance, representative-device acceptance, release evidence, and Release Candidate/Stable qualification remain outstanding.
