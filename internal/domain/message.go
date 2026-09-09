@@ -75,8 +75,8 @@ type Identity struct {
 }
 
 func (i Identity) Validate() error {
-	if strings.TrimSpace(i.UserID) == "" {
-		return errors.New("identity user id is required")
+	if err := ValidateOpaqueIdentifier(i.UserID, "identity user id"); err != nil {
+		return err
 	}
 	if strings.TrimSpace(i.Username) == "" {
 		return errors.New("identity username is required")
@@ -103,14 +103,14 @@ type Message struct {
 }
 
 func (m Message) Validate() error {
-	if strings.TrimSpace(m.ID) == "" {
-		return errors.New("message id is required")
+	if err := ValidateOpaqueIdentifier(m.ID, "message id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(m.ConversationID) == "" {
-		return errors.New("conversation id is required")
+	if err := ValidateOpaqueIdentifier(m.ConversationID, "conversation id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(m.SenderID) == "" {
-		return errors.New("sender id is required")
+	if err := ValidateOpaqueIdentifier(m.SenderID, "sender id"); err != nil {
+		return err
 	}
 	if strings.TrimSpace(m.Body) == "" {
 		return errors.New("message body is required")
