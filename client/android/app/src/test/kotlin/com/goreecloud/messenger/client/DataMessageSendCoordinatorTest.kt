@@ -230,7 +230,7 @@ class DataMessageSendCoordinatorTest {
         )
         return DataMessageSendCoordinator(
             authorityResolver = resolver,
-            transport = EncryptedDataMessageTransport(onTransportSubmit),
+            transport = EncryptedDataMessageTransport { message -> onTransportSubmit(message) },
         )
     }
 
