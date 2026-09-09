@@ -73,15 +73,17 @@ fun interface EncryptedDataMessageTransport {
  * Enforces the fail-closed readiness policy at the final client seam before any injected Data
  * transport can be invoked.
  *
- * Conversation authorization must be verified for the exact conversation carried by the prepared
- * message. A valid participant decision for another conversation cannot be reused at this seam.
+ * The coordinator asks independent authority providers for current evidence about the exact
+ * prepared-message conversation. Callers cannot supply a preassembled positive readiness object to
+ * this send seam. Conversation authorization must be verified for the exact conversation carried by
+ * the prepared message, and the separately resolved E2EE scope must agree with it.
  *
  * This coordinator does not authenticate, authorize, encrypt, persist, retry, queue, synchronize,
- * or send on its own. It simply refuses to call the supplied transport unless all four independent
- * readiness authorities are positively verified and the authorization scope matches the attempted
- * operation.
+ * or send on its own. It refuses to call the supplied transport unless all four independent
+ * authorities are positively verified and their scopes match the attempted operation.
  */
 class DataMessageSendCoordinator(
+    private val authorityResolver: DataMessagingAuthorityResolver,
     private val transport: EncryptedDataMessageTransport,
 ) {
     sealed interface Result {
@@ -96,11 +98,10 @@ class DataMessageSendCoordinator(
         ) : Result
     }
 
-    fun submit(
-        evidence: DataMessagingReadiness.Evidence,
-        message: PreparedEncryptedDataMessage,
-    ): Result =
-        when (val readiness = DataMessagingReadiness.evaluate(evidence)) {
+    fun submit(message: PreparedEncryptedDataMessage): Result {
+        val evidence = authorityResolver.evidenceFor(message.conversationId)
+
+        return when (val readiness = DataMessagingReadiness.evaluate(evidence)) {
             is DataMessagingReadiness.Result.Blocked -> Result.Blocked(readiness.reasons)
             is DataMessagingReadiness.Result.Ready -> {
                 if (readiness.verifiedConversationId != message.conversationId) {
@@ -118,4 +119,5 @@ class DataMessageSendCoordinator(
                 }
             }
         }
+    }
 }
