@@ -155,6 +155,24 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
+    fun transportExceptionFailsClosedAsUnknownRejection() {
+        val coordinator = coordinator(
+            onTransportSubmit = {
+                throw IllegalStateException("transport adapter failed")
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(
+            DataMessageSendCoordinator.Result.TransportRejected(
+                EncryptedDataMessageTransport.RejectionReason.UNKNOWN,
+            ),
+            result,
+        )
+    }
+
+    @Test
     fun preparedCiphertextIsDefensivelyCopied() {
         val source = byteArrayOf(1, 2, 3, 4)
         val prepared = message(ciphertext = source)
