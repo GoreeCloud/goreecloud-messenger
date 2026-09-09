@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -48,8 +47,8 @@ func NewAttachmentService(store AttachmentStore, access ConversationAccess) (*At
 }
 
 func (s *AttachmentService) Submit(ctx context.Context, authenticatedUserID string, attachment domain.DataAttachment) error {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
 	if err := attachment.Validate(); err != nil {
 		return fmt.Errorf("validate Data attachment: %w", err)
@@ -73,11 +72,11 @@ func (s *AttachmentService) Submit(ctx context.Context, authenticatedUserID stri
 }
 
 func (s *AttachmentService) Get(ctx context.Context, authenticatedUserID, attachmentID string) (domain.DataAttachment, error) {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return domain.DataAttachment{}, errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return domain.DataAttachment{}, err
 	}
-	if strings.TrimSpace(attachmentID) == "" {
-		return domain.DataAttachment{}, errors.New("attachment id is required")
+	if err := domain.ValidateOpaqueIdentifier(attachmentID, "attachment id"); err != nil {
+		return domain.DataAttachment{}, err
 	}
 
 	attachment, ok, err := s.store.GetAttachment(ctx, attachmentID)
@@ -103,11 +102,11 @@ func (s *AttachmentService) Get(ctx context.Context, authenticatedUserID, attach
 // whether a prior request completed. Stores keep only the minimum tombstone state required to prevent
 // attachment-id and client-nonce replay.
 func (s *AttachmentService) Delete(ctx context.Context, authenticatedUserID, attachmentID string) error {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(attachmentID) == "" {
-		return errors.New("attachment id is required")
+	if err := domain.ValidateOpaqueIdentifier(attachmentID, "attachment id"); err != nil {
+		return err
 	}
 
 	if _, err := s.Get(ctx, authenticatedUserID, attachmentID); err != nil {
@@ -130,11 +129,11 @@ func (s *AttachmentService) List(
 	conversationID string,
 	limit int,
 ) ([]domain.DataAttachmentMetadata, error) {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return nil, errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return nil, err
 	}
-	if strings.TrimSpace(conversationID) == "" {
-		return nil, errors.New("conversation id is required")
+	if err := domain.ValidateOpaqueIdentifier(conversationID, "conversation id"); err != nil {
+		return nil, err
 	}
 	if limit < 1 || limit > MaxAttachmentListResults {
 		return nil, ErrAttachmentListLimit
