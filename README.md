@@ -4,7 +4,7 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, encrypted-attachment, optional content-free typing presence, authenticated Development typing-privacy preferences, unified Data HTTP runtime-composition, hardened single-node receipt persistence, explicit receipt-persistence environment configuration, and minimized startup-diagnostic foundations are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, durable Privacy Shield-backed preference storage, complete server bootstrap, and client acceptance remain incomplete.
+Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, encrypted-attachment, optional content-free typing presence, authenticated Development typing-privacy preferences, unified Data HTTP runtime-composition, hardened single-node receipt persistence, explicit receipt-persistence environment configuration, minimized startup-diagnostic foundations, and a disconnected native Android readiness/presentation foundation are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, durable Privacy Shield-backed preference storage, live Data transport, complete client acceptance, and release acceptance remain incomplete.
 
 The current foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. GoreeCloud Data adds encrypted-envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, persistence abstraction, authenticated delivery/read receipts, opaque encrypted-attachment transport, and short-lived content-free typing state. The attachment surface can submit, fetch as JSON/base64, list metadata, delete with replay-safe tombstones, and download exact ciphertext bytes without asking the server to interpret plaintext media.
 
@@ -15,6 +15,8 @@ The Development typing policy exposes independent per-conversation choices for p
 Receipt persistence can be explicitly selected as memory or hardened file-backed storage; there is no implicit durable-to-memory fallback. The development executable requires an explicit receipt-persistence environment selection. `memory` must not carry an ignored durable root. `file` requires an explicit absolute non-root persistence directory. Missing, unsupported, relative, root-level, or contradictory settings fail closed before the executable reports its development contract active.
 
 After configuration is accepted, the executable can report a minimized categorical diagnostic containing only receipt persistence mode, implemented durability class, and configuration source. File-mode diagnostics deliberately omit the configured receipt root and any message, receipt, conversation, credential, or cryptographic content. `single-node-durable` describes the selected implementation class only; it is not a distributed-durability or production-readiness claim.
+
+The native Android Development client remains deliberately disconnected from production communication authorities. Its readiness policy keeps GoreeCloud Identity authentication, conversation authorization, GoreeCloud Data transport, and verified active E2EE independent. Conversation authorization and cryptographic scopes must each be canonical bounded opaque identifiers and must identify the same exact conversation before a future operation can project `Data · E2EE`. Noncanonical scopes fail closed; the client does not trim or otherwise normalize authority-owned identifiers into a different conversation scope, and blocked Data readiness does not create SMS/MMS/RCS fallback authority.
 
 ## Product principles
 
@@ -29,7 +31,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - Attachment services transport opaque ciphertext and do not decrypt user content.
 - Typing presence remains content-free, short-lived, participant-authorized, and independently privacy-gated for publish and observe behavior.
 - Operational diagnostics must minimize sensitive configuration and communication data.
-- GLAZE UI V1.2 / 1.2.0 Stable, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
+- GLAZE UI V1.3 / 1.3.0 Adaptive Resonance, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Manager, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
 
 ## Repository layout
 
@@ -38,6 +40,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - `internal/service/` — GoreeCloud Data, receipt, attachment, typing, typing-privacy, persistence, and authorization boundaries
 - `internal/api/` — authenticated HTTP transport plus the unified application-facing Data route-composition boundary and optional typing/privacy routes
 - `internal/runtimeconfig/` — fail-closed process configuration derivation and minimized diagnostic projection for currently implemented runtime options
+- `client/android/` — disconnected native Android Development client, readiness/provenance policy, GLAZE UI source mapping, tests, and rendered shell acceptance
 - `docs/architecture.md` — product architecture and trust boundaries
 - `docs/security.md` — encryption and security constraints
 - `docs/data-messaging.md` — Data service authorization, storage, retry, and carrier-separation contract
@@ -50,8 +53,11 @@ After configuration is accepted, the executable can report a minimized categoric
 - [USER-MANUAL.md](USER-MANUAL.md)
 - [SPECIFICATIONS.md](SPECIFICATIONS.md)
 - [FEATURES.md](FEATURES.md)
+- [FEATURE-ROADMAP.md](FEATURE-ROADMAP.md)
 - [BENEFITS.md](BENEFITS.md)
 - [COMPETITIVE-OBJECTIVES.md](COMPETITIVE-OBJECTIVES.md)
+- [BRANDING.md](BRANDING.md)
+- [SECURITY.md](SECURITY.md)
 
 ## Planned clients
 
@@ -59,9 +65,9 @@ Native or platform-appropriate clients are planned for Android, tablets, desktop
 
 ## Current limitations
 
-This repository remains Development. It does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, distributed message delivery, production object storage, push notification delivery, durable Privacy Shield-backed typing preference storage, production presence fan-out/offline synchronization, anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, Glaze UI client acceptance, or production deployment evidence.
+This repository remains Development. It does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, distributed message delivery, production object storage, push notification delivery, durable Privacy Shield-backed typing preference storage, production presence fan-out/offline synchronization, distributed anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, complete GLAZE UI V1.3 client acceptance, GoreeCloud Mesh/Manager production integration, or production deployment evidence.
 
-The unified Data handler is a composition boundary, and the command-level environment parser supplies a strict receipt-persistence selection contract with a minimized categorical diagnostic. The current executable still does not assemble the complete Data runtime dependencies, credentials/Identity boundaries, TLS, service lifecycle, production health/readiness monitoring, migration, and deployment configuration needed for a production server.
+The unified Data handler is a composition boundary, and the command-level environment parser supplies a strict receipt-persistence selection contract with a minimized categorical diagnostic. The current executable still does not assemble the complete Data runtime dependencies, credentials/Identity boundaries, TLS, service lifecycle, production health/readiness monitoring, migration, and deployment configuration needed for a production server. The Android client still has no production Identity session, live conversation-authorization provider, verified cryptographic session/key authority, live Data networking, message persistence/delivery, composer/Send control, carrier fallback authority, calling authority, protected release signing, or Stable qualification.
 
 ## License
 
