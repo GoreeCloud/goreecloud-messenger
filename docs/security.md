@@ -27,9 +27,11 @@ The current domain layer rejects an `e2ee` assertion on SMS, MMS, or RCS. This p
 
 ## Authority identifier boundary
 
-GoreeCloud Data authority-owned identifiers are opaque scopes, not user-entered text to normalize. Message, conversation, participant/sender, receipt, attachment, and replay-nonce identifiers must be nonblank, must already be canonical at the boundary, must not contain C0 or DEL control characters, and are bounded to 512 UTF-16 code units. Internal spaces and punctuation remain part of the exact identifier.
+GoreeCloud authority-owned identifiers are opaque scopes, not user-entered text to normalize. Current message, conversation, participant/sender, authenticated-user, receipt, attachment, typing-presence, typing-preference, and replay-nonce boundaries require valid Unicode, nonblank values that are already canonical, no C0 or DEL control characters, and a maximum of 512 UTF-16 code units. Internal spaces and punctuation remain part of the exact identifier.
 
-HTTP handlers must pass path identifiers through without trimming or rewriting them. Domain and service layers revalidate the same boundary before authorization or persistence so a caller cannot bypass the rule by invoking a service directly. A value such as ` conversation-1` must therefore fail closed rather than being transformed into the authority scope `conversation-1`.
+Data HTTP handlers pass path identifiers through without trimming or rewriting them. The message, receipt, attachment, typing-presence, typing-preference, and authenticated runtime-diagnostic surfaces reject noncanonical authenticated identities. Domain and service layers revalidate the same boundary before authorization or persistence so a caller cannot bypass the rule by invoking a service directly. A value such as ` conversation-1` must therefore fail closed rather than being transformed into the authority scope `conversation-1`.
+
+The Go boundary also rejects malformed UTF-8 before UTF-16 length evaluation so byte sequences that cannot exist as a native Android `String` cannot become a different replacement-character scope on the server.
 
 This Development rule prevents identifier aliasing; it is not an authentication, authorization, cryptographic-session, or production Identity implementation by itself.
 
