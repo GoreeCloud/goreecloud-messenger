@@ -29,7 +29,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - Attachment services transport opaque ciphertext and do not decrypt user content.
 - Typing presence remains content-free, short-lived, participant-authorized, and independently privacy-gated for publish and observe behavior.
 - Operational diagnostics must minimize sensitive configuration and communication data.
-- Glaze UI 2.0 or newer, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
+- GLAZE UI V1.2 / 1.2.0 Stable, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
 
 ## Repository layout
 
