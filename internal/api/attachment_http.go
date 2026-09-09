@@ -135,8 +135,7 @@ func (h *AttachmentHTTPHandler) getAttachment(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	attachmentID := strings.TrimSpace(r.PathValue("attachmentID"))
-	attachment, err := h.service.Get(r.Context(), userID, attachmentID)
+	attachment, err := h.service.Get(r.Context(), userID, r.PathValue("attachmentID"))
 	if err != nil {
 		writeAttachmentServiceError(w, err)
 		return
@@ -158,7 +157,7 @@ func (h *AttachmentHTTPHandler) getAttachmentCiphertext(w http.ResponseWriter, r
 		return
 	}
 
-	attachment, err := h.service.Get(r.Context(), userID, strings.TrimSpace(r.PathValue("attachmentID")))
+	attachment, err := h.service.Get(r.Context(), userID, r.PathValue("attachmentID"))
 	if err != nil {
 		writeAttachmentServiceError(w, err)
 		return
@@ -182,7 +181,7 @@ func (h *AttachmentHTTPHandler) deleteAttachment(w http.ResponseWriter, r *http.
 	if !ok {
 		return
 	}
-	if err := h.service.Delete(r.Context(), userID, strings.TrimSpace(r.PathValue("attachmentID"))); err != nil {
+	if err := h.service.Delete(r.Context(), userID, r.PathValue("attachmentID")); err != nil {
 		writeAttachmentServiceError(w, err)
 		return
 	}
@@ -208,7 +207,7 @@ func (h *AttachmentHTTPHandler) listAttachments(w http.ResponseWriter, r *http.R
 	metadata, err := h.service.List(
 		r.Context(),
 		userID,
-		strings.TrimSpace(r.PathValue("conversationID")),
+		r.PathValue("conversationID"),
 		limit,
 	)
 	if err != nil {
@@ -232,7 +231,7 @@ func (h *AttachmentHTTPHandler) listAttachments(w http.ResponseWriter, r *http.R
 
 func (h *AttachmentHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
-	if err != nil || strings.TrimSpace(userID) == "" {
+	if err != nil || domain.ValidateOpaqueIdentifier(userID, "authenticated user id") != nil {
 		writeError(w, http.StatusUnauthorized, "authentication required")
 		return "", false
 	}
