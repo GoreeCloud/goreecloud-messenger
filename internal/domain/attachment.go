@@ -5,7 +5,6 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
 
 const (
@@ -49,17 +48,17 @@ func (a DataAttachment) Metadata() DataAttachmentMetadata {
 }
 
 func (a DataAttachment) Validate() error {
-	if strings.TrimSpace(a.AttachmentID) == "" {
-		return errors.New("attachment id is required")
+	if err := ValidateOpaqueIdentifier(a.AttachmentID, "attachment id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(a.ConversationID) == "" {
-		return errors.New("conversation id is required")
+	if err := ValidateOpaqueIdentifier(a.ConversationID, "conversation id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(a.SenderID) == "" {
-		return errors.New("sender id is required")
+	if err := ValidateOpaqueIdentifier(a.SenderID, "sender id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(a.ClientNonce) == "" {
-		return errors.New("client nonce is required")
+	if err := ValidateOpaqueIdentifier(a.ClientNonce, "client nonce"); err != nil {
+		return err
 	}
 	if len(a.Filename) == 0 || len(a.Filename) > MaxAttachmentFilenameBytes {
 		return fmt.Errorf("filename length must be between 1 and %d bytes", MaxAttachmentFilenameBytes)
