@@ -29,6 +29,7 @@ func TestValidateOpaqueIdentifierRejectsNoncanonicalOrUnsafeValues(t *testing.T)
 		"conversation-1 ",
 		"conversation\n1",
 		"conversation\x7f1",
+		string([]byte{0xff}),
 		strings.Repeat("a", MaxOpaqueIdentifierUTF16Units+1),
 	} {
 		if err := ValidateOpaqueIdentifier(value, "identifier"); err == nil {
