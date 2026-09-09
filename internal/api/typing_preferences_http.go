@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
+	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
 	messagingservice "github.com/GoreeCloud/goreecloud-messenger/internal/service"
 )
 
@@ -48,7 +48,7 @@ func (h *TypingPreferencesHTTPHandler) get(w http.ResponseWriter, r *http.Reques
 	if !ok {
 		return
 	}
-	preferences, err := h.service.Get(r.Context(), userID, strings.TrimSpace(r.PathValue("conversationID")))
+	preferences, err := h.service.Get(r.Context(), userID, r.PathValue("conversationID"))
 	if err != nil {
 		writeTypingPreferenceError(w, err)
 		return
@@ -81,7 +81,7 @@ func (h *TypingPreferencesHTTPHandler) put(w http.ResponseWriter, r *http.Reques
 	preferences, err := h.service.Update(
 		r.Context(),
 		userID,
-		strings.TrimSpace(r.PathValue("conversationID")),
+		r.PathValue("conversationID"),
 		messagingservice.TypingPrivacyPreferences{
 			PublishTyping: input.PublishTyping,
 			ObserveTyping: input.ObserveTyping,
@@ -99,7 +99,7 @@ func (h *TypingPreferencesHTTPHandler) put(w http.ResponseWriter, r *http.Reques
 
 func (h *TypingPreferencesHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
-	if err != nil || strings.TrimSpace(userID) == "" {
+	if err != nil || domain.ValidateOpaqueIdentifier(userID, "authenticated user id") != nil {
 		writeError(w, http.StatusUnauthorized, "authentication required")
 		return "", false
 	}
