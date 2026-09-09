@@ -126,6 +126,8 @@ func writeTypingServiceError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusForbidden, "typing indicator disabled by privacy policy")
 	case errors.Is(err, messagingservice.ErrTypingStaleSignal):
 		writeError(w, http.StatusConflict, "typing signal conflicts with newer state")
+	case errors.Is(err, messagingservice.ErrTypingRateLimited):
+		writeError(w, http.StatusTooManyRequests, "typing signal publish rate exceeded")
 	default:
 		writeError(w, http.StatusBadRequest, "typing signal rejected")
 	}
