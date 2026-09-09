@@ -17,6 +17,9 @@
 - Authenticated per-conversation typing privacy preferences for the current Development memory policy, allowing a participant to independently disable publishing or observing typing presence.
 - Strict typing-preference HTTP input that derives user identity from authentication and rejects request-body identity fields.
 - Explicit optional runtime composition of the mutable typing-preference route, separate from the base message runtime and separate from typing-signal composition.
+- Native Android Development readiness policy and presentation that report GoreeCloud Identity authentication, exact conversation authorization, GoreeCloud Data transport, and exact conversation-scoped verified active E2EE independently before any future `Data · E2EE` send operation can be considered ready.
+- Exact bounded opaque conversation-scope validation for Android Data readiness: noncanonical leading/trailing whitespace, overlong values, C0 controls, and DEL fail closed rather than being normalized into another authority scope; valid internal spaces and punctuation are preserved exactly.
+- GLAZE UI V1.3 / `1.3.0` Adaptive Resonance source mapping for the current native Android Development client, with rendered/application acceptance remaining separate.
 
 ## Planned / incomplete
 
@@ -28,5 +31,5 @@
 - **Durable Privacy Shield-backed** typing/presence preference persistence and native client typing/privacy presentation. The current preference store is Development memory state only.
 - SMS/MMS/RCS carrier/platform adapters where legitimate APIs permit.
 - Voice/video call signaling and media transport.
-- Native client packaging and Glaze UI 2.0+ rendered acceptance.
-- Wardveil encrypted-object/security acceptance, Privacy Shield controls, Everkeep continuity, and production deployment evidence.
+- Native client packaging and complete GLAZE UI V1.3 rendered, accessibility, adaptive/form-factor, representative-device, performance, rollback, release, and production acceptance.
+- Wardveil encrypted-object/security acceptance, Privacy Shield controls, Everkeep continuity, GoreeCloud Mesh and GoreeCloud Manager production integration, and production deployment evidence.
