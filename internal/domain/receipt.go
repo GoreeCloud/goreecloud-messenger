@@ -4,7 +4,6 @@ package domain
 
 import (
 	"errors"
-	"strings"
 	"time"
 )
 
@@ -27,14 +26,14 @@ type DeliveryReceipt struct {
 }
 
 func (r DeliveryReceipt) Validate() error {
-	if strings.TrimSpace(r.MessageID) == "" {
-		return errors.New("receipt message id is required")
+	if err := ValidateOpaqueIdentifier(r.MessageID, "receipt message id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(r.ConversationID) == "" {
-		return errors.New("receipt conversation id is required")
+	if err := ValidateOpaqueIdentifier(r.ConversationID, "receipt conversation id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(r.UserID) == "" {
-		return errors.New("receipt user id is required")
+	if err := ValidateOpaqueIdentifier(r.UserID, "receipt user id"); err != nil {
+		return err
 	}
 	switch r.State {
 	case ReceiptDelivered, ReceiptRead:
