@@ -109,7 +109,14 @@ class DataMessageSendCoordinator(
                         setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
                     )
                 } else {
-                    when (val submission = transport.submit(message)) {
+                    val submission = try {
+                        transport.submit(message)
+                    } catch (_: Exception) {
+                        EncryptedDataMessageTransport.Submission.Rejected(
+                            EncryptedDataMessageTransport.RejectionReason.UNKNOWN,
+                        )
+                    }
+                    when (submission) {
                         EncryptedDataMessageTransport.Submission.Accepted ->
                             Result.Submitted(readiness.provenance)
 
