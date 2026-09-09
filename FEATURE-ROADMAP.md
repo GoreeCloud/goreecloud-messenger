@@ -11,7 +11,7 @@ This repository roadmap mirrors the Drive-side GoreeCloud Messenger feature-road
 
 This file and the corresponding Drive `FEATURE-ROADMAP.docx` must remain materially synchronized. A feature appearing here does not establish implementation, production acceptance, release acceptance, or Stable status by itself.
 
-Current Development checkpoint: PR #61 hardens the disconnected Android readiness line so authority-owned conversation identifiers are validated as exact bounded opaque scopes rather than trimmed into aliases. This remains Development source work and does not create live messaging authority.
+Current Development checkpoint: Draft PR #63 (`feature/android-messaging-authority-providers`) is stacked on validated Draft PR #62 and replaces caller-preassembled positive send-readiness evidence with independent provider seams for GoreeCloud Identity session state, exact conversation authorization, GoreeCloud Data transport availability, and exact conversation-scoped E2EE state. The final Data send seam remains unavailable unless all authorities independently verify the exact prepared-message conversation. Exact-head CI for PR #63 is pending; no live Identity, E2EE, Data transport, Send action, deployment, release, or Stable authority is created by this candidate.
 
 ## Roadmap
 
