@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -42,8 +41,8 @@ func NewReceiptService(messages MessageLookup, receipts ReceiptStore, access Con
 }
 
 func (s *ReceiptService) Record(ctx context.Context, authenticatedUserID string, receipt domain.DeliveryReceipt) error {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
 	if err := receipt.Validate(); err != nil {
 		return fmt.Errorf("validate receipt: %w", err)
@@ -72,6 +71,12 @@ func (s *ReceiptService) Record(ctx context.Context, authenticatedUserID string,
 }
 
 func (s *ReceiptService) List(ctx context.Context, authenticatedUserID, messageID string) ([]domain.DeliveryReceipt, error) {
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return nil, err
+	}
+	if err := domain.ValidateOpaqueIdentifier(messageID, "message id"); err != nil {
+		return nil, err
+	}
 	message, found, err := s.messages.Get(ctx, messageID)
 	if err != nil {
 		return nil, fmt.Errorf("lookup message: %w", err)
