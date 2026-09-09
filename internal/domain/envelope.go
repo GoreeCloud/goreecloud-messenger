@@ -4,7 +4,6 @@ package domain
 
 import (
 	"errors"
-	"strings"
 	"time"
 )
 
@@ -22,17 +21,17 @@ type DataEnvelope struct {
 }
 
 func (e DataEnvelope) Validate() error {
-	if strings.TrimSpace(e.MessageID) == "" {
-		return errors.New("envelope message id is required")
+	if err := ValidateOpaqueIdentifier(e.MessageID, "envelope message id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(e.ConversationID) == "" {
-		return errors.New("envelope conversation id is required")
+	if err := ValidateOpaqueIdentifier(e.ConversationID, "envelope conversation id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(e.SenderID) == "" {
-		return errors.New("envelope sender id is required")
+	if err := ValidateOpaqueIdentifier(e.SenderID, "envelope sender id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(e.ClientNonce) == "" {
-		return errors.New("envelope client nonce is required")
+	if err := ValidateOpaqueIdentifier(e.ClientNonce, "envelope client nonce"); err != nil {
+		return err
 	}
 	if len(e.Ciphertext) == 0 {
 		return errors.New("envelope ciphertext is required")
