@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -147,8 +146,7 @@ func (h *Handler) listConversation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conversationID := strings.TrimSpace(r.PathValue("conversationID"))
-	messages, err := h.service.ListConversation(r.Context(), userID, conversationID)
+	messages, err := h.service.ListConversation(r.Context(), userID, r.PathValue("conversationID"))
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -190,7 +188,7 @@ func (h *Handler) recordReceipt(w http.ResponseWriter, r *http.Request) {
 	}
 
 	receipt := domain.DeliveryReceipt{
-		MessageID:      strings.TrimSpace(r.PathValue("messageID")),
+		MessageID:      r.PathValue("messageID"),
 		ConversationID: input.ConversationID,
 		UserID:         input.UserID,
 		State:          input.State,
@@ -208,8 +206,7 @@ func (h *Handler) listReceipts(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	messageID := strings.TrimSpace(r.PathValue("messageID"))
-	receipts, err := h.receipts.List(r.Context(), userID, messageID)
+	receipts, err := h.receipts.List(r.Context(), userID, r.PathValue("messageID"))
 	if err != nil {
 		writeServiceError(w, err)
 		return
@@ -229,7 +226,7 @@ func (h *Handler) listReceipts(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
-	if err != nil || strings.TrimSpace(userID) == "" {
+	if err != nil || domain.ValidateOpaqueIdentifier(userID, "authenticated user id") != nil {
 		writeError(w, http.StatusUnauthorized, "authentication required")
 		return "", false
 	}

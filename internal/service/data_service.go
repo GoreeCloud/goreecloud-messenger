@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -47,8 +46,8 @@ func NewDataService(store DataStore, access ConversationAccess) (*DataService, e
 }
 
 func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, envelope domain.DataEnvelope) error {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
 	if err := envelope.Validate(); err != nil {
 		return fmt.Errorf("validate Data envelope: %w", err)
@@ -72,11 +71,11 @@ func (s *DataService) Submit(ctx context.Context, authenticatedUserID string, en
 }
 
 func (s *DataService) ListConversation(ctx context.Context, authenticatedUserID, conversationID string) ([]domain.DataEnvelope, error) {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return nil, errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return nil, err
 	}
-	if strings.TrimSpace(conversationID) == "" {
-		return nil, errors.New("conversation id is required")
+	if err := domain.ValidateOpaqueIdentifier(conversationID, "conversation id"); err != nil {
+		return nil, err
 	}
 
 	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)

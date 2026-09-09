@@ -5,7 +5,6 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"strings"
 )
 
 // ConversationKind distinguishes direct and group messaging.
@@ -33,8 +32,8 @@ type Conversation struct {
 }
 
 func (c Conversation) Validate() error {
-	if strings.TrimSpace(c.ID) == "" {
-		return errors.New("conversation id is required")
+	if err := ValidateOpaqueIdentifier(c.ID, "conversation id"); err != nil {
+		return err
 	}
 	if !c.Kind.Valid() {
 		return fmt.Errorf("unsupported conversation kind %q", c.Kind)
@@ -47,9 +46,8 @@ func (c Conversation) Validate() error {
 
 	seen := make(map[string]struct{}, len(c.ParticipantIDs))
 	for _, participantID := range c.ParticipantIDs {
-		participantID = strings.TrimSpace(participantID)
-		if participantID == "" {
-			return errors.New("conversation participant id is required")
+		if err := ValidateOpaqueIdentifier(participantID, "conversation participant id"); err != nil {
+			return err
 		}
 		if _, exists := seen[participantID]; exists {
 			return errors.New("conversation participant ids must be unique")

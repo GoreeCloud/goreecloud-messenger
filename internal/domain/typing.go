@@ -4,7 +4,6 @@ package domain
 
 import (
 	"errors"
-	"strings"
 	"time"
 )
 
@@ -25,11 +24,11 @@ type TypingSignal struct {
 }
 
 func (s TypingSignal) Validate() error {
-	if strings.TrimSpace(s.ConversationID) == "" {
-		return errors.New("typing conversation id is required")
+	if err := ValidateOpaqueIdentifier(s.ConversationID, "typing conversation id"); err != nil {
+		return err
 	}
-	if strings.TrimSpace(s.UserID) == "" {
-		return errors.New("typing user id is required")
+	if err := ValidateOpaqueIdentifier(s.UserID, "typing user id"); err != nil {
+		return err
 	}
 	if s.Sequence == 0 {
 		return errors.New("typing sequence must be greater than zero")

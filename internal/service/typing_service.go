@@ -66,8 +66,8 @@ func NewTypingService(store TypingStore, access ConversationAccess, policy Typin
 }
 
 func (s *TypingService) Publish(ctx context.Context, authenticatedUserID string, signal domain.TypingSignal) error {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
 	if err := signal.Validate(); err != nil {
 		return fmt.Errorf("validate typing signal: %w", err)
@@ -117,12 +117,11 @@ func (s *TypingService) Publish(ctx context.Context, authenticatedUserID string,
 }
 
 func (s *TypingService) List(ctx context.Context, authenticatedUserID, conversationID string) ([]domain.ActiveTyping, error) {
-	if strings.TrimSpace(authenticatedUserID) == "" {
-		return nil, errors.New("authenticated user id is required")
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return nil, err
 	}
-	conversationID = strings.TrimSpace(conversationID)
-	if conversationID == "" {
-		return nil, errors.New("conversation id is required")
+	if err := domain.ValidateOpaqueIdentifier(conversationID, "conversation id"); err != nil {
+		return nil, err
 	}
 
 	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -73,7 +72,7 @@ func (h *TypingHTTPHandler) publish(w http.ResponseWriter, r *http.Request) {
 	// The authenticated runtime is the only authority for the typing actor.
 	// The request body intentionally carries no user identity field.
 	signal := domain.TypingSignal{
-		ConversationID: strings.TrimSpace(r.PathValue("conversationID")),
+		ConversationID: r.PathValue("conversationID"),
 		UserID:         userID,
 		Sequence:       input.Sequence,
 		State:          input.State,
@@ -91,7 +90,7 @@ func (h *TypingHTTPHandler) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	active, err := h.service.List(r.Context(), userID, strings.TrimSpace(r.PathValue("conversationID")))
+	active, err := h.service.List(r.Context(), userID, r.PathValue("conversationID"))
 	if err != nil {
 		writeTypingServiceError(w, err)
 		return
@@ -109,7 +108,7 @@ func (h *TypingHTTPHandler) list(w http.ResponseWriter, r *http.Request) {
 
 func (h *TypingHTTPHandler) authenticate(w http.ResponseWriter, r *http.Request) (string, bool) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
-	if err != nil || strings.TrimSpace(userID) == "" {
+	if err != nil || domain.ValidateOpaqueIdentifier(userID, "authenticated user id") != nil {
 		writeError(w, http.StatusUnauthorized, "authentication required")
 		return "", false
 	}

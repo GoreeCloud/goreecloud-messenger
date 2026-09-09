@@ -5,8 +5,9 @@ package api
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
+
+	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
 )
 
 // RuntimePersistenceProbe is a deliberately narrow diagnostic boundary. It may
@@ -53,7 +54,7 @@ func (h *DataRuntimeHandler) registerRuntimeProjection(mux *http.ServeMux) {
 
 func (h *DataRuntimeHandler) runtimeProjection(w http.ResponseWriter, r *http.Request) {
 	userID, err := h.auth.Authenticate(r.Context(), r)
-	if err != nil || strings.TrimSpace(userID) == "" {
+	if err != nil || domain.ValidateOpaqueIdentifier(userID, "authenticated user id") != nil {
 		writeError(w, http.StatusUnauthorized, "authentication required")
 		return
 	}

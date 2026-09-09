@@ -6,7 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
+
+	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
 )
 
 // TypingPrivacyPreferences is the minimized user-controlled projection for
@@ -41,8 +42,7 @@ func NewTypingPrivacyPreferenceService(store TypingPrivacyPreferenceStore, acces
 }
 
 func (s *TypingPrivacyPreferenceService) Get(ctx context.Context, authenticatedUserID, conversationID string) (TypingPrivacyPreferences, error) {
-	conversationID, err := s.authorize(ctx, authenticatedUserID, conversationID)
-	if err != nil {
+	if err := s.authorize(ctx, authenticatedUserID, conversationID); err != nil {
 		return TypingPrivacyPreferences{}, err
 	}
 	preferences, err := s.store.GetTypingPreferences(ctx, conversationID, authenticatedUserID)
@@ -58,8 +58,7 @@ func (s *TypingPrivacyPreferenceService) Update(
 	conversationID string,
 	preferences TypingPrivacyPreferences,
 ) (TypingPrivacyPreferences, error) {
-	conversationID, err := s.authorize(ctx, authenticatedUserID, conversationID)
-	if err != nil {
+	if err := s.authorize(ctx, authenticatedUserID, conversationID); err != nil {
 		return TypingPrivacyPreferences{}, err
 	}
 	if err := s.store.SetTypingPreferences(ctx, conversationID, authenticatedUserID, preferences); err != nil {
@@ -68,23 +67,21 @@ func (s *TypingPrivacyPreferenceService) Update(
 	return preferences, nil
 }
 
-func (s *TypingPrivacyPreferenceService) authorize(ctx context.Context, authenticatedUserID, conversationID string) (string, error) {
-	authenticatedUserID = strings.TrimSpace(authenticatedUserID)
-	conversationID = strings.TrimSpace(conversationID)
-	if authenticatedUserID == "" {
-		return "", errors.New("authenticated user id is required")
+func (s *TypingPrivacyPreferenceService) authorize(ctx context.Context, authenticatedUserID, conversationID string) error {
+	if err := domain.ValidateOpaqueIdentifier(authenticatedUserID, "authenticated user id"); err != nil {
+		return err
 	}
-	if conversationID == "" {
-		return "", errors.New("conversation id is required")
+	if err := domain.ValidateOpaqueIdentifier(conversationID, "conversation id"); err != nil {
+		return err
 	}
 	allowed, err := s.access.IsParticipant(ctx, conversationID, authenticatedUserID)
 	if err != nil {
-		return "", fmt.Errorf("verify conversation access: %w", err)
+		return fmt.Errorf("verify conversation access: %w", err)
 	}
 	if !allowed {
-		return "", ErrConversationAccess
+		return ErrConversationAccess
 	}
-	return conversationID, nil
+	return nil
 }
 
 // GetTypingPreferences returns the effective in-memory values, including the
