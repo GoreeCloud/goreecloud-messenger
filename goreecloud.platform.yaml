@@ -84,15 +84,17 @@ platform_systems:
       - internal/api/runtime_health.go
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
       - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
       - scripts/check_android_client_boundary.py
       - docs/development/native-android-client.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. Its future Data-send readiness boundary fails closed unless Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE are independently positive. Authorization and E2EE scopes must identify the same conversation before readiness becomes positive, and the pre-transport coordinator then requires that unified scope to exactly match the prepared encrypted message target. Public health/readiness responses expose only categorical state; accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. Its future Data-send readiness boundary now resolves Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE through separate provider seams; provider failures map only that authority to UNKNOWN. Authorization and E2EE scopes must identify the same conversation before readiness becomes positive, and the pre-transport coordinator resolves those providers itself rather than accepting caller-preassembled positive readiness evidence. Public health/readiness responses expose only categorical state; accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
   wardveil_security:
     result: applicable-blocked
     version: null
@@ -104,15 +106,17 @@ platform_systems:
       - internal/service/typing_service.go
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
       - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
       - scripts/check_android_client_boundary.py
       - docs/development/native-android-client.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, a bounded process-local typing anti-flood guard, and a disconnected Android client whose source boundary rejects carrier E2EE claims, network/storage authority, unscoped conversation-participant readiness, unscoped E2EE readiness, mismatched authorization/cryptographic conversation scopes, cross-conversation reuse of a verified operation scope, and Data-send readiness unless each independent security/authorization prerequisite is verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, a bounded process-local typing anti-flood guard, and a disconnected Android client whose source boundary rejects carrier E2EE claims, network/storage authority, unscoped conversation-participant readiness, unscoped E2EE readiness, mismatched authorization/cryptographic conversation scopes, cross-conversation reuse of a verified operation scope, caller-preassembled positive send-readiness evidence, and Data-send readiness unless each independent provider-owned security/authorization prerequisite is verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
   everkeep:
     result: applicable-blocked
     version: null
@@ -155,10 +159,12 @@ platform_systems:
       - internal/api/typing_preferences_http.go
       - client/android/README.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
-    notes: Server HTTP handlers inject an Authenticator and derive acting identities from it, while the native Android Development client intentionally has no account/session integration and explicitly blocks future Data-send readiness when Identity state is not independently authenticated. Conversation authorization remains a separate authority and must carry its exact verified conversation. Cryptographic readiness remains a separate authority and must independently carry the same conversation before the client can consider the operation ready. Production GoreeCloud Identity credential issuance, session validation, device identity, and username resolution are not implemented or accepted.
+    notes: Server HTTP handlers inject an Authenticator and derive acting identities from it, while the native Android Development client intentionally has no production account/session integration. The client now defines a narrow GoreeCloud Identity session provider seam whose only projection is authentication state; provider failure maps to UNKNOWN and cannot be upgraded by conversation, transport, or E2EE state. Conversation authorization remains a separate exact-scope authority, and cryptographic readiness remains another separate exact-scope authority. Production GoreeCloud Identity credential issuance, session validation, device identity, authorization service integration, and exact-handle username resolution are not implemented or accepted.
 
 health:
   health_endpoint: /healthz
@@ -218,8 +224,10 @@ conformance:
     - docs/development/native-android-client.md
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinator.kt
     - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
+    - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
     - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
     - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
@@ -228,8 +236,8 @@ conformance:
     - docs/development/typing-publish-rate-guard.md
     - docs/development/typing-publish-participant-cap.md
   blockers:
-    - The native Android Development client is still disconnected and has no accepted V1.3 rendered/accessibility/device acceptance or real Data messaging integration; no production conversation-authorization or E2EE-scope provider is composed even though the pre-transport policy requires those independent positive authorities to agree on one exact conversation.
-    - Production GoreeCloud Identity credential, session, device identity, and username-resolution integration are not established.
+    - The native Android Development client is still disconnected and has no accepted V1.3 rendered/accessibility/device acceptance or real Data messaging integration; no production Identity, conversation-authorization, Data-transport, or E2EE provider is composed even though the pre-transport resolver requires those independent positive authorities to agree on one exact conversation.
+    - Production GoreeCloud Identity credential, session, device identity, authorization-service, and username-resolution integration are not established.
     - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
     - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
     - Privacy Shield integration, consent authority, and accepted preference persistence are not established.

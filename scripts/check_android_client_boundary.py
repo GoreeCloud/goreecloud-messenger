@@ -10,6 +10,7 @@ STRINGS = CLIENT / "res" / "values" / "strings.xml"
 APP_BUILD = ANDROID / "app" / "build.gradle.kts"
 CLIENT_KOTLIN = CLIENT / "kotlin" / "com" / "goreecloud" / "messenger" / "client"
 READINESS = CLIENT_KOTLIN / "DataMessagingReadiness.kt"
+AUTHORITIES = CLIENT_KOTLIN / "DataMessagingAuthorityResolver.kt"
 COORDINATOR = CLIENT_KOTLIN / "DataMessageSendCoordinator.kt"
 
 errors: list[str] = []
@@ -122,19 +123,45 @@ else:
                 f"Messenger readiness contract is missing scoped authority guard {required!r}",
             )
 
+if not AUTHORITIES.is_file():
+    errors.append("Messenger independent messaging authority resolver is missing")
+else:
+    authority_text = AUTHORITIES.read_text(encoding="utf-8")
+    for required in (
+        "fun interface GoreeCloudIdentitySessionAuthority",
+        "fun interface ConversationAuthorizationAuthority",
+        "fun interface GoreeCloudDataTransportAuthority",
+        "fun interface E2EESessionAuthority",
+        "class DataMessagingAuthorityResolver",
+        "conversationAuthorizationAuthority.accessFor(targetConversationId)",
+        "e2eeSessionAuthority.stateFor(targetConversationId)",
+        "ConversationAccessState.UNKNOWN",
+        "DataTransportState.UNKNOWN",
+        "CryptographicState.UNKNOWN",
+    ):
+        if required not in authority_text:
+            errors.append(
+                f"Messenger authority resolver is missing independent fail-closed provider guard {required!r}",
+            )
+
 if not COORDINATOR.is_file():
     errors.append("Messenger Data message send coordinator is missing")
 else:
     coordinator_text = COORDINATOR.read_text(encoding="utf-8")
     for required in (
+        "private val authorityResolver: DataMessagingAuthorityResolver",
+        "fun submit(message: PreparedEncryptedDataMessage): Result",
+        "authorityResolver.evidenceFor(message.conversationId)",
         "readiness.verifiedConversationId != message.conversationId",
         "DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED",
         "transport.submit(message)",
     ):
         if required not in coordinator_text:
             errors.append(
-                f"Messenger send coordinator is missing conversation-bound transport guard {required!r}",
+                f"Messenger send coordinator is missing provider-owned conversation-bound guard {required!r}",
             )
+    if "evidence: DataMessagingReadiness.Evidence" in coordinator_text:
+        errors.append("Messenger send coordinator must not accept caller-assembled readiness evidence")
 
 if errors:
     print("Messenger Android Development client boundary FAILED:", file=sys.stderr)
