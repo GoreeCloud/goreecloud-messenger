@@ -71,9 +71,9 @@ class MessengerClientRuntimeAcceptanceTest {
         assertTrue(visibleText.any { it.contains("Data messaging readiness") })
         assertTrue(visibleText.any { it.contains("Data send unavailable") })
         assertTrue(visibleText.any { it.contains("Identity authentication") })
-        assertTrue(visibleText.any { it.contains("conversation authorization") })
+        assertTrue(visibleText.any { it.contains("Conversation authorization") })
         assertTrue(visibleText.any { it.contains("GoreeCloud Data transport") })
-        assertTrue(visibleText.any { it.contains("verified active E2EE") })
+        assertTrue(visibleText.any { it.contains("Verified active E2EE") })
         assertTrue(visibleText.any { it.contains("Not Release Candidate") })
         assertTrue(visibleText.any { it.contains("Provenance examples") })
 

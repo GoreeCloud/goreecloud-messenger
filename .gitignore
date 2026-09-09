@@ -1,0 +1,44 @@
+# Operating-system and editor artifacts
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.local
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+local.properties
+
+# Go build/test artifacts
+bin/
+coverage.out
+coverage.html
+*.test
+*.prof
+
+# Gradle / Android generated state
+.gradle/
+**/.gradle/
+**/build/
+**/.cxx/
+**/.externalNativeBuild/
+*.apk
+*.aab
+*.ap_
+
+# Temporary files and logs
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.tmp/
+tmp/

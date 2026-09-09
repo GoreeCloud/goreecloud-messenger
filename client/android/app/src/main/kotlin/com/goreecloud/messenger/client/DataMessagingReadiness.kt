@@ -72,18 +72,16 @@ object DataMessagingReadiness {
      * Require every independently owned prerequisite before a future client may expose an eligible
      * encrypted GoreeCloud Data send operation.
      *
-     * All missing, negative, unavailable, unknown, or unscoped states fail closed. Positive
-     * conversation-access and E2EE authorities must also identify the same exact conversation.
-     * There is deliberately no downgrade to carrier messaging and no conversion from transport
-     * availability to E2EE state.
+     * All missing, negative, unavailable, unknown, noncanonical, or unscoped states fail closed.
+     * Positive conversation-access and E2EE authorities must identify the same exact bounded opaque
+     * conversation identifier. There is deliberately no normalization into another scope, downgrade
+     * to carrier messaging, or conversion from transport availability to E2EE state.
      */
     fun evaluate(evidence: Evidence): Result {
         val authorizedConversationId = evidence.authorizedConversationId
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+            ?.let(DataReceiptIdentifierPolicy::canonicalOrNull)
         val e2eeConversationId = evidence.e2eeConversationId
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
+            ?.let(DataReceiptIdentifierPolicy::canonicalOrNull)
 
         val reasons = buildSet {
             if (evidence.identity != IdentityState.AUTHENTICATED) {

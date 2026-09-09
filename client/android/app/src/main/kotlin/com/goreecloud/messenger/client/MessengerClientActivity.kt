@@ -131,28 +131,8 @@ class MessengerClientActivity : Activity() {
             ),
         )
 
-    private fun readinessExplanation(result: DataMessagingReadiness.Result): String = when (result) {
-        is DataMessagingReadiness.Result.Ready ->
-            "Data messaging prerequisites are independently verified (${result.provenance.displayLabel()})."
-
-        is DataMessagingReadiness.Result.Blocked -> {
-            val labels = listOfNotNull(
-                "Identity authentication".takeIf {
-                    DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED in result.reasons
-                },
-                "conversation authorization".takeIf {
-                    DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED in result.reasons
-                },
-                "GoreeCloud Data transport".takeIf {
-                    DataMessagingReadiness.BlockReason.DATA_TRANSPORT_NOT_AVAILABLE in result.reasons
-                },
-                "verified active E2EE".takeIf {
-                    DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE in result.reasons
-                },
-            )
-            "Missing verified prerequisites: ${labels.joinToString(" · ")}. No Send action is exposed."
-        }
-    }
+    private fun readinessExplanation(result: DataMessagingReadiness.Result): String =
+        DataMessagingReadinessPresentationPolicy.present(result).body()
 
     private fun surface(title: String, body: String, colors: Palette): View =
         LinearLayout(this).apply {

@@ -27,7 +27,7 @@ class DataMessagingReadinessTest {
     }
 
     @Test
-    fun independentConversationScopesAreNormalizedBeforeReadiness() {
+    fun trimDependentAuthorityScopesFailClosedInsteadOfAliasing() {
         val result = DataMessagingReadiness.evaluate(
             fullyReady.copy(
                 authorizedConversationId = "  conversation-1  ",
@@ -36,8 +36,11 @@ class DataMessagingReadinessTest {
         )
 
         assertEquals(
-            "conversation-1",
-            (result as DataMessagingReadiness.Result.Ready).verifiedConversationId,
+            setOf(
+                DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED,
+                DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE,
+            ),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
         )
     }
 
@@ -74,6 +77,49 @@ class DataMessagingReadinessTest {
         assertEquals(
             setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
             (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun overlongAuthorizationScopeFailsClosedWithoutInvalidatingIndependentCryptoEvidence() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(
+                authorizedConversationId = "a".repeat(
+                    DataReceiptIdentifierPolicy.MAX_IDENTIFIER_LENGTH + 1,
+                ),
+            ),
+        )
+
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun controlCharacterInE2eeScopeFailsClosed() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(e2eeConversationId = "conversation\u0000-1"),
+        )
+
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun validInternalWhitespaceRemainsPartOfOpaqueScope() {
+        val result = DataMessagingReadiness.evaluate(
+            fullyReady.copy(
+                authorizedConversationId = "conversation 1",
+                e2eeConversationId = "conversation 1",
+            ),
+        )
+
+        assertEquals(
+            "conversation 1",
+            (result as DataMessagingReadiness.Result.Ready).verifiedConversationId,
         )
     }
 
