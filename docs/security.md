@@ -25,6 +25,14 @@ The eventual implementation must cover:
 
 The current domain layer rejects an `e2ee` assertion on SMS, MMS, or RCS. This prevents the application core from presenting GoreeCloud E2EE on a carrier transport without a separately implemented and verified cryptographic envelope.
 
+## Authority identifier boundary
+
+GoreeCloud Data authority-owned identifiers are opaque scopes, not user-entered text to normalize. Message, conversation, participant/sender, receipt, attachment, and replay-nonce identifiers must be nonblank, must already be canonical at the boundary, must not contain C0 or DEL control characters, and are bounded to 512 UTF-16 code units. Internal spaces and punctuation remain part of the exact identifier.
+
+HTTP handlers must pass path identifiers through without trimming or rewriting them. Domain and service layers revalidate the same boundary before authorization or persistence so a caller cannot bypass the rule by invoking a service directly. A value such as ` conversation-1` must therefore fail closed rather than being transformed into the authority scope `conversation-1`.
+
+This Development rule prevents identifier aliasing; it is not an authentication, authorization, cryptographic-session, or production Identity implementation by itself.
+
 ## Metadata minimization
 
 Message content, attachment content, encryption key material, device identity secrets, contact data, and communication metadata must be collected and retained only when required for the application to function.
