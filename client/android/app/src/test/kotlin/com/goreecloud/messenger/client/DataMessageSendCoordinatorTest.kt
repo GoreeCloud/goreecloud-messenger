@@ -6,29 +6,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DataMessageSendCoordinatorTest {
-    private val readyEvidence = DataMessagingReadiness.Evidence(
-        identity = DataMessagingReadiness.IdentityState.AUTHENTICATED,
-        conversationAccess = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
-        transport = DataMessagingReadiness.DataTransportState.AVAILABLE,
-        cryptography = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
-        authorizedConversationId = "conversation-1",
-        e2eeConversationId = "conversation-1",
-    )
-
     @Test
-    fun blockedReadinessNeverInvokesTransport() {
+    fun blockedAuthorityReadinessNeverInvokesTransport() {
         var calls = 0
-        val coordinator = DataMessageSendCoordinator(
-            transport = EncryptedDataMessageTransport {
+        val coordinator = coordinator(
+            cryptography = DataMessagingReadiness.CryptographicState.NOT_ESTABLISHED,
+            onTransportSubmit = {
                 calls += 1
                 EncryptedDataMessageTransport.Submission.Accepted
             },
         )
-        val blockedEvidence = readyEvidence.copy(
-            cryptography = DataMessagingReadiness.CryptographicState.NOT_ESTABLISHED,
-        )
 
-        val result = coordinator.submit(blockedEvidence, message())
+        val result = coordinator.submit(message())
 
         assertEquals(0, calls)
         assertTrue(result is DataMessageSendCoordinator.Result.Blocked)
@@ -41,17 +30,16 @@ class DataMessageSendCoordinatorTest {
     @Test
     fun mismatchedAuthorizationAndE2eeScopesNeverInvokeTransport() {
         var calls = 0
-        val coordinator = DataMessageSendCoordinator(
-            transport = EncryptedDataMessageTransport {
+        val coordinator = coordinator(
+            authorizedConversationId = "conversation-1",
+            e2eeConversationId = "conversation-2",
+            onTransportSubmit = {
                 calls += 1
                 EncryptedDataMessageTransport.Submission.Accepted
             },
         )
-        val mismatchedEvidence = readyEvidence.copy(
-            e2eeConversationId = "conversation-2",
-        )
 
-        val result = coordinator.submit(mismatchedEvidence, message())
+        val result = coordinator.submit(message())
 
         assertEquals(0, calls)
         assertEquals(
@@ -65,18 +53,16 @@ class DataMessageSendCoordinatorTest {
     @Test
     fun verifiedDifferentConversationNeverInvokesTransportForPreparedTarget() {
         var calls = 0
-        val coordinator = DataMessageSendCoordinator(
-            transport = EncryptedDataMessageTransport {
+        val coordinator = coordinator(
+            authorizedConversationId = "conversation-2",
+            e2eeConversationId = "conversation-2",
+            onTransportSubmit = {
                 calls += 1
                 EncryptedDataMessageTransport.Submission.Accepted
             },
         )
-        val differentConversationEvidence = readyEvidence.copy(
-            authorizedConversationId = "conversation-2",
-            e2eeConversationId = "conversation-2",
-        )
 
-        val result = coordinator.submit(differentConversationEvidence, message())
+        val result = coordinator.submit(message())
 
         assertEquals(0, calls)
         assertEquals(
@@ -88,16 +74,16 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
-    fun fullyVerifiedReadinessInvokesOnlyInjectedDataTransport() {
+    fun fullyVerifiedIndependentAuthoritiesInvokeOnlyInjectedDataTransport() {
         var calls = 0
-        val coordinator = DataMessageSendCoordinator(
-            transport = EncryptedDataMessageTransport {
+        val coordinator = coordinator(
+            onTransportSubmit = {
                 calls += 1
                 EncryptedDataMessageTransport.Submission.Accepted
             },
         )
 
-        val result = coordinator.submit(readyEvidence, message())
+        val result = coordinator.submit(message())
 
         assertEquals(1, calls)
         assertTrue(result is DataMessageSendCoordinator.Result.Submitted)
@@ -107,16 +93,58 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
-    fun transportRejectionDoesNotInventFallbackSuccess() {
+    fun failingAuthorityProviderNeverInvokesTransport() {
+        var transportCalls = 0
+        val resolver = DataMessagingAuthorityResolver(
+            identityAuthority = GoreeCloudIdentitySessionAuthority {
+                throw IllegalStateException("identity unavailable")
+            },
+            conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
+                ConversationAuthorizationEvidence(
+                    state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
+                    authorizedConversationId = conversationId,
+                )
+            },
+            dataTransportAuthority = GoreeCloudDataTransportAuthority {
+                DataMessagingReadiness.DataTransportState.AVAILABLE
+            },
+            e2eeSessionAuthority = E2EESessionAuthority { conversationId ->
+                E2EESessionEvidence(
+                    state = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
+                    e2eeConversationId = conversationId,
+                )
+            },
+        )
         val coordinator = DataMessageSendCoordinator(
+            authorityResolver = resolver,
             transport = EncryptedDataMessageTransport {
+                transportCalls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, transportCalls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun transportRejectionDoesNotInventFallbackSuccess() {
+        val coordinator = coordinator(
+            onTransportSubmit = {
                 EncryptedDataMessageTransport.Submission.Rejected(
                     EncryptedDataMessageTransport.RejectionReason.TRANSPORT_UNAVAILABLE,
                 )
             },
         )
 
-        val result = coordinator.submit(readyEvidence, message())
+        val result = coordinator.submit(message())
 
         assertEquals(
             DataMessageSendCoordinator.Result.TransportRejected(
@@ -171,6 +199,39 @@ class DataMessageSendCoordinatorTest {
     @Test(expected = IllegalArgumentException::class)
     fun preparedMessageRejectsEmptyCiphertext() {
         message(ciphertext = byteArrayOf())
+    }
+
+    private fun coordinator(
+        identity: DataMessagingReadiness.IdentityState = DataMessagingReadiness.IdentityState.AUTHENTICATED,
+        conversationAccess: DataMessagingReadiness.ConversationAccessState =
+            DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
+        authorizedConversationId: String? = "conversation-1",
+        transport: DataMessagingReadiness.DataTransportState = DataMessagingReadiness.DataTransportState.AVAILABLE,
+        cryptography: DataMessagingReadiness.CryptographicState =
+            DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
+        e2eeConversationId: String? = "conversation-1",
+        onTransportSubmit: (PreparedEncryptedDataMessage) -> EncryptedDataMessageTransport.Submission,
+    ): DataMessageSendCoordinator {
+        val resolver = DataMessagingAuthorityResolver(
+            identityAuthority = GoreeCloudIdentitySessionAuthority { identity },
+            conversationAuthorizationAuthority = ConversationAuthorizationAuthority {
+                ConversationAuthorizationEvidence(
+                    state = conversationAccess,
+                    authorizedConversationId = authorizedConversationId,
+                )
+            },
+            dataTransportAuthority = GoreeCloudDataTransportAuthority { transport },
+            e2eeSessionAuthority = E2EESessionAuthority {
+                E2EESessionEvidence(
+                    state = cryptography,
+                    e2eeConversationId = e2eeConversationId,
+                )
+            },
+        )
+        return DataMessageSendCoordinator(
+            authorityResolver = resolver,
+            transport = EncryptedDataMessageTransport(onTransportSubmit),
+        )
     }
 
     private fun message(
