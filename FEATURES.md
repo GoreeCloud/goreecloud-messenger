@@ -19,15 +19,18 @@
 - Explicit optional runtime composition of the mutable typing-preference route, separate from the base message runtime and separate from typing-signal composition.
 - Development-only GoreeCloud Identity exact-handle consumer boundary: authenticated Messenger-facing `POST /v1/identity/resolve`, strict `{handle}` input, injected service-side resolver, minimized subject/handle/display-name success projection, one uniform privacy-sensitive unresolved result, provider-failure redaction, and explicit opt-in runtime composition. No live Identity client or service credential is implemented.
 - Native Android Development readiness policy and presentation that report GoreeCloud Identity authentication, exact conversation authorization, GoreeCloud Data transport, and exact conversation-scoped verified active E2EE independently before any future `Data · E2EE` send operation can be considered ready.
+- Protocol-neutral Android E2EE authority acceptance projection: a future provider's `E2EE_ACTIVE` claim is admitted to readiness only when the provider also reports accepted implementation review, enrolled local cryptographic device identity, established conversation session, current key lifecycle, and the exact canonical conversation scope. Missing, rejected, contradictory, noncanonical, or mismatched evidence fails closed.
 - Exact bounded opaque conversation-scope validation for Android Data readiness: noncanonical leading/trailing whitespace, overlong values, C0 controls, and DEL fail closed rather than being normalized into another authority scope; valid internal spaces and punctuation are preserved exactly.
+- Development Android source guard preventing the current disconnected acceptance-only client from silently introducing network, local persistence, `java.security`, or `javax.crypto` implementation authority.
 - GLAZE UI V1.3 / `1.3.0` Adaptive Resonance source mapping for the current native Android Development client, with rendered/application acceptance remaining separate.
 
 ## Planned / incomplete
 
-- Production GoreeCloud Identity sessions and device/key lifecycle.
+- Production GoreeCloud Identity sessions and device identity lifecycle.
 - Accepted production GoreeCloud Identity consumer-directory service authentication and live exact-handle resolver transport. The current exact-handle consumer boundary is Development source only and is pinned to an upstream Draft/Development contract.
 - Application-specific invitation, membership, contact, and messaging authorization after Identity resolution.
-- Production E2EE session establishment, verification, rotation, and multi-device state.
+- Selection and security review of the concrete Messenger E2EE protocol/implementation; no authoritative GoreeCloud record currently selects Signal Protocol, MLS, Double Ratchet, libsignal, or another concrete protocol for Messenger.
+- Production E2EE device identity, session establishment, key lifecycle/rotation/change handling, device verification, group security, and multi-device enrollment/revocation. The current Android acceptance projection is policy evidence only and does not implement cryptography.
 - Distributed message and attachment persistence/object storage.
 - Push delivery, production presence fan-out/offline synchronization, and production rate limiting.
 - Production account-discovery abuse/rate-limit controls and Privacy Shield/Wardveil acceptance for Identity resolution.
