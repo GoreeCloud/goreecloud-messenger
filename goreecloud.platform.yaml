@@ -101,9 +101,10 @@ platform_systems:
       - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
       - scripts/check_android_client_boundary.py
       - docs/development/native-android-client.md
+      - docs/development/e2ee-authority-acceptance.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. The optional Development Identity consumer boundary accepts only exact-handle input after Messenger-user authentication, rejects client-supplied requester-service identity, validates a minimized subject/handle/display-name provider projection, and preserves one uniform unresolved result for nonexistent, private, and service-disclosure-unauthorized identities. The upstream consumer contract remains GoreeCloud Identity Draft PR #5 at exact head 5904a44997b90cc44f5d196620bb7e189fea0eeb; no production resolver, service-authentication profile, consent/disclosure acceptance, or Privacy Shield production validation is established. The Android future Data-send readiness boundary continues to resolve Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE through separate fail-closed provider seams.
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. The optional Development Identity consumer boundary accepts only exact-handle input after Messenger-user authentication, rejects client-supplied requester-service identity, validates a minimized subject/handle/display-name provider projection, and preserves one uniform unresolved result for nonexistent, private, and service-disclosure-unauthorized identities. The upstream consumer contract remains GoreeCloud Identity Draft PR #5 at exact head 5904a44997b90cc44f5d196620bb7e189fea0eeb; no production resolver, service-authentication profile, consent/disclosure acceptance, or Privacy Shield production validation is established. The Android future Data-send readiness boundary continues to resolve Identity, exact conversation-scoped participant authorization, Data transport, and E2EE through separate fail-closed provider seams. The E2EE seam now exposes only minimized protocol-neutral acceptance facts and exact scope, with no keys, secrets, algorithm claim, fingerprint, ciphertext transformation, or network endpoint; this is Development minimization evidence and not Privacy Shield production acceptance.
   wardveil_security:
     result: applicable-blocked
     version: null
@@ -129,9 +130,10 @@ platform_systems:
       - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
       - scripts/check_android_client_boundary.py
       - docs/development/native-android-client.md
+      - docs/development/e2ee-authority-acceptance.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, and a bounded process-local typing anti-flood guard. The optional Identity resolution boundary requires Messenger-user authentication, strict bounded JSON input, rejects a client-authored service identity, redacts provider failures, validates provider output, and is absent until explicitly composed. It does not implement a live Identity client, service credential, distributed account-discovery rate limiting, or accepted Wardveil abuse controls. The disconnected Android client continues to reject carrier E2EE claims, network/storage authority, unscoped conversation readiness, caller-preassembled positive send readiness, and transport success unless independent authority prerequisites are verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, and a bounded process-local typing anti-flood guard. The optional Identity resolution boundary requires Messenger-user authentication, strict bounded JSON input, rejects a client-authored service identity, redacts provider failures, validates provider output, and is absent until explicitly composed. It does not implement a live Identity client, service credential, distributed account-discovery rate limiting, or accepted Wardveil abuse controls. The disconnected Android client rejects carrier E2EE claims, network/storage authority, unscoped conversation readiness, caller-preassembled positive send readiness, and transport success unless independent authority prerequisites are verified. Its protocol-neutral E2EE acceptance seam additionally rejects a bare active-E2EE claim unless implementation review is accepted, local cryptographic device identity is enrolled, the conversation session is established, key lifecycle is current, and exact canonical conversation scope matches. The source guard blocks direct java.security/javax.crypto implementation markers on this acceptance-only line. No concrete E2EE protocol is selected or implemented, no real key/session authority exists, and accepted Wardveil Security integration remains blocked.
   everkeep:
     result: applicable-blocked
     version: null
@@ -239,10 +241,12 @@ conformance:
     - USER-MANUAL.md
     - SPECIFICATIONS.md
     - FEATURES.md
+    - SECURITY.md
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
     - docs/development/identity-consumer-directory.md
+    - docs/development/e2ee-authority-acceptance.md
     - internal/domain/identity_directory.go
     - internal/service/identity_directory.go
     - internal/service/identity_directory_test.go
@@ -270,7 +274,7 @@ conformance:
     - The native Android Development client is still disconnected and has no accepted V1.3 rendered/accessibility/device acceptance or real Data messaging integration; no production Identity, conversation-authorization, Data-transport, or E2EE provider is composed even though the pre-transport resolver requires those independent positive authorities to agree on one exact conversation.
     - The Messenger Identity exact-handle consumer boundary is Development-only and pinned to GoreeCloud Identity Draft PR #5 at 5904a44997b90cc44f5d196620bb7e189fea0eeb; the upstream contract is unmerged, production service-principal authentication/profile and live resolver transport are unresolved, and application-specific invitation/membership authorization remains separate.
     - Production GoreeCloud Identity credential, session, device identity, authorization-service, and username-resolution deployment are not established.
-    - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
+    - The Android FR-005 E2EE acceptance gate is Development policy only. No authoritative concrete Messenger E2EE protocol/implementation is selected, security-reviewed, or integrated; real cryptographic device identity/key storage, session establishment, key lifecycle/rotation, verification, group security, and multi-device enrollment/revocation are not established for production or the Android client.
     - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local and Identity discovery has no accepted production rate-limit/abuse-control layer.
     - Privacy Shield integration, consent/disclosure acceptance, and accepted preference persistence are not established.
     - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
