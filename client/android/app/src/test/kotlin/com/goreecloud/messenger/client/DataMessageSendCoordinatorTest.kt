@@ -87,9 +87,12 @@ class DataMessageSendCoordinatorTest {
         val result = coordinator.submit(message())
 
         assertEquals(0, calls)
+        // The stricter FR-005 cryptographic projection rejects conversation-2 as active E2EE
+        // while resolving the prepared conversation-1 target, before the coordinator's later
+        // verified-target comparison can be reached.
         assertEquals(
             DataMessageSendCoordinator.Result.Blocked(
-                setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+                setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
             ),
             result,
         )
