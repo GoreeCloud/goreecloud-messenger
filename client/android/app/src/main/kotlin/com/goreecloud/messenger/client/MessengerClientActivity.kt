@@ -61,7 +61,10 @@ class MessengerClientActivity : Activity() {
         content.addView(
             surface(
                 title = "Data send unavailable",
-                body = readinessExplanation(disconnectedReadiness()),
+                body = readinessExplanation(
+                    result = disconnectedReadiness(),
+                    e2eeFailure = E2EEAcceptanceFailure.CRYPTOGRAPHY_NOT_ACTIVE,
+                ),
                 colors = colors,
             ),
         )
@@ -131,8 +134,13 @@ class MessengerClientActivity : Activity() {
             ),
         )
 
-    private fun readinessExplanation(result: DataMessagingReadiness.Result): String =
-        DataMessagingReadinessPresentationPolicy.present(result).body()
+    private fun readinessExplanation(
+        result: DataMessagingReadiness.Result,
+        e2eeFailure: E2EEAcceptanceFailure? = null,
+    ): String = DataMessagingReadinessPresentationPolicy.present(
+        result = result,
+        e2eeFailure = e2eeFailure,
+    ).body()
 
     private fun surface(title: String, body: String, colors: Palette): View =
         LinearLayout(this).apply {
