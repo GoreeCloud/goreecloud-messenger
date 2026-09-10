@@ -3,6 +3,7 @@ package com.goreecloud.messenger.client
 internal data class DataMessagingReadinessChecklistItem(
     val label: String,
     val verified: Boolean,
+    val detail: String? = null,
 )
 
 internal data class DataMessagingReadinessPresentation(
@@ -15,6 +16,11 @@ internal data class DataMessagingReadinessPresentation(
             append('\n')
             append(if (item.verified) "Verified — " else "Not verified — ")
             append(item.label)
+            if (!item.verified && item.detail != null) {
+                append('\n')
+                append("Why — ")
+                append(item.detail)
+            }
         }
     }
 }
@@ -27,7 +33,10 @@ internal data class DataMessagingReadinessPresentation(
  * result legible in a stable order for the disconnected Development shell.
  */
 internal object DataMessagingReadinessPresentationPolicy {
-    fun present(result: DataMessagingReadiness.Result): DataMessagingReadinessPresentation {
+    fun present(
+        result: DataMessagingReadiness.Result,
+        e2eeFailure: E2EEAcceptanceFailure? = null,
+    ): DataMessagingReadinessPresentation {
         val missing = (result as? DataMessagingReadiness.Result.Blocked)?.reasons.orEmpty()
         val ready = result is DataMessagingReadiness.Result.Ready
 
@@ -62,6 +71,7 @@ internal object DataMessagingReadinessPresentationPolicy {
                     reason = DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE,
                     missing = missing,
                     ready = ready,
+                    detail = e2eeFailure?.presentationReason(),
                 ),
             ),
         )
@@ -72,8 +82,13 @@ internal object DataMessagingReadinessPresentationPolicy {
         reason: DataMessagingReadiness.BlockReason,
         missing: Set<DataMessagingReadiness.BlockReason>,
         ready: Boolean,
-    ): DataMessagingReadinessChecklistItem = DataMessagingReadinessChecklistItem(
-        label = label,
-        verified = ready || reason !in missing,
-    )
+        detail: String? = null,
+    ): DataMessagingReadinessChecklistItem {
+        val verified = ready || reason !in missing
+        return DataMessagingReadinessChecklistItem(
+            label = label,
+            verified = verified,
+            detail = detail.takeUnless { verified },
+        )
+    }
 }
