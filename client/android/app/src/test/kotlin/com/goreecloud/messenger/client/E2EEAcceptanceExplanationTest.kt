@@ -38,6 +38,29 @@ class E2EEAcceptanceExplanationTest {
         }
     }
 
+    @Test
+    fun presentationReasonsRemainProtocolNeutralAndBounded() {
+        val expected = mapOf(
+            E2EEAcceptanceFailure.CRYPTOGRAPHY_NOT_ACTIVE to
+                "No verified active E2EE evidence is available.",
+            E2EEAcceptanceFailure.CONVERSATION_SCOPE_NOT_VERIFIED to
+                "E2EE evidence is not verified for this exact conversation.",
+            E2EEAcceptanceFailure.IMPLEMENTATION_REVIEW_NOT_ACCEPTED to
+                "The cryptographic implementation review is not accepted.",
+            E2EEAcceptanceFailure.DEVICE_IDENTITY_NOT_ENROLLED to
+                "The local cryptographic device identity is not enrolled.",
+            E2EEAcceptanceFailure.SESSION_NOT_ESTABLISHED to
+                "The conversation-scoped cryptographic session is not established.",
+            E2EEAcceptanceFailure.KEY_LIFECYCLE_NOT_CURRENT to
+                "The cryptographic key lifecycle is not current.",
+        )
+
+        assertEquals(E2EEAcceptanceFailure.entries.toSet(), expected.keys)
+        expected.forEach { (failure, reason) ->
+            assertEquals(reason, failure.presentationReason())
+        }
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun noncanonicalRequestedConversationIsRejectedBeforeExplanation() {
         acceptedEvidence().acceptanceFailureFor(" conversation-1")
