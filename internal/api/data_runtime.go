@@ -10,15 +10,17 @@ import (
 )
 
 // DataRuntimeHandler is the application-facing HTTP composition boundary for
-// GoreeCloud Data messaging, receipts, encrypted attachments, and optional
-// privacy-controlled typing presence. It does not own credential validation,
+// GoreeCloud Data messaging, receipts, encrypted attachments, optional
+// privacy-controlled typing presence, and optional Identity exact-handle
+// resolution. It does not own credential validation, service authentication,
 // cryptographic sessions, or persistence authority; those remain injected
-// through the existing service and Authenticator boundaries.
+// through the existing service, resolver, and Authenticator boundaries.
 type DataRuntimeHandler struct {
 	messages          *Handler
 	attachments       *AttachmentHTTPHandler
 	typing            *TypingHTTPHandler
 	typingPreferences *TypingPreferencesHTTPHandler
+	identityDirectory *IdentityDirectoryHTTPHandler
 	auth              Authenticator
 	persistenceProbe  RuntimePersistenceProbe
 	cryptographyProbe RuntimeCryptographyProbe
@@ -104,6 +106,26 @@ func (h *DataRuntimeHandler) WithTypingPresence(
 	return withTyping.WithTypingPrivacyPreferences(preferenceService)
 }
 
+// WithIdentityDirectory returns a copy of the runtime with an authenticated
+// Messenger-facing exact-handle resolution endpoint backed by an injected
+// GoreeCloud Identity resolver. The resolver, not the client, owns the verified
+// Messenger service principal used for any future service-to-service Identity
+// request. This method adds no live Identity network client by itself.
+func (h *DataRuntimeHandler) WithIdentityDirectory(
+	service *messagingservice.IdentityDirectoryService,
+) (*DataRuntimeHandler, error) {
+	if h == nil || service == nil {
+		return nil, errors.New("runtime handler and Identity directory service are required")
+	}
+	directory, err := NewIdentityDirectoryHTTPHandler(service, h.auth)
+	if err != nil {
+		return nil, err
+	}
+	copy := *h
+	copy.identityDirectory = directory
+	return &copy, nil
+}
+
 // WithRuntimePersistenceProbe returns a copy of the composition handler with a
 // bounded, diagnostic-only persistence probe. The probe does not gain authority
 // over message, receipt, or attachment operations and is never treated as a
@@ -146,7 +168,7 @@ func (h *DataRuntimeHandler) WithRuntimeReadinessProbe(probe RuntimeReadinessPro
 
 // Routes returns one mux containing every enabled Data HTTP route. Shared
 // conversation prefixes are registered directly so message, attachment, and
-// optional typing endpoints remain simultaneously reachable.
+// optional typing/Identity endpoints remain simultaneously reachable.
 func (h *DataRuntimeHandler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	h.messages.RegisterRoutes(mux)
@@ -156,6 +178,9 @@ func (h *DataRuntimeHandler) Routes() http.Handler {
 	}
 	if h.typingPreferences != nil {
 		h.typingPreferences.RegisterRoutes(mux)
+	}
+	if h.identityDirectory != nil {
+		h.identityDirectory.RegisterRoutes(mux)
 	}
 	h.registerRuntimeProjection(mux)
 	h.registerHealthRoutes(mux)

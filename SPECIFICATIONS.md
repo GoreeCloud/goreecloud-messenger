@@ -18,10 +18,19 @@ GoreeCloud Messenger is the native GoreeCloud messaging and calling application/
 - Local Development persistence abstractions and focused tests.
 - Native Android Development client foundations with explicit communication-provenance/readiness boundaries and a repository-local GLAZE UI V1.3 Stable source mapping.
 - Android Data-send readiness keeps GoreeCloud Identity authentication, conversation authorization, Data transport availability, and verified active E2EE as independent authorities. Conversation authorization and E2EE scopes must each be canonical bounded opaque identifiers and must identify the same exact conversation before `Data · E2EE` readiness can be projected.
+- A Development-only, explicitly composed Messenger consumer boundary for GoreeCloud Identity exact-handle resolution. It accepts only an exact handle from an authenticated Messenger user, preserves one uniform unresolved state, returns only opaque Identity subject/canonical handle/optional display name on success, and contains no production Identity network client or service credential.
 
 ## Identity and discovery
 
-Messenger must use GoreeCloud Identity for account/session authority and consumer username resolution. Username discovery must not create a Messenger-owned browsable account directory. The preferred contract is exact-handle resolution with explicit Identity-owned discoverability and per-service disclosure policy.
+Messenger must use GoreeCloud Identity for account/session authority and consumer username resolution. Username discovery must not create a Messenger-owned browsable account directory.
+
+The current Development consumer boundary is pinned to GoreeCloud Identity Draft PR #5 (`agent/native-directory-contract`) at exact head `5904a44997b90cc44f5d196620bb7e189fea0eeb`, contract `goreecloud-identity.consumer-directory.v1`. That upstream contract remains Draft/unmerged and does not establish production authority.
+
+Messenger's current optional `POST /v1/identity/resolve` application endpoint accepts only `{handle}` after Messenger-user authentication and delegates the supplied handle unchanged to an injected `IdentityDirectoryResolver`. Messenger does not accept a client-supplied requester-service identity and does not own Identity canonicalization, discoverability, or per-service disclosure policy. The future resolver must derive Messenger's verified service principal from an accepted trusted runtime/service-authentication configuration.
+
+Resolved provider output is limited to opaque Identity subject, canonical lowercase handle, and optional display name. Nonexistent, private, and service-disclosure-unauthorized accounts remain one indistinguishable unresolved result. Prefix search, fuzzy search, directory browsing, account enumeration, phone/email lookup, and administrative listing are outside this contract.
+
+Invitation, conversation membership, contact, messaging, block/report, and other Messenger-specific authorization remain Messenger responsibilities and are not granted by a successful Identity resolution.
 
 ## Security and privacy requirements
 
@@ -29,6 +38,8 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 - Encryption state must be represented only when verified by the applicable client/session protocol.
 - Encrypted conversations must not silently downgrade to SMS/MMS.
 - Attachment raw-byte transport must remain generic binary with no content sniffing and no server-side plaintext MIME interpretation.
+- Identity resolution must preserve uniform privacy-sensitive negative results and minimized successful disclosure; upstream provider errors and policy details must not be exposed to clients.
+- Identity service identity must be derived from a trusted service-authentication authority, never from client-supplied request fields.
 - Wardveil Security, Privacy Shield, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity integration are required where applicable.
 - Client surfaces must track the **current approved Stable GLAZE UI release**. The current target is GLAZE UI V1.3 / `1.3.0` — Adaptive Resonance, at exact Stable integration revision `fc7cc91d2eace8da2371371c2855c24cbcb326a1`, with `1.2.0` retained as the rollback baseline.
 - Client presentation must not manufacture security, privacy, encryption, delivery, authorization, or transport state through decorative material or semantic color. Visible state must remain derived from the responsible technical authority.
@@ -37,4 +48,6 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 
 ## Current acceptance boundary
 
-This is not production-ready. Production-grade identity/device keys, cryptographic session establishment, multi-device synchronization, distributed message/object persistence, push delivery, abuse controls, carrier adapters, calling media infrastructure, client packaging, complete GLAZE UI V1.3 downstream acceptance, and deployment acceptance remain incomplete.
+This is not production-ready. Production-grade Identity sessions/device identity, accepted service-principal authentication for the consumer directory, a live Identity resolver/transport, cryptographic session establishment, multi-device synchronization, distributed message/object persistence, push delivery, abuse controls/rate limiting, carrier adapters, calling media infrastructure, client packaging, complete GLAZE UI V1.3 downstream acceptance, and deployment acceptance remain incomplete.
+
+A Development exact-handle resolution boundary does not complete FR-004. Production Identity credential/session/device authority, accepted consumer-directory deployment and service authentication, production username-resolution transport, Privacy Shield/Wardveil acceptance, and application-specific authorization still require separate evidence.

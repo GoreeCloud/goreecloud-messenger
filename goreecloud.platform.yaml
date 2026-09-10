@@ -56,6 +56,9 @@ api:
     - name: data-typing-preferences-put
       url: /v1/data/conversations/{conversationID}/typing/preferences
       purpose: PUT the authenticated participant's minimized typing privacy choices.
+    - name: identity-handle-resolve
+      url: /v1/identity/resolve
+      purpose: POST an authenticated exact-handle request through an explicitly composed Development GoreeCloud Identity consumer resolver; success is minimized and privacy-sensitive unresolved outcomes are uniform.
     - name: data-runtime-projection
       url: /v1/data/runtime
       purpose: GET the authenticated minimized Development runtime composition projection without sensitive dependency details.
@@ -82,6 +85,12 @@ platform_systems:
       - internal/api/typing_preferences_http.go
       - internal/service/typing_service.go
       - internal/api/runtime_health.go
+      - internal/domain/identity_directory.go
+      - internal/service/identity_directory.go
+      - internal/service/identity_directory_test.go
+      - internal/api/identity_directory_http.go
+      - internal/api/identity_directory_http_test.go
+      - docs/development/identity-consumer-directory.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
@@ -94,7 +103,7 @@ platform_systems:
       - docs/development/native-android-client.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. Its future Data-send readiness boundary now resolves Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE through separate provider seams; provider failures map only that authority to UNKNOWN. Authorization and E2EE scopes must identify the same conversation before readiness becomes positive, and the pre-transport coordinator resolves those providers itself rather than accepting caller-preassembled positive readiness evidence. Public health/readiness responses expose only categorical state; accepted Privacy Shield integration, consent authority, and production privacy validation are not established.
+    notes: Typing presence is content-free and independently privacy-gated, limiter state is ephemeral and minimized with global and per-participant reservation bounds, and the Android Development client exposes no live user data or message authority. The optional Development Identity consumer boundary accepts only exact-handle input after Messenger-user authentication, rejects client-supplied requester-service identity, validates a minimized subject/handle/display-name provider projection, and preserves one uniform unresolved result for nonexistent, private, and service-disclosure-unauthorized identities. The upstream consumer contract remains GoreeCloud Identity Draft PR #5 at exact head 5904a44997b90cc44f5d196620bb7e189fea0eeb; no production resolver, service-authentication profile, consent/disclosure acceptance, or Privacy Shield production validation is established. The Android future Data-send readiness boundary continues to resolve Identity, exact conversation-scoped participant authorization, Data transport, and exact conversation-scoped verified active E2EE through separate fail-closed provider seams.
   wardveil_security:
     result: applicable-blocked
     version: null
@@ -104,6 +113,12 @@ platform_systems:
       - internal/api/runtime_health.go
       - internal/api/runtime_health_test.go
       - internal/service/typing_service.go
+      - internal/domain/identity_directory.go
+      - internal/service/identity_directory.go
+      - internal/service/identity_directory_test.go
+      - internal/api/identity_directory_http.go
+      - internal/api/identity_directory_http_test.go
+      - docs/development/identity-consumer-directory.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/CommunicationProvenance.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
@@ -116,7 +131,7 @@ platform_systems:
       - docs/development/native-android-client.md
       - docs/development/typing-publish-rate-guard.md
       - docs/development/typing-publish-participant-cap.md
-    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, a bounded process-local typing anti-flood guard, and a disconnected Android client whose source boundary rejects carrier E2EE claims, network/storage authority, unscoped conversation-participant readiness, unscoped E2EE readiness, mismatched authorization/cryptographic conversation scopes, cross-conversation reuse of a verified operation scope, caller-preassembled positive send-readiness evidence, and Data-send readiness unless each independent provider-owned security/authorization prerequisite is verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
+    notes: Messenger has authorization, fail-closed Development persistence, opaque ciphertext handling, minimized diagnostics, categorical fail-closed readiness, and a bounded process-local typing anti-flood guard. The optional Identity resolution boundary requires Messenger-user authentication, strict bounded JSON input, rejects a client-authored service identity, redacts provider failures, validates provider output, and is absent until explicitly composed. It does not implement a live Identity client, service credential, distributed account-discovery rate limiting, or accepted Wardveil abuse controls. The disconnected Android client continues to reject carrier E2EE claims, network/storage authority, unscoped conversation readiness, caller-preassembled positive send readiness, and transport success unless independent authority prerequisites are verified. Accepted Wardveil Security integration and distributed production abuse-control validation are not established.
   everkeep:
     result: applicable-blocked
     version: null
@@ -157,6 +172,13 @@ platform_systems:
     evidence:
       - internal/api/http.go
       - internal/api/typing_preferences_http.go
+      - internal/domain/identity_directory.go
+      - internal/service/identity_directory.go
+      - internal/service/identity_directory_test.go
+      - internal/api/identity_directory_http.go
+      - internal/api/identity_directory_http_test.go
+      - internal/api/data_runtime.go
+      - docs/development/identity-consumer-directory.md
       - client/android/README.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingReadiness.kt
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolver.kt
@@ -164,7 +186,7 @@ platform_systems:
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingReadinessTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
-    notes: Server HTTP handlers inject an Authenticator and derive acting identities from it, while the native Android Development client intentionally has no production account/session integration. The client now defines a narrow GoreeCloud Identity session provider seam whose only projection is authentication state; provider failure maps to UNKNOWN and cannot be upgraded by conversation, transport, or E2EE state. Conversation authorization remains a separate exact-scope authority, and cryptographic readiness remains another separate exact-scope authority. Production GoreeCloud Identity credential issuance, session validation, device identity, authorization service integration, and exact-handle username resolution are not implemented or accepted.
+    notes: Server HTTP handlers inject an Authenticator and derive acting Messenger user identities from it. The optional exact-handle consumer boundary is pinned to GoreeCloud Identity Draft PR #5 at exact head 5904a44997b90cc44f5d196620bb7e189fea0eeb and preserves the Draft contract's service-owned requester identity, exact-handle-only semantics, uniform privacy-sensitive unresolved result, and minimized successful projection. The route is absent until explicitly composed, and the repository contains no production Identity resolver, network client, service credential, accepted service-principal authentication profile, deployed consumer directory, device identity integration, or production session authority. The native Android client separately defines a narrow Identity-session state provider seam but composes no production provider. Production GoreeCloud Identity credential issuance, session validation, device identity, application authorization integration, service authentication, and username-resolution deployment are not implemented or accepted.
 
 health:
   health_endpoint: /healthz
@@ -215,9 +237,18 @@ conformance:
   evidence:
     - README.md
     - USER-MANUAL.md
+    - SPECIFICATIONS.md
+    - FEATURES.md
     - docs/architecture.md
     - docs/security.md
     - docs/data-http-api.md
+    - docs/development/identity-consumer-directory.md
+    - internal/domain/identity_directory.go
+    - internal/service/identity_directory.go
+    - internal/service/identity_directory_test.go
+    - internal/api/identity_directory_http.go
+    - internal/api/identity_directory_http_test.go
+    - internal/api/data_runtime.go
     - internal/api/runtime_health.go
     - internal/api/runtime_health_test.go
     - client/android/README.md
@@ -237,10 +268,11 @@ conformance:
     - docs/development/typing-publish-participant-cap.md
   blockers:
     - The native Android Development client is still disconnected and has no accepted V1.3 rendered/accessibility/device acceptance or real Data messaging integration; no production Identity, conversation-authorization, Data-transport, or E2EE provider is composed even though the pre-transport resolver requires those independent positive authorities to agree on one exact conversation.
-    - Production GoreeCloud Identity credential, session, device identity, authorization-service, and username-resolution integration are not established.
+    - The Messenger Identity exact-handle consumer boundary is Development-only and pinned to GoreeCloud Identity Draft PR #5 at 5904a44997b90cc44f5d196620bb7e189fea0eeb; the upstream contract is unmerged, production service-principal authentication/profile and live resolver transport are unresolved, and application-specific invitation/membership authorization remains separate.
+    - Production GoreeCloud Identity credential, session, device identity, authorization-service, and username-resolution deployment are not established.
     - Accepted cryptographic session and key lifecycle are not established for production or the Android client.
-    - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local only.
-    - Privacy Shield integration, consent authority, and accepted preference persistence are not established.
+    - Wardveil Security integration and distributed production abuse-control acceptance are not established; current typing limits are process-local and Identity discovery has no accepted production rate-limit/abuse-control layer.
+    - Privacy Shield integration, consent/disclosure acceptance, and accepted preference persistence are not established.
     - Everkeep integration plus accepted backup, restore, recovery, and encrypted-communication portability are not established.
     - GoreeCloud Mesh registration, service identity, capability publication, event contracts, and runtime acceptance are not established.
     - GoreeCloud Manager platform visibility and operational acceptance are not established; the health/readiness routes are only an application-local Development foundation.
