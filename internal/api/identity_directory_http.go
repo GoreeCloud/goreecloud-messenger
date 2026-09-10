@@ -5,6 +5,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/GoreeCloud/goreecloud-messenger/internal/domain"
@@ -59,7 +60,10 @@ func (h *IdentityDirectoryHTTPHandler) resolveExactHandle(w http.ResponseWriter,
 		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if decoder.Decode(&struct{}{}) == nil {
+	// A request is valid only when the first JSON object consumes the complete body
+	// apart from JSON whitespace. A second successful value and trailing malformed
+	// JSON both fail closed instead of allowing parser ambiguity before resolution.
+	if err := decoder.Decode(&struct{}{}); !errors.Is(err, io.EOF) {
 		writeError(w, http.StatusBadRequest, "request body must contain one JSON object")
 		return
 	}
