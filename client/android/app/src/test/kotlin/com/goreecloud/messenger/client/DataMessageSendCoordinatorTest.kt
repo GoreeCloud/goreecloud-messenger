@@ -28,6 +28,28 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
+    fun activeE2eeWithoutAcceptedSecurityReviewNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            implementationReview = E2EEImplementationReviewState.NOT_ACCEPTED,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.E2EE_NOT_VERIFIED_ACTIVE),
+            ),
+            result,
+        )
+    }
+
+    @Test
     fun mismatchedAuthorizationAndE2eeScopesNeverInvokeTransport() {
         var calls = 0
         val coordinator = coordinator(
@@ -109,10 +131,7 @@ class DataMessageSendCoordinatorTest {
                 DataMessagingReadiness.DataTransportState.AVAILABLE
             },
             e2eeSessionAuthority = E2EESessionAuthority { conversationId ->
-                E2EESessionEvidence(
-                    state = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
-                    e2eeConversationId = conversationId,
-                )
+                acceptedE2eeEvidence(conversationId)
             },
         )
         val coordinator = DataMessageSendCoordinator(
@@ -228,6 +247,10 @@ class DataMessageSendCoordinatorTest {
         cryptography: DataMessagingReadiness.CryptographicState =
             DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
         e2eeConversationId: String? = "conversation-1",
+        implementationReview: E2EEImplementationReviewState = E2EEImplementationReviewState.ACCEPTED,
+        deviceIdentity: E2EEDeviceIdentityState = E2EEDeviceIdentityState.ENROLLED,
+        sessionEstablishment: E2EESessionEstablishmentState = E2EESessionEstablishmentState.ESTABLISHED,
+        keyLifecycle: E2EEKeyLifecycleState = E2EEKeyLifecycleState.CURRENT,
         onTransportSubmit: (PreparedEncryptedDataMessage) -> EncryptedDataMessageTransport.Submission,
     ): DataMessageSendCoordinator {
         val resolver = DataMessagingAuthorityResolver(
@@ -243,6 +266,10 @@ class DataMessageSendCoordinatorTest {
                 E2EESessionEvidence(
                     state = cryptography,
                     e2eeConversationId = e2eeConversationId,
+                    implementationReview = implementationReview,
+                    deviceIdentity = deviceIdentity,
+                    sessionEstablishment = sessionEstablishment,
+                    keyLifecycle = keyLifecycle,
                 )
             },
         )
@@ -251,6 +278,16 @@ class DataMessageSendCoordinatorTest {
             transport = EncryptedDataMessageTransport { message -> onTransportSubmit(message) },
         )
     }
+
+    private fun acceptedE2eeEvidence(conversationId: String): E2EESessionEvidence =
+        E2EESessionEvidence(
+            state = DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
+            e2eeConversationId = conversationId,
+            implementationReview = E2EEImplementationReviewState.ACCEPTED,
+            deviceIdentity = E2EEDeviceIdentityState.ENROLLED,
+            sessionEstablishment = E2EESessionEstablishmentState.ESTABLISHED,
+            keyLifecycle = E2EEKeyLifecycleState.CURRENT,
+        )
 
     private fun message(
         ciphertext: ByteArray = byteArrayOf(10, 20, 30),
