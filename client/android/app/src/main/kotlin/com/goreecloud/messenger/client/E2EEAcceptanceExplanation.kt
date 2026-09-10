@@ -15,6 +15,27 @@ enum class E2EEAcceptanceFailure {
 }
 
 /**
+ * Bounded user-facing explanation copy for the disconnected Development shell.
+ *
+ * These strings deliberately describe missing acceptance evidence rather than claiming a concrete
+ * cryptographic protocol, key state, threat outcome, or security guarantee.
+ */
+internal fun E2EEAcceptanceFailure.presentationReason(): String = when (this) {
+    E2EEAcceptanceFailure.CRYPTOGRAPHY_NOT_ACTIVE ->
+        "No verified active E2EE evidence is available."
+    E2EEAcceptanceFailure.CONVERSATION_SCOPE_NOT_VERIFIED ->
+        "E2EE evidence is not verified for this exact conversation."
+    E2EEAcceptanceFailure.IMPLEMENTATION_REVIEW_NOT_ACCEPTED ->
+        "The cryptographic implementation review is not accepted."
+    E2EEAcceptanceFailure.DEVICE_IDENTITY_NOT_ENROLLED ->
+        "The local cryptographic device identity is not enrolled."
+    E2EEAcceptanceFailure.SESSION_NOT_ESTABLISHED ->
+        "The conversation-scoped cryptographic session is not established."
+    E2EEAcceptanceFailure.KEY_LIFECYCLE_NOT_CURRENT ->
+        "The cryptographic key lifecycle is not current."
+}
+
+/**
  * Return the first protocol-neutral acceptance failure in the same fail-closed order used by the
  * current E2EE readiness contract. A null result means the supplied evidence satisfies the current
  * acceptance projection for the exact canonical conversation; it does not independently prove
