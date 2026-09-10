@@ -35,15 +35,18 @@ else:
     if 'android:allowBackup="false"' not in manifest:
         errors.append("Development client must keep Android backup disabled")
 
-# Network/storage implementation authority must not enter Kotlin source in this
-# disconnected Development shell. Android XML namespace URIs are intentionally
-# not treated as network authority.
+# Network/storage/cryptographic implementation authority must not enter Kotlin
+# source in this disconnected Development shell. This branch may consume only
+# minimized authority evidence; it does not implement cryptography locally.
+# Android XML namespace URIs are intentionally not treated as network authority.
 for path in CLIENT.rglob("*.kt"):
     text = path.read_text(encoding="utf-8")
     relative = path.relative_to(ROOT)
     forbidden_fragments = (
         "java.net.",
         "javax.net.",
+        "java.security.",
+        "javax.crypto.",
         "okhttp",
         "retrofit",
         "http://",
@@ -132,9 +135,18 @@ else:
         "fun interface ConversationAuthorizationAuthority",
         "fun interface GoreeCloudDataTransportAuthority",
         "fun interface E2EESessionAuthority",
+        "enum class E2EEImplementationReviewState",
+        "enum class E2EEDeviceIdentityState",
+        "enum class E2EESessionEstablishmentState",
+        "enum class E2EEKeyLifecycleState",
+        "implementationReview == E2EEImplementationReviewState.ACCEPTED",
+        "deviceIdentity == E2EEDeviceIdentityState.ENROLLED",
+        "sessionEstablishment == E2EESessionEstablishmentState.ESTABLISHED",
+        "keyLifecycle == E2EEKeyLifecycleState.CURRENT",
+        ".readinessProjectionFor(targetConversationId)",
         "class DataMessagingAuthorityResolver",
         "conversationAuthorizationAuthority.accessFor(targetConversationId)",
-        "e2eeSessionAuthority.stateFor(targetConversationId)",
+        "e2eeSessionAuthority",
         "ConversationAccessState.UNKNOWN",
         "DataTransportState.UNKNOWN",
         "CryptographicState.UNKNOWN",
