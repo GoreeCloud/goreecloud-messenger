@@ -38,6 +38,23 @@ jobs:
       - name: Run client unit tests
         run: gradle -p client/android :app:testDebugUnitTest --stacktrace
 
+      - name: Resolve Development Android debug runtime dependencies
+        run: |
+          mkdir -p client/android/app/build/outputs/dependency-evidence
+          gradle -p client/android :app:dependencies \
+            --configuration debugRuntimeClasspath \
+            --console=plain \
+            > client/android/app/build/outputs/dependency-evidence/gradle-debug-runtime-dependencies.txt
+
+      - name: Generate exact-source Development Android SBOM
+        env:
+          GOREECLOUD_SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 scripts/generate_android_dependency_sbom.py \
+            --report client/android/app/build/outputs/dependency-evidence/gradle-debug-runtime-dependencies.txt \
+            --output client/android/app/build/outputs/dependency-evidence/android-debug-runtime.cdx.json \
+            --checksum-output client/android/app/build/outputs/dependency-evidence/android-debug-runtime.cdx.json.sha256
+
       - name: Build client debug APK
         run: gradle -p client/android :app:assembleDebug --stacktrace
 
@@ -64,6 +81,14 @@ jobs:
         with:
           name: goreecloud-messenger-android-debug-evidence
           path: client/android/app/build/outputs/apk/debug/evidence/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Retain Development dependency evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: goreecloud-messenger-android-debug-dependency-evidence
+          path: client/android/app/build/outputs/dependency-evidence/
           if-no-files-found: error
           retention-days: 30
 
