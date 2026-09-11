@@ -63,6 +63,8 @@ This SBOM is a Development packaged-runtime inventory. It is not by itself a vul
 
 A verified debug APK signature proves package integrity under that Development signer. It does **not** establish GoreeCloud production release-signing authority. No production signing key, private key, keystore password, reusable credential, or equivalent release secret belongs in this repository, generated evidence, ordinary logs, or documentation.
 
+Clean CI runners may create a fresh Android debug keystore. The Development signer-certificate identity and therefore the signed APK checksum may differ across exact-head workflow runs even when Messenger runtime source and resolved runtime dependencies are unchanged. Each retained debug APK is therefore treated as its own Development artifact and must be bound to its own exact source revision, APK checksum, signer-certificate digest, and SBOM identity. This is exact per-artifact traceability; it is not reproducible production signing or signer continuity.
+
 A future Release Candidate or production release-signing workflow must use the approved GoreeCloud secret-storage and release-governance boundary, bind the signed artifact to an exact accepted candidate, preserve artifact checksum/provenance and required SBOM evidence, and complete all separately applicable release and production-acceptance gates.
 
 ## CI artifact evidence
