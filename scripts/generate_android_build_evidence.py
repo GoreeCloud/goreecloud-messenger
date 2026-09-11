@@ -26,6 +26,7 @@ EXPECTED_VERSION_CODE = "1"
 EXPECTED_MIN_SDK = "26"
 EXPECTED_TARGET_SDK = "35"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+CERT_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def fail(message: str) -> None:
@@ -152,12 +153,14 @@ def main() -> None:
         [str(apksigner), "verify", "--verbose", "--print-certs", str(apk)],
     )
     signer_digest_match = re.search(
-        r"Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F]{64})",
+        r"Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F:]+)",
         signature_report,
     )
     if not signer_digest_match:
         fail("APK signature verification did not expose a signer certificate SHA-256 digest")
-    signer_digest = signer_digest_match.group(1).lower()
+    signer_digest = signer_digest_match.group(1).replace(":", "").lower()
+    if not CERT_SHA256_RE.fullmatch(signer_digest):
+        fail("APK signer certificate SHA-256 digest was not a 32-byte hexadecimal value")
     verified_scheme = bool(
         re.search(r"Verified using v[1-9][^:]*:\s*true", signature_report, re.IGNORECASE),
     )
