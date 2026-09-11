@@ -82,6 +82,17 @@ def parse_dependencies(report: str) -> list[dict[str, str]]:
     if f"{EXPECTED_CONFIGURATION} -" not in report:
         fail(f"dependency report does not identify {EXPECTED_CONFIGURATION}")
 
+    failed_lines = [
+        line.strip()
+        for line in report.splitlines()
+        if re.search(r"\bFAILED\b", line, re.IGNORECASE)
+    ]
+    if failed_lines:
+        fail(
+            "dependency report contains failed or unresolved dependency resolution: "
+            + " | ".join(failed_lines[:8]),
+        )
+
     versions: dict[tuple[str, str], str] = {}
     for raw_line in report.splitlines():
         match = COORDINATE_RE.search(raw_line)
@@ -98,6 +109,9 @@ def parse_dependencies(report: str) -> list[dict[str, str]]:
                 f"{group}:{name}: {previous} vs {version}",
             )
         versions[key] = version
+
+    if not versions:
+        fail("dependency report contains no resolved runtime components")
 
     components: list[dict[str, str]] = []
     for (group, name), version in sorted(versions.items()):
