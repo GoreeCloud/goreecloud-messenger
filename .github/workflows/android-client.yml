@@ -41,12 +41,32 @@ jobs:
       - name: Build client debug APK
         run: gradle -p client/android :app:assembleDebug --stacktrace
 
+      - name: Resolve exact Development runtime dependency closure
+        run: |
+          mkdir -p client/android/app/build/outputs/apk/debug/evidence
+          gradle -p client/android :app:dependencies \
+            --configuration debugRuntimeClasspath \
+            --console=plain \
+            > client/android/app/build/outputs/apk/debug/evidence/.debug-runtime-dependencies.txt
+
+      - name: Generate exact Development CycloneDX SBOM
+        env:
+          GOREECLOUD_SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 scripts/generate_android_sbom.py \
+            --dependency-report client/android/app/build/outputs/apk/debug/evidence/.debug-runtime-dependencies.txt \
+            --apk client/android/app/build/outputs/apk/debug/app-debug.apk \
+            --output client/android/app/build/outputs/apk/debug/evidence/goreecloud-messenger-android-debug.cdx.json \
+            --checksum-output client/android/app/build/outputs/apk/debug/evidence/goreecloud-messenger-android-debug.cdx.json.sha256
+          rm client/android/app/build/outputs/apk/debug/evidence/.debug-runtime-dependencies.txt
+
       - name: Generate exact Development APK build evidence
         env:
           GOREECLOUD_SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           python3 scripts/generate_android_build_evidence.py \
             --apk client/android/app/build/outputs/apk/debug/app-debug.apk \
+            --sbom client/android/app/build/outputs/apk/debug/evidence/goreecloud-messenger-android-debug.cdx.json \
             --output client/android/app/build/outputs/apk/debug/evidence/build-evidence.json \
             --checksum-output client/android/app/build/outputs/apk/debug/evidence/app-debug.apk.sha256 \
             --signature-output client/android/app/build/outputs/apk/debug/evidence/signature-evidence.txt
@@ -59,7 +79,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Retain Development APK evidence
+      - name: Retain Development APK and SBOM evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: goreecloud-messenger-android-debug-evidence
