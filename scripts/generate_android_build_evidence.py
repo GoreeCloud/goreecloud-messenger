@@ -89,6 +89,41 @@ def extract_single(pattern: str, text: str, label: str) -> str:
     return match.group(1)
 
 
+def extract_signer_certificate_sha256(signature_report: str) -> str:
+    candidate_lines: list[str] = []
+    digests: set[str] = set()
+
+    for raw_line in signature_report.splitlines():
+        line = raw_line.strip()
+        lowered = line.lower()
+        if "certificate" not in lowered or not re.search(r"sha[ -]?256", lowered):
+            continue
+        candidate_lines.append(line)
+
+        digest_marker = re.search(r"digest\s*[:=]?\s*(.*)$", line, re.IGNORECASE)
+        if not digest_marker:
+            continue
+        suffix = digest_marker.group(1).strip()
+        normalized = re.sub(r"[^0-9a-fA-F]", "", suffix).lower()
+        if CERT_SHA256_RE.fullmatch(normalized):
+            digests.add(normalized)
+
+    if len(digests) == 1:
+        return next(iter(digests))
+
+    safe_lines = " | ".join(candidate_lines[:8]) if candidate_lines else "<none>"
+    if len(digests) > 1:
+        fail(
+            "APK signature verification exposed multiple certificate SHA-256 digests; "
+            f"refusing ambiguous signer identity. Candidate metadata: {safe_lines}",
+        )
+    fail(
+        "APK signature verification did not expose one parseable signer-certificate "
+        f"SHA-256 digest. Candidate metadata: {safe_lines}",
+    )
+    raise AssertionError("unreachable")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apk", required=True)
@@ -152,15 +187,7 @@ def main() -> None:
     signature_report = run_checked(
         [str(apksigner), "verify", "--verbose", "--print-certs", str(apk)],
     )
-    signer_digest_match = re.search(
-        r"Signer #1 certificate SHA-256 digest:\s*([0-9a-fA-F:]+)",
-        signature_report,
-    )
-    if not signer_digest_match:
-        fail("APK signature verification did not expose a signer certificate SHA-256 digest")
-    signer_digest = signer_digest_match.group(1).replace(":", "").lower()
-    if not CERT_SHA256_RE.fullmatch(signer_digest):
-        fail("APK signer certificate SHA-256 digest was not a 32-byte hexadecimal value")
+    signer_digest = extract_signer_certificate_sha256(signature_report)
     verified_scheme = bool(
         re.search(r"Verified using v[1-9][^:]*:\s*true", signature_report, re.IGNORECASE),
     )
