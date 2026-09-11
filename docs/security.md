@@ -8,6 +8,8 @@ Messenger security indicators describe verified technical state. E2EE, Privacy S
 
 Messenger will use an established, security-reviewed end-to-end encryption protocol or implementation. GoreeCloud will not invent a proprietary cryptographic algorithm for message confidentiality.
 
+No authoritative GoreeCloud record currently selects a concrete Messenger E2EE protocol or implementation. Development code must therefore not claim or imply Signal Protocol, MLS, Double Ratchet, libsignal, or another concrete protocol unless a future authoritative decision and implementation evidence establish it.
+
 The eventual implementation must cover:
 
 - device identity keys
@@ -20,6 +22,28 @@ The eventual implementation must cover:
 - secure attachment encryption
 - encrypted local state where appropriate
 - safe backup, migration, and recovery behavior
+
+## Protocol-neutral E2EE acceptance seam
+
+The current native Android Development client does not implement cryptography. Its `E2EESessionAuthority` is a provider-owned seam that may expose only a minimized readiness projection.
+
+A provider-supplied `E2EE_ACTIVE` claim is accepted for Data-send readiness only when the same evidence also establishes all of the following for the exact requested conversation:
+
+- `E2EEImplementationReviewState.ACCEPTED`
+- `E2EEDeviceIdentityState.ENROLLED`
+- `E2EESessionEstablishmentState.ESTABLISHED`
+- `E2EEKeyLifecycleState.CURRENT`
+- an exact canonical bounded opaque E2EE conversation identifier matching the requested conversation
+
+`E2EESessionEvidence.readinessProjectionFor(...)` downgrades a contradictory active claim to `UNKNOWN` when any required acceptance fact is missing, negative, noncanonical, or scoped to another conversation. Explicit negative cryptographic states are never upgraded by positive auxiliary facts.
+
+The projection carries no key material, session secret, algorithm claim, cipher-suite identifier, device secret, fingerprint, ciphertext transformation, reusable credential, or network endpoint. Group and multi-device implementations remain responsible for resolving their complete participant/device state before exposing this minimized projection.
+
+Positive unit-test fixtures exercise only this policy contract. They are not a real security review, cryptographic session, key lifecycle, or production E2EE implementation.
+
+The disconnected Android Development source guard also rejects direct `java.security` and `javax.crypto` implementation markers. That guard must be deliberately replaced under a future governed cryptographic implementation rather than silently bypassed.
+
+See [`development/e2ee-authority-acceptance.md`](development/e2ee-authority-acceptance.md) for the current FR-005 Development boundary.
 
 ## Initial enforcement
 
