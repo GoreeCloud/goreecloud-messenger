@@ -74,6 +74,22 @@ class MessengerClientRuntimeAcceptanceTest {
         assertTrue(visibleText.any { it.contains("Conversation authorization") })
         assertTrue(visibleText.any { it.contains("GoreeCloud Data transport") })
         assertTrue(visibleText.any { it.contains("Verified active E2EE") })
+        assertTrue(
+            visibleText.any {
+                it.contains("No verified GoreeCloud Identity session evidence is available.")
+            },
+        )
+        assertTrue(
+            visibleText.any {
+                it.contains("No verified conversation-participant authorization evidence is available.")
+            },
+        )
+        assertTrue(
+            visibleText.any {
+                it.contains("No verified GoreeCloud Data transport availability evidence is available.")
+            },
+        )
+        assertTrue(visibleText.any { it.contains("No verified active E2EE evidence is available.") })
         assertTrue(visibleText.any { it.contains("Not Release Candidate") })
         assertTrue(visibleText.any { it.contains("Provenance examples") })
 

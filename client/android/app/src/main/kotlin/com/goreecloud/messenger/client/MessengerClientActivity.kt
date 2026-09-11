@@ -58,11 +58,13 @@ class MessengerClientActivity : Activity() {
         content.addView(spacer(5))
         content.addView(text(getString(R.string.readiness_summary), 14f, colors.muted, Typeface.NORMAL))
         content.addView(spacer(12))
+        val readinessEvidence = disconnectedReadinessEvidence()
         content.addView(
             surface(
                 title = "Data send unavailable",
                 body = readinessExplanation(
-                    result = disconnectedReadiness(),
+                    result = DataMessagingReadiness.evaluate(readinessEvidence),
+                    evidence = readinessEvidence,
                     e2eeFailure = E2EEAcceptanceFailure.CRYPTOGRAPHY_NOT_ACTIVE,
                 ),
                 colors = colors,
@@ -124,21 +126,21 @@ class MessengerClientActivity : Activity() {
      * Keep every value unknown rather than synthesizing readiness from the mere existence of client
      * code or from a future transport connection.
      */
-    private fun disconnectedReadiness(): DataMessagingReadiness.Result =
-        DataMessagingReadiness.evaluate(
-            DataMessagingReadiness.Evidence(
-                identity = DataMessagingReadiness.IdentityState.UNKNOWN,
-                conversationAccess = DataMessagingReadiness.ConversationAccessState.UNKNOWN,
-                transport = DataMessagingReadiness.DataTransportState.UNKNOWN,
-                cryptography = DataMessagingReadiness.CryptographicState.UNKNOWN,
-            ),
+    private fun disconnectedReadinessEvidence(): DataMessagingReadiness.Evidence =
+        DataMessagingReadiness.Evidence(
+            identity = DataMessagingReadiness.IdentityState.UNKNOWN,
+            conversationAccess = DataMessagingReadiness.ConversationAccessState.UNKNOWN,
+            transport = DataMessagingReadiness.DataTransportState.UNKNOWN,
+            cryptography = DataMessagingReadiness.CryptographicState.UNKNOWN,
         )
 
     private fun readinessExplanation(
         result: DataMessagingReadiness.Result,
+        evidence: DataMessagingReadiness.Evidence? = null,
         e2eeFailure: E2EEAcceptanceFailure? = null,
     ): String = DataMessagingReadinessPresentationPolicy.present(
         result = result,
+        evidence = evidence,
         e2eeFailure = e2eeFailure,
     ).body()
 
