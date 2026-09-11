@@ -38,6 +38,14 @@ jobs:
       - name: Build client debug APK
         run: gradle -p client/android :app:assembleDebug --stacktrace
 
+      - name: Retain Development debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: goreecloud-messenger-android-debug
+          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
   android-client-emulator:
     needs: android-client
     runs-on: ubuntu-latest
