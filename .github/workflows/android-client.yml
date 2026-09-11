@@ -35,6 +35,9 @@ jobs:
       - name: Validate Development client authority boundary
         run: python3 scripts/check_android_client_boundary.py
 
+      - name: Test Development SBOM dependency parser
+        run: python3 -m unittest scripts/test_generate_android_sbom.py
+
       - name: Run client unit tests
         run: gradle -p client/android :app:testDebugUnitTest --stacktrace
 
