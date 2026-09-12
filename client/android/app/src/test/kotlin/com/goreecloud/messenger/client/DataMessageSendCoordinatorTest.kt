@@ -28,6 +28,31 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
+    fun availableTransportWithoutAcceptedRuntimeFactsNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            transportConfiguration = DataTransportAcceptanceState.UNKNOWN,
+            transportAuthenticationBinding = DataTransportAcceptanceState.UNKNOWN,
+            transportChannelProtection = DataTransportAcceptanceState.UNKNOWN,
+            transportFailurePolicy = DataTransportAcceptanceState.UNKNOWN,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.DATA_TRANSPORT_NOT_AVAILABLE),
+            ),
+            result,
+        )
+    }
+
+    @Test
     fun activeE2eeWithoutAcceptedSecurityReviewNeverInvokesTransport() {
         var calls = 0
         val coordinator = coordinator(
@@ -131,7 +156,7 @@ class DataMessageSendCoordinatorTest {
                 )
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
-                DataMessagingReadiness.DataTransportState.AVAILABLE
+                acceptedTransportEvidence()
             },
             e2eeSessionAuthority = E2EESessionAuthority { conversationId ->
                 acceptedE2eeEvidence(conversationId)
@@ -247,6 +272,10 @@ class DataMessageSendCoordinatorTest {
             DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         authorizedConversationId: String? = "conversation-1",
         transport: DataMessagingReadiness.DataTransportState = DataMessagingReadiness.DataTransportState.AVAILABLE,
+        transportConfiguration: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
+        transportAuthenticationBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
+        transportChannelProtection: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
+        transportFailurePolicy: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
         cryptography: DataMessagingReadiness.CryptographicState =
             DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
         e2eeConversationId: String? = "conversation-1",
@@ -264,7 +293,15 @@ class DataMessageSendCoordinatorTest {
                     authorizedConversationId = authorizedConversationId,
                 )
             },
-            dataTransportAuthority = GoreeCloudDataTransportAuthority { transport },
+            dataTransportAuthority = GoreeCloudDataTransportAuthority {
+                DataTransportEvidence(
+                    state = transport,
+                    configuration = transportConfiguration,
+                    authenticationBinding = transportAuthenticationBinding,
+                    channelProtection = transportChannelProtection,
+                    failurePolicy = transportFailurePolicy,
+                )
+            },
             e2eeSessionAuthority = E2EESessionAuthority {
                 E2EESessionEvidence(
                     state = cryptography,
@@ -281,6 +318,15 @@ class DataMessageSendCoordinatorTest {
             transport = EncryptedDataMessageTransport { message -> onTransportSubmit(message) },
         )
     }
+
+    private fun acceptedTransportEvidence(): DataTransportEvidence =
+        DataTransportEvidence(
+            state = DataMessagingReadiness.DataTransportState.AVAILABLE,
+            configuration = DataTransportAcceptanceState.ACCEPTED,
+            authenticationBinding = DataTransportAcceptanceState.ACCEPTED,
+            channelProtection = DataTransportAcceptanceState.ACCEPTED,
+            failurePolicy = DataTransportAcceptanceState.ACCEPTED,
+        )
 
     private fun acceptedE2eeEvidence(conversationId: String): E2EESessionEvidence =
         E2EESessionEvidence(

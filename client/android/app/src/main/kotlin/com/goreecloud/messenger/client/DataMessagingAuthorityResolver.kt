@@ -25,11 +25,60 @@ fun interface ConversationAuthorizationAuthority {
 }
 
 /**
- * Narrow availability projection for a future GoreeCloud Data transport implementation.
- * Availability alone does not imply authentication, conversation access, or E2EE readiness.
+ * Protocol-neutral acceptance state for one future GoreeCloud Data transport prerequisite.
+ *
+ * These values are minimized projections only. ACCEPTED does not carry endpoints, credentials,
+ * tokens, certificates, retry schedules, or other implementation details across this boundary.
+ */
+enum class DataTransportAcceptanceState {
+    ACCEPTED,
+    NOT_ACCEPTED,
+    UNKNOWN,
+}
+
+/**
+ * Minimized evidence supplied by a future GoreeCloud Data transport authority.
+ *
+ * A provider may project [DataMessagingReadiness.DataTransportState.AVAILABLE] into readiness only
+ * after its responsible runtime has independently accepted required configuration, authentication
+ * binding, protected-channel operation, and bounded timeout/retry/failure behavior. Test fixtures
+ * can exercise these states but do not create production transport acceptance.
+ */
+data class DataTransportEvidence(
+    val state: DataMessagingReadiness.DataTransportState,
+    val configuration: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+    val authenticationBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+    val channelProtection: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+    val failurePolicy: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+) {
+    /**
+     * Return only the transport state allowed to participate in messaging readiness.
+     *
+     * A bare AVAILABLE claim fails closed to UNKNOWN. Negative/unavailable states are preserved and
+     * are never upgraded by positive auxiliary facts.
+     */
+    fun readinessProjection(): DataTransportEvidence {
+        if (state != DataMessagingReadiness.DataTransportState.AVAILABLE) {
+            return this
+        }
+
+        val accepted =
+            configuration == DataTransportAcceptanceState.ACCEPTED &&
+                authenticationBinding == DataTransportAcceptanceState.ACCEPTED &&
+                channelProtection == DataTransportAcceptanceState.ACCEPTED &&
+                failurePolicy == DataTransportAcceptanceState.ACCEPTED
+
+        return if (accepted) this else copy(state = DataMessagingReadiness.DataTransportState.UNKNOWN)
+    }
+}
+
+/**
+ * Narrow acceptance projection for a future GoreeCloud Data transport implementation.
+ * Availability alone is insufficient and does not imply authentication, conversation access,
+ * E2EE readiness, endpoint approval, or production acceptance.
  */
 fun interface GoreeCloudDataTransportAuthority {
-    fun availability(): DataMessagingReadiness.DataTransportState
+    fun evidence(): DataTransportEvidence
 }
 
 /**
@@ -160,7 +209,7 @@ class DataMessagingAuthorityResolver(
         }
 
         val transport = try {
-            dataTransportAuthority.availability()
+            dataTransportAuthority.evidence().readinessProjection().state
         } catch (_: Exception) {
             DataMessagingReadiness.DataTransportState.UNKNOWN
         }
