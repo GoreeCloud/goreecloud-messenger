@@ -32,6 +32,48 @@ class DataMessagingAuthorityResolverTest {
     }
 
     @Test
+    fun bareAvailableTransportClaimFailsClosed() {
+        val resolver = resolver(
+            transportEvidence = DataTransportEvidence(
+                state = DataMessagingReadiness.DataTransportState.AVAILABLE,
+            ),
+        )
+
+        assertTransportBlocked(resolver.evidenceFor("conversation-1"))
+    }
+
+    @Test
+    fun everyMissingTransportAcceptanceFactFailsClosed() {
+        val rejected = DataTransportAcceptanceState.NOT_ACCEPTED
+        val candidates = listOf(
+            acceptedTransportEvidence().copy(configuration = rejected),
+            acceptedTransportEvidence().copy(authenticationBinding = rejected),
+            acceptedTransportEvidence().copy(channelProtection = rejected),
+            acceptedTransportEvidence().copy(failurePolicy = rejected),
+        )
+
+        candidates.forEach { evidence ->
+            assertTransportBlocked(
+                resolver(transportEvidence = evidence).evidenceFor("conversation-1"),
+            )
+        }
+    }
+
+    @Test
+    fun unavailableTransportIsNotUpgradedByPositiveAcceptanceFacts() {
+        val resolver = resolver(
+            transportEvidence = acceptedTransportEvidence().copy(
+                state = DataMessagingReadiness.DataTransportState.UNAVAILABLE,
+            ),
+        )
+
+        val evidence = resolver.evidenceFor("conversation-1")
+
+        assertEquals(DataMessagingReadiness.DataTransportState.UNAVAILABLE, evidence.transport)
+        assertTransportBlocked(evidence)
+    }
+
+    @Test
     fun bareActiveClaimWithoutAcceptanceEvidenceFailsClosed() {
         val resolver = resolver(
             e2eeProvider = { conversationId ->
@@ -137,7 +179,7 @@ class DataMessagingAuthorityResolverTest {
                 throw IllegalStateException("authorization unavailable")
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
-                DataMessagingReadiness.DataTransportState.AVAILABLE
+                acceptedTransportEvidence()
             },
             e2eeSessionAuthority = E2EESessionAuthority { conversationId ->
                 acceptedE2eeEvidence(conversationId)
@@ -194,7 +236,7 @@ class DataMessagingAuthorityResolverTest {
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
                 calls += 1
-                DataMessagingReadiness.DataTransportState.UNKNOWN
+                DataTransportEvidence(DataMessagingReadiness.DataTransportState.UNKNOWN)
             },
             e2eeSessionAuthority = E2EESessionAuthority {
                 calls += 1
@@ -230,7 +272,10 @@ class DataMessagingAuthorityResolverTest {
     }
 
     private fun resolver(
-        e2eeProvider: (String) -> E2EESessionEvidence,
+        e2eeProvider: (String) -> E2EESessionEvidence = { conversationId ->
+            acceptedE2eeEvidence(conversationId)
+        },
+        transportEvidence: DataTransportEvidence = acceptedTransportEvidence(),
         authorizationObserver: (String) -> Unit = {},
     ): DataMessagingAuthorityResolver =
         DataMessagingAuthorityResolver(
@@ -244,10 +289,17 @@ class DataMessagingAuthorityResolverTest {
                     authorizedConversationId = conversationId,
                 )
             },
-            dataTransportAuthority = GoreeCloudDataTransportAuthority {
-                DataMessagingReadiness.DataTransportState.AVAILABLE
-            },
+            dataTransportAuthority = GoreeCloudDataTransportAuthority { transportEvidence },
             e2eeSessionAuthority = E2EESessionAuthority(e2eeProvider),
+        )
+
+    private fun acceptedTransportEvidence(): DataTransportEvidence =
+        DataTransportEvidence(
+            state = DataMessagingReadiness.DataTransportState.AVAILABLE,
+            configuration = DataTransportAcceptanceState.ACCEPTED,
+            authenticationBinding = DataTransportAcceptanceState.ACCEPTED,
+            channelProtection = DataTransportAcceptanceState.ACCEPTED,
+            failurePolicy = DataTransportAcceptanceState.ACCEPTED,
         )
 
     private fun acceptedE2eeEvidence(conversationId: String): E2EESessionEvidence =
@@ -259,6 +311,14 @@ class DataMessagingAuthorityResolverTest {
             sessionEstablishment = E2EESessionEstablishmentState.ESTABLISHED,
             keyLifecycle = E2EEKeyLifecycleState.CURRENT,
         )
+
+    private fun assertTransportBlocked(evidence: DataMessagingReadiness.Evidence) {
+        val result = DataMessagingReadiness.evaluate(evidence)
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.DATA_TRANSPORT_NOT_AVAILABLE),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
 
     private fun assertE2eeBlocked(evidence: DataMessagingReadiness.Evidence) {
         val result = DataMessagingReadiness.evaluate(evidence)

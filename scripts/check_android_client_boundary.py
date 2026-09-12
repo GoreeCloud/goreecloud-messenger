@@ -37,7 +37,7 @@ else:
 
 # Network/storage/cryptographic implementation authority must not enter Kotlin
 # source in this disconnected Development shell. This branch may consume only
-# minimized authority evidence; it does not implement cryptography locally.
+# minimized authority evidence; it does not implement cryptography or transport locally.
 # Android XML namespace URIs are intentionally not treated as network authority.
 for path in CLIENT.rglob("*.kt"):
     text = path.read_text(encoding="utf-8")
@@ -133,7 +133,19 @@ else:
     for required in (
         "fun interface GoreeCloudIdentitySessionAuthority",
         "fun interface ConversationAuthorizationAuthority",
+        "enum class DataTransportAcceptanceState",
+        "data class DataTransportEvidence",
+        "val configuration: DataTransportAcceptanceState",
+        "val authenticationBinding: DataTransportAcceptanceState",
+        "val channelProtection: DataTransportAcceptanceState",
+        "val failurePolicy: DataTransportAcceptanceState",
+        "configuration == DataTransportAcceptanceState.ACCEPTED",
+        "authenticationBinding == DataTransportAcceptanceState.ACCEPTED",
+        "channelProtection == DataTransportAcceptanceState.ACCEPTED",
+        "failurePolicy == DataTransportAcceptanceState.ACCEPTED",
         "fun interface GoreeCloudDataTransportAuthority",
+        "fun evidence(): DataTransportEvidence",
+        "dataTransportAuthority.evidence().readinessProjection().state",
         "fun interface E2EESessionAuthority",
         "enum class E2EEImplementationReviewState",
         "enum class E2EEDeviceIdentityState",
@@ -155,6 +167,8 @@ else:
             errors.append(
                 f"Messenger authority resolver is missing independent fail-closed provider guard {required!r}",
             )
+    if "fun availability(): DataMessagingReadiness.DataTransportState" in authority_text:
+        errors.append("Messenger Data transport authority must not expose bare availability as accepted readiness")
 
 if not COORDINATOR.is_file():
     errors.append("Messenger Data message send coordinator is missing")
