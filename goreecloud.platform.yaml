@@ -97,11 +97,12 @@ platform_systems:
     notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
   glaze_ui:
     result: applicable-migration-required
-    version: null
+    version: "1.4.0"
     evidence:
       - README.md
       - SPECIFICATIONS.md
-    notes: The authoritative repository is currently a server-first Development foundation and has no accepted user-facing Glaze client. Any first-party client must target the current governed Stable Glaze consumer line and pass application-specific rendered, accessibility, adaptive, representative-device, and Human Visual Excellence acceptance. Current governed Stable consumer authority is V1.1 / 1.1.0, whose known immutable import-closure defect still requires a corrected governed Stable release before downstream conformance can be claimed.
+      - docs/glaze-ui-v1.4-governance.md
+    notes: Authoritative Messenger main is currently a server-first Development foundation and has no accepted first-party user-facing client. GLAZE UI V1.4 / 1.4.0 at merged Stable source revision 84cb3db4884042f0fa25ed6d475a127fb110f596 is the required design-system baseline for any first-party Messenger client. This server repository does not claim rendered Glaze implementation or application conformance merely by declaring the required version. Client-specific source mapping, accessibility, adaptive, representative-device, privacy/security, and release acceptance remain mandatory; applicable human/manual/physical-device visual validation is assigned to the shared V1.4.1 hardening track.
   mesh:
     result: applicable-blocked
     version: null
@@ -159,10 +160,10 @@ external_dependencies: []
 
 compatibility:
   platform_contract: "0.2"
-  glaze_ui_required: "1.1.0"
+  glaze_ui_required: "1.4.0"
   requires:
     - goreecloud-platform-contract==0.2
-    - glaze-ui==1.1.0
+    - glaze-ui==1.4.0
   provides:
     - messenger-data-http-api-v1
 
@@ -182,13 +183,14 @@ conformance:
     - docs/security.md
     - docs/data-http-api.md
     - docs/runtime-diagnostics.md
+    - docs/glaze-ui-v1.4-governance.md
     - docs/development/auth-derived-typing-publish.md
     - docs/development/http-response-hardening.md
     - docs/development/typing-presence-bundle.md
     - docs/durable-receipt-store.md
   blockers:
-    - No accepted first-party user-facing GoreeCloud Messenger client currently exists in authoritative main.
-    - Current governed Stable Glaze consumer authority is V1.1 / 1.1.0, and its known immutable import-closure defect requires a corrected governed Stable release plus downstream Messenger re-pin and fresh acceptance before Glaze conformance can be claimed.
+    - No accepted first-party user-facing GoreeCloud Messenger client currently exists in authoritative main; GLAZE UI V1.4 is the required client baseline, not evidence that a client has been implemented.
+    - Any future Messenger client still requires exact V1.4 source mapping plus rendered/accessibility/adaptive/representative-device acceptance and applicable V1.4.1 human-validation evidence before Glaze conformance can be claimed.
     - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
     - Accepted production cryptographic session and key lifecycle are not established.
     - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.
