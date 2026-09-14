@@ -191,15 +191,6 @@ platform_systems:
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessagingAuthorityResolverTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/DataMessageSendCoordinatorTest.kt
     notes: Server HTTP handlers inject an Authenticator and derive acting Messenger user identities from it. The optional exact-handle consumer boundary is pinned to GoreeCloud Identity Draft PR #5 at exact head 5904a44997b90cc44f5d196620bb7e189fea0eeb and preserves the Draft contract's service-owned requester identity, exact-handle-only semantics, uniform privacy-sensitive unresolved result, and minimized successful projection. The route is absent until explicitly composed, and the repository contains no production Identity resolver, network client, service credential, accepted service-principal authentication profile, deployed consumer directory, device identity integration, or production session authority. The native Android client separately defines a narrow Identity-session state provider seam but composes no production provider. Production GoreeCloud Identity credential issuance, session validation, device identity, application authorization integration, service authentication, and username-resolution deployment are not implemented or accepted.
-  sync:
-    result: applicable-blocked
-    version: null
-    evidence:
-      - README.md
-      - USER-MANUAL.md
-      - docs/architecture.md
-      - client/android/README.md
-    notes: Messenger requires authorized cross-device conversation state, device/key lifecycle coordination, offline continuation, receipts, edits/deletions, and preference continuity, but no accepted GoreeCloud Sync change tracking, version reconciliation, conflict handling, authorized replication, offline-resume, or cross-device runtime integration is established. The disconnected Android shell persists no message state. Sync remains separate from Everkeep backup/recovery and does not create E2EE or Identity authority.
 
 health:
   health_endpoint: /healthz
