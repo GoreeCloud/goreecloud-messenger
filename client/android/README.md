@@ -35,34 +35,41 @@ The future Data-send seam is intentionally split across independent authorities:
 
 - `GoreeCloudIdentitySessionAuthority` supplies authentication state only;
 - `ConversationAuthorizationAuthority` supplies participant state plus its exact authorized conversation scope;
-- `GoreeCloudDataTransportAuthority` supplies Data transport availability only; and
+- `GoreeCloudDataTransportAuthority` supplies minimized transport evidence whose configuration, authentication binding, protected channel, and bounded failure policy must all be independently accepted before availability may participate in readiness; and
 - `E2EESessionAuthority` supplies reviewed cryptographic state plus the exact conversation scope for which active E2EE is verified.
 
-`DataMessagingAuthorityResolver` queries those providers independently for the prepared encrypted message's exact canonical conversation. A provider exception fails closed to that provider's `UNKNOWN` state. Positive authorization cannot substitute for Identity, transport, or E2EE evidence, and positive E2EE cannot substitute for conversation authorization. Authorization and E2EE scopes must still identify the same exact conversation.
+`DataMessagingAuthorityResolver` queries those providers independently for the prepared encrypted message's exact canonical conversation. A provider exception fails closed to that provider's `UNKNOWN` state. Positive authorization cannot substitute for Identity, accepted transport, or E2EE evidence, and positive E2EE cannot substitute for conversation authorization. Authorization and E2EE scopes must still identify the same exact conversation.
 
 `DataMessageSendCoordinator` resolves the provider evidence itself rather than accepting caller-preassembled positive `DataMessagingReadiness.Evidence`. It invokes an injected encrypted Data transport only after all four authorities are positive and the resulting verified conversation exactly matches the prepared message target. This is a composition contract only; the current client still supplies no production providers or network transport and exposes no real Send control.
 
-## GLAZE UI boundary
+## GLAZE UI V1.4 boundary
 
-The current shared design-system consumer target is **GLAZE UI V1.3 / `1.3.0` Stable — Adaptive Resonance**.
+The shared design-system source target is **GLAZE UI V1.4 / `1.4.0` Stable — Optical Intelligence** at exact Stable revision `84cb3db4884042f0fa25ed6d475a127fb110f596`.
 
-Messenger's repository-local Android mapping records:
+V1.4 inherits the V1.3 Adaptive Resonance token/component baseline. Messenger preserves the neutral material foundation, 48dp ordinary interaction floor, 56dp Touch Assistance floor, System Light/Dark Development behavior, and V1.3 as the immediate rollback baseline.
 
-- exact Stable integration revision `fc7cc91d2eace8da2371371c2855c24cbcb326a1`;
-- inherited optical foundation `tokens/glaze-v1.2-optical-foundation.candidate.json`;
-- adaptive contract `contracts/v1.3/adaptive-resonance.plan.json`;
-- Stable web entrypoint `css/glaze-v1.3.0.css`;
-- Stable runtime entrypoint `js/glaze-v1.3.0.mjs`;
-- rollback baseline `1.2.0`;
-- the rule **Neutral glass is the material. Color is an accent.**;
-- 48dp ordinary interaction floor and 56dp Touch Assistance floor; and
-- neutral Light and Dark canvas/surface values, with tests that reject the historical Deep Teal/Soft Amber substrate pattern.
+`GlazeMessengerOptics` adds a Messenger-specific fail-closed V1.4 source policy:
 
-The current Development Activity only maps Android System Light and Dark. It does **not** silently alias Deep Dark to ordinary Dark or infer adaptive environmental accent behavior; those remain downstream application-specific acceptance items if exposed in supported release scope.
+- the shared Optical Engine is treated as local and deterministic;
+- telemetry, camera access, and remote context are not required;
+- Messenger environmental color-memory influence is fixed at `0.0`, below the shared V1.4 maximum of `0.08`;
+- Reduced Transparency and Forced Colors require solid-accessible treatment;
+- Increased Contrast suppresses decorative tint and warmth;
+- accessibility cannot be overridden by optical context;
+- optical presentation cannot become semantic/product authority; and
+- message content, composer drafts, conversation/participant identity, delivery receipts, typing presence, E2EE state, Data-transport state, Identity-session state, Privacy Shield/Wardveil/Everkeep/Sync state, and remote artwork/media are prohibited optical inputs in this disconnected Development shell.
 
-This source mapping does not establish rendered/native-device conformance. Messenger still requires exact-revision visual review, accessibility/assistive-technology evidence, large-text behavior, Reduced Motion, Reduced Transparency/effects-free behavior where applicable, contrast/high-contrast behavior, adaptive/form-factor behavior, RTL/localization, representative-device evidence, performance evidence, rollback acceptance, Human Visual Excellence review, and final product-specific acceptance before production promotion.
+The optical adapter remains inactive. `MessengerClientActivity` does not consume `GlazeMessengerOptics`, so migrating source authority does not silently activate context-aware rendering.
 
-GLAZE UI presentation cannot manufacture Data transport availability, E2EE state, Identity authorization, Wardveil Security state, Privacy Shield privacy state, Everkeep recovery state, Mesh coordination, message delivery, or any other runtime authority.
+This source mapping does not establish rendered/native-device conformance. GLAZE UI V1.4.0 also does not claim the human/manual/physical-device/subjective qualification assigned to V1.4.1. Messenger still requires fresh exact-revision visual, accessibility/assistive-technology, large-text, Reduced Motion, Reduced Transparency, contrast/high-contrast, adaptive/form-factor, RTL/localization, representative-device, performance, rollback, Human Visual Excellence, and final product-specific acceptance before production promotion.
+
+GLAZE UI presentation cannot manufacture Data transport availability, E2EE state, Identity authorization, Wardveil Security state, Privacy Shield privacy state, Everkeep recovery state, GoreeCloud Sync state, Mesh coordination, message delivery, or any other runtime authority.
+
+## Eight-system Platform Contract boundary
+
+Messenger declares Platform Contract `0.3`, which evaluates all eight Integral Platform Systems: Manager, Privacy Shield, Wardveil Security, Everkeep, GLAZE UI, Mesh, Identity, and Sync.
+
+GoreeCloud Sync remains `applicable-blocked`. Messenger requires future authorized cross-device conversation state, device/key lifecycle coordination, offline continuation, receipts, edits/deletions, and preference continuity, but the disconnected Android shell does not persist messages and no accepted Sync change tracking, version reconciliation, conflict handling, authorized replication, offline-resume, or cross-device runtime exists. Sync is not Everkeep backup/recovery and does not create Identity or E2EE authority.
 
 ## Remaining client gates
 
@@ -72,9 +79,9 @@ Before this Android client can approach Release Candidate status it still requir
 - accepted exact conversation authorization authority;
 - reviewed cryptographic device/session/key lifecycle plus truthful exact conversation-scoped E2EE state derivation;
 - a live GoreeCloud Data client transport and production delivery/synchronization boundary;
-- Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and Manager integration/acceptance;
-- complete application-specific GLAZE UI V1.3 rendered/accessibility/adaptive/device/performance/rollback acceptance;
+- Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Sync, and Manager integration/acceptance;
+- complete application-specific GLAZE UI V1.4 rendered/accessibility/adaptive/device/performance/rollback acceptance plus applicable V1.4.1 human/manual/device validation;
 - representative Android lifecycle, IME, Back, adaptive/form-factor, and accessibility acceptance; and
 - protected release signing, artifact provenance, release/rollback/upgrade documentation, and final exact-candidate acceptance.
 
-The server and Android client remain separate runtime compositions. This client foundation does not grant itself server, Identity, cryptographic, recovery, carrier, calling, deployment, or production authority.
+The server and Android client remain separate runtime compositions. This client foundation does not grant itself server, Identity, cryptographic, recovery, synchronization, carrier, calling, deployment, or production authority.
