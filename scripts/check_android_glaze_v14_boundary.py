@@ -22,27 +22,27 @@ def forbid(text: str, fragment: str, label: str) -> None:
 
 
 if not TOKENS.is_file() or not OPTICS.is_file() or not ACTIVITY.is_file():
-    errors.append("Messenger V1.4 Glaze source files are incomplete")
+    errors.append("Messenger V1.4.1 Glaze source files are incomplete")
 else:
     tokens = TOKENS.read_text(encoding="utf-8")
     optics = OPTICS.read_text(encoding="utf-8")
     activity = ACTIVITY.read_text(encoding="utf-8")
 
     for marker in (
-        'const val Version = "1.4.0"',
-        'const val ReleaseTheme = "Optical Intelligence"',
-        'const val StableReleaseRevision = "84cb3db4884042f0fa25ed6d475a127fb110f596"',
-        'const val StableWebEntrypoint = "css/glaze-v1.4.0.css"',
-        'const val StableRuntimeEntrypoint = "js/glaze-v1.4.0.mjs"',
-        'const val RollbackBaselineVersion = "1.3.0"',
+        'const val Version = "1.4.1"',
+        'const val ReleaseTheme = "Optical Hardening"',
+        'const val StableReleaseRevision = "4fab9da0fad2e5c974e0e66ec88632c61745751c"',
+        'const val StableWebEntrypoint = "css/glaze-v1.4.1.css"',
+        'const val StableRuntimeEntrypoint = "js/glaze-v1.4.1.mjs"',
+        'const val RollbackBaselineVersion = "1.4.0"',
         "const val InteractionFloorDp = 48",
         "const val TouchAssistanceFloorDp = 56",
     ):
         require(tokens, marker, "GlazeClientTokens")
 
     for marker in (
-        'const val Version = "1.4.0"',
-        'const val StableRevision = "84cb3db4884042f0fa25ed6d475a127fb110f596"',
+        'const val Version = "1.4.1"',
+        'const val StableRevision = "4fab9da0fad2e5c974e0e66ec88632c61745751c"',
         "const val OpticalEngineIsLocalAndDeterministic = true",
         "const val TelemetryRequired = false",
         "const val CameraRequired = false",
@@ -77,9 +77,9 @@ else:
     forbid(activity, "GlazeMessengerOptics", "MessengerClientActivity")
 
 if errors:
-    print("Messenger Android GLAZE UI V1.4 boundary FAILED:", file=sys.stderr)
+    print("Messenger Android GLAZE UI V1.4.1 boundary FAILED:", file=sys.stderr)
     for error in errors:
         print(f"- {error}", file=sys.stderr)
     raise SystemExit(1)
 
-print("Messenger Android GLAZE UI V1.4 source boundary passed")
+print("Messenger Android GLAZE UI V1.4.1 source boundary passed")
