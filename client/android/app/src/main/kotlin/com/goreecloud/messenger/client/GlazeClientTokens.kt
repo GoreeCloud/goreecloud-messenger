@@ -1,20 +1,21 @@
 package com.goreecloud.messenger.client
 
 /**
- * Repository-local Android source mapping for GLAZE UI V1.4 Stable.
+ * Repository-local Android source mapping for GLAZE UI V1.4.1 Stable.
  *
- * Optical Intelligence inherits the V1.3 Adaptive Resonance token/component baseline. These
- * constants pin the disconnected Development client to the exact current Stable design authority
- * without claiming rendered/native-device acceptance. Presentation must never manufacture Data
- * transport, E2EE, Identity, privacy, security, recovery, synchronization, or delivery truth.
+ * Optical Hardening preserves the V1.4 Optical Intelligence and inherited V1.3
+ * token/component baseline. These constants pin the disconnected Development
+ * client to the exact current Stable design authority without claiming rendered
+ * or native-device acceptance. Presentation must never manufacture data transport,
+ * E2EE, Identity, privacy, security, recovery, synchronization, or delivery truth.
  */
 object GlazeClientTokens {
-    const val Version = "1.4.0"
-    const val ReleaseTheme = "Optical Intelligence"
-    const val StableReleaseRevision = "84cb3db4884042f0fa25ed6d475a127fb110f596"
-    const val StableWebEntrypoint = "css/glaze-v1.4.0.css"
-    const val StableRuntimeEntrypoint = "js/glaze-v1.4.0.mjs"
-    const val RollbackBaselineVersion = "1.3.0"
+    const val Version = "1.4.1"
+    const val ReleaseTheme = "Optical Hardening"
+    const val StableReleaseRevision = "4fab9da0fad2e5c974e0e66ec88632c61745751c"
+    const val StableWebEntrypoint = "css/glaze-v1.4.1.css"
+    const val StableRuntimeEntrypoint = "js/glaze-v1.4.1.mjs"
+    const val RollbackBaselineVersion = "1.4.0"
     const val MaterialRule = "neutral-glass-is-material-color-is-accent"
 
     const val InteractionFloorDp = 48
@@ -24,8 +25,8 @@ object GlazeClientTokens {
     const val SectionSpacingDp = 14
 
     // This disconnected Development shell currently renders Android System Light/Dark only.
-    // Deep Dark, adaptive accents, and V1.4 optical context remain independently gated rather
-    // than inferred or silently activated.
+    // Deep Dark, adaptive accents, and optical context remain independently gated rather than
+    // inferred or silently activated by the version bump.
     const val LightCanvas = 0xFFF4F6F7
     const val LightSurface = 0xEFFFFFFF
     const val LightText = 0xFF182126
@@ -37,7 +38,7 @@ object GlazeClientTokens {
     const val DarkMutedText = 0xFFB6C0C5
     const val DarkBorder = 0x337E8A90
 
-    /** V1.4 inherits the neutral material substrate; optical/adaptive color remains subordinate. */
+    /** V1.4.1 preserves the neutral material substrate; optical/adaptive color remains subordinate. */
     fun isNeutralSubstrate(argb: Long, maximumChannelSpread: Int = 16): Boolean {
         require(maximumChannelSpread >= 0)
         val red = ((argb shr 16) and 0xff).toInt()

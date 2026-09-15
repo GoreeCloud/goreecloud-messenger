@@ -7,20 +7,17 @@ import org.junit.Test
 
 class GlazeClientTokensTest {
     @Test
-    fun sourceMappingTargetsCurrentStableV14Authority() {
-        assertEquals("1.4.0", GlazeClientTokens.Version)
-        assertEquals("Optical Intelligence", GlazeClientTokens.ReleaseTheme)
+    fun sourceMappingTargetsCurrentStableV141Authority() {
+        assertEquals("1.4.1", GlazeClientTokens.Version)
+        assertEquals("Optical Hardening", GlazeClientTokens.ReleaseTheme)
         assertEquals(
-            "84cb3db4884042f0fa25ed6d475a127fb110f596",
+            "4fab9da0fad2e5c974e0e66ec88632c61745751c",
             GlazeClientTokens.StableReleaseRevision,
         )
-        assertEquals("css/glaze-v1.4.0.css", GlazeClientTokens.StableWebEntrypoint)
-        assertEquals("js/glaze-v1.4.0.mjs", GlazeClientTokens.StableRuntimeEntrypoint)
-        assertEquals("1.3.0", GlazeClientTokens.RollbackBaselineVersion)
-        assertEquals(
-            "neutral-glass-is-material-color-is-accent",
-            GlazeClientTokens.MaterialRule,
-        )
+        assertEquals("css/glaze-v1.4.1.css", GlazeClientTokens.StableWebEntrypoint)
+        assertEquals("js/glaze-v1.4.1.mjs", GlazeClientTokens.StableRuntimeEntrypoint)
+        assertEquals("1.4.0", GlazeClientTokens.RollbackBaselineVersion)
+        assertEquals("neutral-glass-is-material-color-is-accent", GlazeClientTokens.MaterialRule)
         assertEquals(GlazeClientTokens.Version, GlazeMessengerOptics.Version)
         assertEquals(GlazeClientTokens.StableReleaseRevision, GlazeMessengerOptics.StableRevision)
     }
@@ -81,7 +78,7 @@ class GlazeClientTokensTest {
     }
 
     @Test
-    fun deferredHumanAndDeviceGatesRemainFalse() {
+    fun sharedV141QualificationDoesNotFabricateMessengerAcceptance() {
         assertFalse(GlazeMessengerOptics.PhysicalDeviceAcceptanceEstablished)
         assertFalse(GlazeMessengerOptics.ManualAssistiveTechnologyAcceptanceEstablished)
         assertFalse(GlazeMessengerOptics.HumanVisualExcellenceAcceptanceEstablished)
