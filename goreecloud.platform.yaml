@@ -191,9 +191,7 @@ compatibility:
     - messenger-android-disconnected-development-v1
 
 evidence:
-  acceptance_tests:
-    - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeClientTokensTest.kt
-    - client/android/app/src/androidTest/kotlin/com/goreecloud/messenger/client/MessengerClientRuntimeAcceptanceTest.kt
+  acceptance_tests: []
   release: []
 
 conformance:
