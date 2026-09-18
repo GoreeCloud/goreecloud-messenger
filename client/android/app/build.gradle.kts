@@ -5,18 +5,22 @@ plugins {
 
 android {
     namespace = "com.goreecloud.messenger.client"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.goreecloud.messenger"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0-dev"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".development"
+            versionNameSuffix = "+android.1"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
