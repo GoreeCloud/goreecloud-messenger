@@ -21,8 +21,8 @@ from uuid import NAMESPACE_URL, uuid5
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_REPOSITORY = "GoreeCloud/goreecloud-messenger"
-EXPECTED_PACKAGE = "com.goreecloud.messenger"
-EXPECTED_VERSION_NAME = "0.1.0-dev"
+EXPECTED_PACKAGE = "com.goreecloud.messenger.development"
+EXPECTED_VERSION_NAME = "0.1.0-dev+android.1"
 EXPECTED_CONFIGURATION = "debugRuntimeClasspath"
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 COORDINATE_RE = re.compile(
