@@ -6,9 +6,9 @@ This directory contains the first original GoreeCloud-owned native Android clien
 
 Lifecycle: **Development**
 
-This client has been restacked onto current authoritative Messenger `main` as a bounded migration candidate. Historical stacked branches remain provenance only; exact source revision and CI evidence must be read from the current branch/PR.
+This disconnected native Android Development client is integrated into authoritative Messenger `main` through PR #79. Historical stacked branches remain provenance only; exact source revision and CI evidence must always be read from the revision being evaluated.
 
-Successful source/build evidence for earlier Development revisions does not establish Release Candidate, production, Stable, signing, deployment, representative-device, accessibility, or rendered GLAZE UI acceptance for this materially changed branch.
+Successful source/build evidence for the merged Development foundation does not establish Release Candidate, production, Stable, protected signing, deployment, representative-device, accessibility, or rendered GLAZE UI acceptance for future materially changed revisions.
 
 ## Deliberate Development boundary
 
