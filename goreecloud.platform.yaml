@@ -94,9 +94,6 @@ platform_systems:
       - internal/service/file_receipt_store.go
       - internal/service/file_attachment_store.go
       - docs/durable-receipt-store.md
-    - client/android/README.md
-    - client/android/app/src/main/AndroidManifest.xml
-    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
       - README.md
     notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
   glaze_ui:
@@ -210,6 +207,9 @@ conformance:
     - docs/development/http-response-hardening.md
     - docs/development/typing-presence-bundle.md
     - docs/durable-receipt-store.md
+    - client/android/README.md
+    - client/android/app/src/main/AndroidManifest.xml
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
   blockers:
     - A native Android Messenger client exists only as a disconnected Development foundation; production account/session binding, connected messaging, durable client state, representative-device acceptance, protected signing, deployment, and release acceptance are not established.
     - Current Official Stable Glaze UI V1.5 / 1.5.1 is source-mapped in the Android Development client, but Messenger-local rendered, accessibility, adaptive/form-factor, localization/RTL, performance, rollback, Human Visual Excellence, and production acceptance remain incomplete.
