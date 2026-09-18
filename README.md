@@ -4,7 +4,7 @@ Native GoreeCloud messaging and calling with usernames, end-to-end encryption, D
 
 ## Status
 
-Active Development — native messaging, GoreeCloud Data messaging, authenticated HTTP transport, delivery/read receipt, encrypted-attachment, optional content-free typing presence, authenticated Development typing-privacy preferences, unified Data HTTP runtime-composition, hardened single-node receipt persistence, explicit receipt-persistence environment configuration, and minimized startup-diagnostic foundations are implemented in source; production identity, cryptographic session establishment, distributed delivery/storage, durable Privacy Shield-backed preference storage, complete server bootstrap, and client acceptance remain incomplete.
+Active Development — native messaging domain/service foundations, GoreeCloud Data HTTP transport, receipts, opaque encrypted attachments, privacy-controlled typing foundations, hardened single-node Development persistence, minimized runtime diagnostics, and a disconnected native Android Development client are implemented in source. Production Identity, cryptographic session establishment, connected client transport, distributed delivery/storage, durable Privacy Shield-backed preference storage, complete server bootstrap, and client acceptance remain incomplete.
 
 The current foundation establishes the transport-provenance domain model used to keep Data, SMS, MMS, and RCS communication technically distinct. GoreeCloud Data adds encrypted-envelope validation, authenticated sender enforcement, conversation authorization, deterministic retry protection, persistence abstraction, authenticated delivery/read receipts, opaque encrypted-attachment transport, and short-lived content-free typing state. The attachment surface can submit, fetch as JSON/base64, list metadata, delete with replay-safe tombstones, and download exact ciphertext bytes without asking the server to interpret plaintext media.
 
@@ -29,7 +29,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - Attachment services transport opaque ciphertext and do not decrypt user content.
 - Typing presence remains content-free, short-lived, participant-authorized, and independently privacy-gated for publish and observe behavior.
 - Operational diagnostics must minimize sensitive configuration and communication data.
-- Glaze UI 2.0 or newer, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity are substantive platform integration requirements for applicable surfaces.
+- Current Official Stable Glaze UI V1.5 / 1.5.1 plus GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability are substantive platform integration requirements for applicable surfaces; repository-local source mapping does not establish acceptance.
 
 ## Repository layout
 
@@ -44,6 +44,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - `docs/data-http-api.md` — HTTP API, authentication, authorization, receipt, attachment, runtime composition, and privacy boundary
 - `docs/durable-receipt-store.md` — file durability, runtime selection, and environment-configuration boundaries
 - `docs/runtime-diagnostics.md` — minimized runtime configuration diagnostic and non-disclosure boundary
+- `client/android/` — disconnected original native Android Development client with fail-closed messaging authority boundaries and exact-artifact validation
 
 ## Documentation
 
@@ -53,13 +54,15 @@ After configuration is accepted, the executable can report a minimized categoric
 - [BENEFITS.md](BENEFITS.md)
 - [COMPETITIVE-OBJECTIVES.md](COMPETITIVE-OBJECTIVES.md)
 
-## Planned clients
+## Client status
 
-Native or platform-appropriate clients are planned for Android, tablets, desktop Linux, and other approved GoreeCloud client platforms. Client work will consume the shared transport and security contracts established here rather than redefining them independently. Consumer username resolution is expected to use a GoreeCloud Identity-owned exact-handle disclosure contract rather than a Messenger-owned account directory.
+A native Android Development client is present as a disconnected, fail-closed shell. It has no production account, network/message transport, durable message storage, active E2EE provider, carrier authority, or Send control. It exists to validate native client structure, communication provenance, independent readiness authorities, current Glaze UI 1.5.1 source mapping, lifecycle behavior, and artifact provenance without manufacturing messaging capability.
+
+Additional tablet, desktop Linux, and other approved clients remain planned. All clients must consume shared transport, identity, privacy, security, recovery, policy, observability, and messaging contracts rather than redefining them independently. Consumer username resolution remains a GoreeCloud Identity-owned exact-handle disclosure concern rather than a Messenger-owned account directory.
 
 ## Current limitations
 
-This repository remains Development. It does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, distributed message delivery, production object storage, push notification delivery, durable Privacy Shield-backed typing preference storage, production presence fan-out/offline synchronization, anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, Glaze UI client acceptance, or production deployment evidence.
+This repository remains Development. The Android shell is source-present but disconnected and not production accepted. The repository does not yet establish production-grade Identity sessions, device/key lifecycle, end-to-end cryptographic session establishment, connected Android message transport, distributed message delivery, production object storage, push notification delivery, durable Privacy Shield-backed typing preference storage, production presence fan-out/offline synchronization, anti-abuse/rate-limit acceptance, carrier adapters, calling media transport, Messenger-local Glaze UI acceptance, or production deployment evidence.
 
 The unified Data handler is a composition boundary, and the command-level environment parser supplies a strict receipt-persistence selection contract with a minimized categorical diagnostic. The current executable still does not assemble the complete Data runtime dependencies, credentials/Identity boundaries, TLS, service lifecycle, production health/readiness monitoring, migration, and deployment configuration needed for a production server.
 
