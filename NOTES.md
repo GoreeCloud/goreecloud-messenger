@@ -2,18 +2,22 @@
 
 ## Current stabilization context
 
-- Repository lifecycle remains Development and is not Stable or production accepted.
-- Verified baseline for this notes change: `main` at `1273a57d08acb375a38127df2e2fee193d0dbe65`.
-- Authoritative `main` at the migration start is server-first. This topic branch cleanly restacks the historical disconnected Android shell onto current `main`; it is not authoritative client state until governed integration completes.
-- This migration branch updates the platform declaration to accepted Contract 0.4/nine-system semantics and current Glaze UI 1.5.1 source authority while keeping overall conformance nonconformant.
-- Draft PR #76 remains historical stacked provenance only. The current migration branch copies the reviewed client subtree onto current `main`, updates the Android 16 toolchain and current authorities, and must obtain fresh exact-head validation rather than reusing #76's green results.
+- Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
+- Authoritative `main` includes the disconnected native Android Development client through merge `08ea079527960e6c3ac7e5f1f4234236aef6d508` (PR #79).
+- PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
+- The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
+- Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
 
 ## Active stabilization observations
 
-- A native Android Development candidate is now present on this migration branch; connected messaging, representative-device acceptance, production signing/deployment, and release acceptance remain separate required states.
-- Client integration must not activate message transport, Identity, E2EE, privacy, security, or synchronization authority merely because UI source exists.
-- Production Identity/session/device integration, accepted cryptographic session/key lifecycle, Wardveil, Privacy Shield, Everkeep, Mesh, Manager, GoreeCloud Policy, GoreeCloud Observability, application-specific Glaze acceptance, signing/deployment, and representative target-environment evidence remain incomplete.
+- The native Android client has no production account/session binding, connected message transport, durable client message storage, active production E2EE lifecycle, carrier authority, or live Send control.
+- Client integration must not activate message transport, Identity, E2EE, privacy, security, recovery, policy, observability, synchronization, or delivery authority merely because UI source is present.
+- The repository now declares accepted Platform Contract 0.4 structure and all nine Integral Platform Systems, while unresolved runtime systems remain explicitly blocked.
+- Current Official Stable Glaze UI V1.5 / 1.5.1 is source-mapped, but Messenger-local rendered, accessibility, representative-device/form-factor, localization/RTL, performance, rollback, and Human Visual Excellence acceptance remain incomplete.
+- Production Identity/session/device integration, accepted cryptographic session/key lifecycle, Wardveil, Privacy Shield, Everkeep, Mesh, Manager, GoreeCloud Policy, GoreeCloud Observability, protected signing/deployment, and representative target-environment evidence remain incomplete.
 
 ## Maintenance notes
 
-Keep this clean restack on current authoritative contracts rather than merging the stale stack unchanged. Preserve the disconnected/fail-closed client until authenticated transport, exact conversation ownership, cryptographic, privacy, security, policy, observability, recovery, and identity boundaries are accepted. Fresh exact-head Android/emulator/contract evidence is required before integration; production and Stable claims remain blocked.
+Continue from authoritative `main`; do not revive or merge the stale stacked Android lineage unchanged. Preserve the disconnected/fail-closed client until authenticated transport, exact conversation ownership, cryptographic, privacy, security, policy, observability, recovery, and identity boundaries are accepted.
+
+Any material Android source change requires fresh exact-head validation. Existing PR #79 evidence proves only the merged Development foundation at its exact source head; it does not establish future-revision, production, Release Candidate, or Stable acceptance.
