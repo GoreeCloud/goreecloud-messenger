@@ -21,3 +21,11 @@
 Continue from authoritative `main`; do not revive or merge the stale stacked Android lineage unchanged. Preserve the disconnected/fail-closed client until authenticated transport, exact conversation ownership, cryptographic, privacy, security, policy, observability, recovery, and identity boundaries are accepted.
 
 Any material Android source change requires fresh exact-head validation. Existing PR #79 evidence proves only the merged Development foundation at its exact source head; it does not establish future-revision, production, Release Candidate, or Stable acceptance.
+
+
+## September 18 CI stabilization slice
+
+- Android client CI now targets Ubuntu 24.04 rather than the moving `ubuntu-latest` label.
+- Both Android jobs verify that the checked-out revision exactly matches the pull-request head or pushed `main` SHA before executing source.
+- The build job also assembles the release variant as compilation/package-shape evidence without retaining or promoting it as a production artifact.
+- These controls strengthen exact-source and build-variant evidence only. They do not activate network transport, Identity, E2EE, durable client state, Send authority, production signing, Release Candidate, or Stable status.
