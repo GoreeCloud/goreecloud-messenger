@@ -1,4 +1,4 @@
-schema_version: "0.2"
+schema_version: "0.4"
 
 component:
   type: application
@@ -11,6 +11,7 @@ version: "0.1.0-dev"
 
 supported_platforms:
   - server
+  - android
 
 api:
   versions:
@@ -97,11 +98,14 @@ platform_systems:
     notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
   glaze_ui:
     result: applicable-migration-required
-    version: null
+    version: "1.5.1"
     evidence:
       - README.md
       - SPECIFICATIONS.md
-    notes: The authoritative repository is currently a server-first Development foundation and has no accepted user-facing Glaze client. Any first-party client must target the current governed Stable Glaze consumer line and pass application-specific rendered, accessibility, adaptive, representative-device, and Human Visual Excellence acceptance. Current governed Stable consumer authority is V1.1 / 1.1.0, whose known immutable import-closure defect still requires a corrected governed Stable release before downstream conformance can be claimed.
+      - client/android/README.md
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeClientTokensTest.kt
+    notes: The disconnected native Android Development client is source-mapped to current Official Stable Glaze UI V1.5 / 1.5.1 with fail-closed presentation authority, but Messenger-specific rendered, accessibility, representative-device/form-factor, performance, localization/RTL, rollback, Human Visual Excellence, and production acceptance remain incomplete.
   mesh:
     result: applicable-blocked
     version: null
@@ -127,6 +131,22 @@ platform_systems:
       - internal/api/typing_preferences_http.go
       - docs/development/auth-derived-typing-publish.md
     notes: Current handlers derive acting identities through an injected authentication boundary instead of caller-supplied mutation identities, but production GoreeCloud Identity credential issuance, session validation, device identity, account/profile isolation, revocation, and username resolution are not implemented or accepted.
+  policy:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+      - SPECIFICATIONS.md
+      - goreecloud.platform.yaml
+    notes: GoreeCloud Policy is applicable to Messenger policy representation, privacy/security/authorization decision coordination, explanation, version/freshness, exception, and evidence boundaries, but no accepted Messenger runtime Policy integration or exact-release policy acceptance exists.
+  observability:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - README.md
+      - docs/runtime-diagnostics.md
+      - goreecloud.platform.yaml
+    notes: Messenger has bounded privacy-minimized Development runtime diagnostics on the server side while the disconnected Android shell emits no production telemetry; accepted GoreeCloud Observability health, metrics, events, diagnostics, dependency-health, provenance/freshness, alerting, and target-environment runtime acceptance remain incomplete.
 
 health:
   health_endpoint: null
@@ -158,13 +178,14 @@ continuity:
 external_dependencies: []
 
 compatibility:
-  platform_contract: "0.2"
-  glaze_ui_required: "1.1.0"
+  platform_contract: "0.4"
+  glaze_ui_required: "1.5.1"
   requires:
-    - goreecloud-platform-contract==0.2
-    - glaze-ui==1.1.0
+    - goreecloud-platform-contract==0.4
+    - glaze-ui==1.5.1
   provides:
     - messenger-data-http-api-v1
+    - messenger-android-disconnected-development-v1
 
 evidence:
   acceptance_tests: []
@@ -186,9 +207,12 @@ conformance:
     - docs/development/http-response-hardening.md
     - docs/development/typing-presence-bundle.md
     - docs/durable-receipt-store.md
+    - client/android/README.md
+    - client/android/app/src/main/AndroidManifest.xml
+    - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
   blockers:
-    - No accepted first-party user-facing GoreeCloud Messenger client currently exists in authoritative main.
-    - Current governed Stable Glaze consumer authority is V1.1 / 1.1.0, and its known immutable import-closure defect requires a corrected governed Stable release plus downstream Messenger re-pin and fresh acceptance before Glaze conformance can be claimed.
+    - A native Android Messenger client exists only as a disconnected Development foundation; production account/session binding, connected messaging, durable client state, representative-device acceptance, protected signing, deployment, and release acceptance are not established.
+    - Current Official Stable Glaze UI V1.5 / 1.5.1 is source-mapped in the Android Development client, but Messenger-local rendered, accessibility, adaptive/form-factor, localization/RTL, performance, rollback, Human Visual Excellence, and production acceptance remain incomplete.
     - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
     - Accepted production cryptographic session and key lifecycle are not established.
     - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.
@@ -196,4 +220,6 @@ conformance:
     - Everkeep integration plus accepted backup, restore, recovery, migration, rollback, and encrypted-communication portability are not established.
     - GoreeCloud Mesh registration, service identity, authenticated discovery/transport, capability/event publication, and runtime acceptance are not established.
     - GoreeCloud Manager health/readiness, platform visibility, operational integration, and acceptance are not established.
+    - GoreeCloud Policy runtime decision, enforcement-coordination, explanation, freshness, exception, and evidence integration/acceptance are not established.
+    - GoreeCloud Observability health, metrics, events, diagnostics, dependency-health, provenance/freshness, alerting, and target-environment integration/acceptance are not established.
     - Representative target-environment performance, resilience, upgrade/rollback, signing/deployment, release provenance, and Release Candidate acceptance remain outstanding.

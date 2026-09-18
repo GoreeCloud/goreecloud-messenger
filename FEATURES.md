@@ -2,6 +2,10 @@
 
 ## Implemented in Development source
 
+- Disconnected native Android Development client with explicit no-account/no-network/no-message-storage presentation, transport/protection provenance examples, fail-closed Data readiness explanation, and no live Send control.
+- Android source separates Identity session, exact conversation authorization, accepted GoreeCloud Data transport, and exact-conversation E2EE evidence as independent prerequisites; provider absence or error remains unknown/blocked rather than becoming readiness.
+- Android Development artifact boundary keeps backup disabled, requests no Internet/contacts/SMS/phone/microphone/camera permissions, uses a distinct Development package identity, and carries adaptive, round, and monochrome launcher resources.
+- Android Development source targets current Official Stable Glaze UI V1.5 / 1.5.1 while leaving application-specific rendered, accessibility, device, performance, and Human Visual Excellence acceptance false.
 - GoreeCloud Data conversation/message domain contracts.
 - Transport provenance separating Data, SMS, MMS, and RCS semantics.
 - Authenticated sender and conversation authorization.
@@ -28,5 +32,5 @@
 - **Durable Privacy Shield-backed** typing/presence preference persistence and native client typing/privacy presentation. The current preference store is Development memory state only.
 - SMS/MMS/RCS carrier/platform adapters where legitimate APIs permit.
 - Voice/video call signaling and media transport.
-- Native client packaging and Glaze UI 2.0+ rendered acceptance.
-- Wardveil encrypted-object/security acceptance, Privacy Shield controls, Everkeep continuity, and production deployment evidence.
+- Connected Android messaging/client persistence and production client packaging; current Glaze UI V1.5 / 1.5.1 rendered, accessibility, adaptive-device, performance, and Human Visual Excellence acceptance remain incomplete.
+- Wardveil encrypted-object/security acceptance, Privacy Shield controls, Everkeep continuity, GoreeCloud Policy runtime integration, GoreeCloud Observability runtime integration, Manager/Mesh/Identity acceptance, and production deployment evidence.
