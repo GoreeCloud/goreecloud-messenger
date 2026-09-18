@@ -2,6 +2,7 @@ package com.goreecloud.messenger.client
 
 import android.Manifest
 import android.content.Context
+import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -95,6 +96,31 @@ class MessengerClientRuntimeAcceptanceTest {
 
         // A disconnected provenance/readiness preview must not grow a live message-send control.
         assertFalse(visibleText.any { it.trim().equals("Send", ignoreCase = true) })
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val headings = collectTextViews(root)
+                .filter { it.isAccessibilityHeading }
+                .map { it.text?.toString().orEmpty() }
+                .toSet()
+            assertTrue(
+                headings.containsAll(
+                    setOf(
+                        "GoreeCloud Messenger",
+                        "Data messaging readiness",
+                        "Provenance examples",
+                        "RC integration boundary",
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun collectTextViews(view: View): List<TextView> = when (view) {
+        is TextView -> listOf(view)
+        is ViewGroup -> buildList {
+            repeat(view.childCount) { index -> addAll(collectTextViews(view.getChildAt(index))) }
+        }
+        else -> emptyList()
     }
 
     private fun collectText(view: View): List<String> = when (view) {
