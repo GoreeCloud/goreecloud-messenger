@@ -21,11 +21,11 @@ from uuid import NAMESPACE_URL, uuid5
 
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_REPOSITORY = "GoreeCloud/goreecloud-messenger"
-EXPECTED_PACKAGE = "com.goreecloud.messenger"
-EXPECTED_VERSION_NAME = "0.1.0-dev"
+EXPECTED_PACKAGE = "com.goreecloud.messenger.development"
+EXPECTED_VERSION_NAME = "0.1.0-dev+android.1"
 EXPECTED_VERSION_CODE = "1"
 EXPECTED_MIN_SDK = "26"
-EXPECTED_TARGET_SDK = "35"
+EXPECTED_TARGET_SDK = "36"
 EXPECTED_SBOM_FORMAT = "CycloneDX"
 EXPECTED_SBOM_SPEC = "1.6"
 EXPECTED_SBOM_COMPONENT = "goreecloud-messenger-android"
