@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   android-client:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
@@ -20,6 +20,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+
+      - name: Verify exact source revision
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
 
       - name: Set up Java
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -46,6 +49,9 @@ jobs:
 
       - name: Build client debug APK
         run: gradle -p client/android :app:assembleDebug --stacktrace
+
+      - name: Assemble release variant without promotion
+        run: gradle -p client/android :app:assembleRelease --stacktrace
 
       - name: Resolve exact Development runtime dependency closure
         run: |
@@ -95,7 +101,7 @@ jobs:
 
   android-client-emulator:
     needs: android-client
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
 
     steps:
@@ -104,6 +110,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+
+      - name: Verify exact source revision
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
 
       - name: Set up Java
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
