@@ -34,3 +34,10 @@ Any material Android source change requires fresh exact-head validation. Existin
 ## Accessibility stabilization candidate — September 18, 2026
 
 The current candidate restacks the section-heading semantics change directly onto the CI-hardened authoritative base. It marks the app title and major readiness/provenance/platform section headings as Android accessibility headings on API 28+ and extends Android 16 runtime acceptance to verify those semantics. It does not widen messaging or platform authority.
+
+
+## Foundation CI supply-chain stabilization candidate — September 18, 2026
+
+- Messenger Foundation is being moved from mutable Ubuntu/action tags to Ubuntu 24.04 plus immutable checkout and setup-go commit SHAs while preserving the existing action major versions.
+- Foundation checkout now targets and verifies the exact pull-request head or pushed main revision before Go source is executed.
+- This changes CI provenance only; it does not activate Data transport, Identity, E2EE, durable state, Send authority, production signing, RC, or Stable status.
