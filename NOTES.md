@@ -3,7 +3,7 @@
 ## Current stabilization context
 
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
-- Authoritative `main` includes the disconnected native Android Development client through merge `08ea079527960e6c3ac7e5f1f4234236aef6d508` (PR #79).
+- Authoritative `main` includes the disconnected native Android Development client and exact-source CI hardening through `d18ed837507c1da441529267014a406f75a067b5` (PR #82), building on the Android foundation merge `08ea079527960e6c3ac7e5f1f4234236aef6d508` (PR #79).
 - PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
 - The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
 - Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
@@ -29,3 +29,8 @@ Any material Android source change requires fresh exact-head validation. Existin
 - Both Android jobs verify that the checked-out revision exactly matches the pull-request head or pushed `main` SHA before executing source.
 - The build job also assembles the release variant as compilation/package-shape evidence without retaining or promoting it as a production artifact.
 - These controls strengthen exact-source and build-variant evidence only. They do not activate network transport, Identity, E2EE, durable client state, Send authority, production signing, Release Candidate, or Stable status.
+
+
+## Accessibility stabilization candidate — September 18, 2026
+
+The current candidate restacks the section-heading semantics change directly onto the CI-hardened authoritative base. It marks the app title and major readiness/provenance/platform section headings as Android accessibility headings on API 28+ and extends Android 16 runtime acceptance to verify those semantics. It does not widen messaging or platform authority.
