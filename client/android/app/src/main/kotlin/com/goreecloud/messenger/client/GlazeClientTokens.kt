@@ -1,22 +1,21 @@
 package com.goreecloud.messenger.client
 
 /**
- * Repository-local Android source mapping for GLAZE UI V1.5.1 Stable.
+ * Repository-local Android source mapping for GLAZE UI V1.4.1 Stable.
  *
- * V1.5.1 preserves the reviewed V1.5 Contextual + Capability Awareness behavior over the inherited V1.4.1 optical material baseline. These constants pin the disconnected Development
+ * Optical Hardening preserves the V1.4 Optical Intelligence and inherited V1.3
+ * token/component baseline. These constants pin the disconnected Development
  * client to the exact current Stable design authority without claiming rendered
  * or native-device acceptance. Presentation must never manufacture data transport,
  * E2EE, Identity, privacy, security, recovery, synchronization, or delivery truth.
  */
 object GlazeClientTokens {
-    const val Version = "1.5.1"
-    const val ReleaseTheme = "Contextual + Capability Awareness"
-    const val StableReleaseRevision = "98da57064ede0f334627b632bc16801f580331af"
+    const val Version = "1.4.1"
+    const val ReleaseTheme = "Optical Hardening"
+    const val StableReleaseRevision = "4fab9da0fad2e5c974e0e66ec88632c61745751c"
     const val StableWebEntrypoint = "css/glaze-v1.4.1.css"
-    const val StableRuntimeEntrypoint = "js/glaze-v1.5.1.mjs"
-    const val RollbackBaselineVersion = "1.5.0"
-    const val ReviewedV15ImplementationAnchor = "ee1032a0822ab8e103f8afe48e5c1859fde65cc9"
-    const val StableQualificationAnchor = "5b59d0e36950d737dba35b58ae58058684e0831b"
+    const val StableRuntimeEntrypoint = "js/glaze-v1.4.1.mjs"
+    const val RollbackBaselineVersion = "1.4.0"
     const val MaterialRule = "neutral-glass-is-material-color-is-accent"
 
     const val InteractionFloorDp = 48
@@ -39,7 +38,7 @@ object GlazeClientTokens {
     const val DarkMutedText = 0xFFB6C0C5
     const val DarkBorder = 0x337E8A90
 
-    /** V1.5.1 preserves the inherited neutral material substrate; context/capability presentation remains non-authoritative. */
+    /** V1.4.1 preserves the neutral material substrate; optical/adaptive color remains subordinate. */
     fun isNeutralSubstrate(argb: Long, maximumChannelSpread: Int = 16): Boolean {
         require(maximumChannelSpread >= 0)
         val red = ((argb shr 16) and 0xff).toInt()

@@ -1,17 +1,17 @@
 package com.goreecloud.messenger.client
 
 /**
- * Source-level GLAZE UI V1.5.1 Contextual + Capability Awareness boundary for Messenger's
+ * Source-level GLAZE UI V1.4.1 Optical Hardening boundary for Messenger's
  * disconnected Android Development shell.
  *
  * This policy intentionally accepts no conversation/message/editor/identity/security context.
  * Optical presentation remains local, deterministic, accessibility-subordinate, and unable to
- * become messaging or platform authority. Shared Glaze V1.5.1 qualification does not establish
+ * become messaging or platform authority. Shared Glaze V1.4.1 qualification does not establish
  * Messenger-local rendered, accessibility, device, performance, release, or production acceptance.
  */
 object GlazeMessengerOptics {
-    const val Version = "1.5.1"
-    const val StableRevision = "98da57064ede0f334627b632bc16801f580331af"
+    const val Version = "1.4.1"
+    const val StableRevision = "4fab9da0fad2e5c974e0e66ec88632c61745751c"
 
     const val OpticalEngineIsLocalAndDeterministic = true
     const val TelemetryRequired = false
@@ -40,9 +40,6 @@ object GlazeMessengerOptics {
     const val RemoteArtworkOrMediaSamplingAllowed = false
 
     const val OpticalContextMayCarrySemanticAuthority = false
-    const val ContextCapabilityPresentationMayGrantAuthority = false
-    const val ProviderConflictFailsClosed = true
-    const val AutomaticConsequentialActionAllowed = false
     const val OpticalEngineAdapterAccepted = false
     const val PhysicalDeviceAcceptanceEstablished = false
     const val ManualAssistiveTechnologyAcceptanceEstablished = false

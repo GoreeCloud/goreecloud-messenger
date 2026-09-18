@@ -7,19 +7,17 @@ import org.junit.Test
 
 class GlazeClientTokensTest {
     @Test
-    fun sourceMappingTargetsCurrentStableV151Authority() {
-        assertEquals("1.5.1", GlazeClientTokens.Version)
-        assertEquals("Contextual + Capability Awareness", GlazeClientTokens.ReleaseTheme)
+    fun sourceMappingTargetsCurrentStableV141Authority() {
+        assertEquals("1.4.1", GlazeClientTokens.Version)
+        assertEquals("Optical Hardening", GlazeClientTokens.ReleaseTheme)
         assertEquals(
-            "98da57064ede0f334627b632bc16801f580331af",
+            "4fab9da0fad2e5c974e0e66ec88632c61745751c",
             GlazeClientTokens.StableReleaseRevision,
         )
         assertEquals("css/glaze-v1.4.1.css", GlazeClientTokens.StableWebEntrypoint)
-        assertEquals("js/glaze-v1.5.1.mjs", GlazeClientTokens.StableRuntimeEntrypoint)
-        assertEquals("1.5.0", GlazeClientTokens.RollbackBaselineVersion)
+        assertEquals("js/glaze-v1.4.1.mjs", GlazeClientTokens.StableRuntimeEntrypoint)
+        assertEquals("1.4.0", GlazeClientTokens.RollbackBaselineVersion)
         assertEquals("neutral-glass-is-material-color-is-accent", GlazeClientTokens.MaterialRule)
-        assertEquals("ee1032a0822ab8e103f8afe48e5c1859fde65cc9", GlazeClientTokens.ReviewedV15ImplementationAnchor)
-        assertEquals("5b59d0e36950d737dba35b58ae58058684e0831b", GlazeClientTokens.StableQualificationAnchor)
         assertEquals(GlazeClientTokens.Version, GlazeMessengerOptics.Version)
         assertEquals(GlazeClientTokens.StableReleaseRevision, GlazeMessengerOptics.StableRevision)
     }
@@ -62,9 +60,6 @@ class GlazeClientTokensTest {
         assertTrue(GlazeMessengerOptics.IncreasedContrastSuppressesDecorativeTintAndWarmth)
         assertFalse(GlazeMessengerOptics.AccessibilityMayBeOverriddenByOpticalContext)
         assertFalse(GlazeMessengerOptics.OpticalContextMayCarrySemanticAuthority)
-        assertFalse(GlazeMessengerOptics.ContextCapabilityPresentationMayGrantAuthority)
-        assertTrue(GlazeMessengerOptics.ProviderConflictFailsClosed)
-        assertFalse(GlazeMessengerOptics.AutomaticConsequentialActionAllowed)
     }
 
     @Test
@@ -83,7 +78,7 @@ class GlazeClientTokensTest {
     }
 
     @Test
-    fun sharedV151QualificationDoesNotFabricateMessengerAcceptance() {
+    fun sharedV141QualificationDoesNotFabricateMessengerAcceptance() {
         assertFalse(GlazeMessengerOptics.PhysicalDeviceAcceptanceEstablished)
         assertFalse(GlazeMessengerOptics.ManualAssistiveTechnologyAcceptanceEstablished)
         assertFalse(GlazeMessengerOptics.HumanVisualExcellenceAcceptanceEstablished)
