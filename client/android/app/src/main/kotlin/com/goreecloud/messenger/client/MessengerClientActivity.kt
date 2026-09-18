@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
@@ -39,7 +40,7 @@ class MessengerClientActivity : Activity() {
             )
         }
 
-        content.addView(text("GoreeCloud Messenger", 30f, colors.text, Typeface.BOLD))
+        content.addView(heading("GoreeCloud Messenger", 30f, colors.text))
         content.addView(spacer(8))
         content.addView(text(getString(R.string.development_title), 17f, colors.text, Typeface.BOLD))
         content.addView(spacer(4))
@@ -54,7 +55,7 @@ class MessengerClientActivity : Activity() {
         )
 
         content.addView(spacer(22))
-        content.addView(text(getString(R.string.readiness_heading), 20f, colors.text, Typeface.BOLD))
+        content.addView(heading(getString(R.string.readiness_heading), 20f, colors.text))
         content.addView(spacer(5))
         content.addView(text(getString(R.string.readiness_summary), 14f, colors.muted, Typeface.NORMAL))
         content.addView(spacer(12))
@@ -72,7 +73,7 @@ class MessengerClientActivity : Activity() {
         )
 
         content.addView(spacer(22))
-        content.addView(text(getString(R.string.provenance_heading), 20f, colors.text, Typeface.BOLD))
+        content.addView(heading(getString(R.string.provenance_heading), 20f, colors.text))
         content.addView(spacer(5))
         content.addView(text(getString(R.string.provenance_summary), 14f, colors.muted, Typeface.NORMAL))
         content.addView(spacer(12))
@@ -107,7 +108,7 @@ class MessengerClientActivity : Activity() {
         }
 
         content.addView(spacer(22))
-        content.addView(text(getString(R.string.platform_heading), 20f, colors.text, Typeface.BOLD))
+        content.addView(heading(getString(R.string.platform_heading), 20f, colors.text))
         content.addView(spacer(10))
         content.addView(
             surface(
@@ -159,6 +160,13 @@ class MessengerClientActivity : Activity() {
             addView(text(title, 16f, colors.text, Typeface.BOLD))
             addView(spacer(6))
             addView(text(body, 14f, colors.muted, Typeface.NORMAL))
+        }
+
+    private fun heading(value: String, sizeSp: Float, color: Int): TextView =
+        text(value, sizeSp, color, Typeface.BOLD).apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                isAccessibilityHeading = true
+            }
         }
 
     private fun text(value: String, sizeSp: Float, color: Int, style: Int): TextView =
