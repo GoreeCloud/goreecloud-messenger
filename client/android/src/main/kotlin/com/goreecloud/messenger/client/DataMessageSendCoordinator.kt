@@ -1,0 +1,130 @@
+package com.goreecloud.messenger.client
+
+/**
+ * Opaque client-prepared GoreeCloud Data message ready for a future transport adapter.
+ *
+ * This type contains ciphertext and protocol identifiers only. It deliberately does not carry a
+ * caller-authored sender identity, credential, key, plaintext body, carrier fallback, or transport
+ * endpoint. Authenticated identity remains owned by the runtime authentication authority.
+ *
+ * Message, conversation, and nonce identifiers must already be exact bounded opaque values. This
+ * preparation boundary never trims external identifier text into a different transport scope.
+ */
+class PreparedEncryptedDataMessage private constructor(
+    val messageId: String,
+    val conversationId: String,
+    val clientNonce: String,
+    ciphertext: ByteArray,
+) {
+    private val encryptedBytes = ciphertext.copyOf()
+
+    val ciphertextSizeBytes: Int
+        get() = encryptedBytes.size
+
+    fun ciphertextCopy(): ByteArray = encryptedBytes.copyOf()
+
+    companion object {
+        fun create(
+            messageId: String,
+            conversationId: String,
+            clientNonce: String,
+            ciphertext: ByteArray,
+        ): PreparedEncryptedDataMessage {
+            require(ciphertext.isNotEmpty()) { "ciphertext must not be empty" }
+
+            return PreparedEncryptedDataMessage(
+                messageId = DataReceiptIdentifierPolicy.requireCanonical(messageId, "messageId"),
+                conversationId = DataReceiptIdentifierPolicy.requireCanonical(
+                    conversationId,
+                    "conversationId",
+                ),
+                clientNonce = DataReceiptIdentifierPolicy.requireCanonical(clientNonce, "clientNonce"),
+                ciphertext = ciphertext,
+            )
+        }
+    }
+}
+
+/**
+ * Future transport seam for already-prepared encrypted Data messages.
+ *
+ * The current Development client does not provide a production implementation. A later adapter
+ * may implement this interface only after its own Identity/session, authorization, network,
+ * protocol, and deployment requirements are satisfied.
+ */
+fun interface EncryptedDataMessageTransport {
+    fun submit(message: PreparedEncryptedDataMessage): Submission
+
+    sealed interface Submission {
+        data object Accepted : Submission
+
+        data class Rejected(val reason: RejectionReason) : Submission
+    }
+
+    enum class RejectionReason {
+        TRANSPORT_UNAVAILABLE,
+        AUTHORIZATION_REJECTED,
+        PROTOCOL_REJECTED,
+        UNKNOWN,
+    }
+}
+
+/**
+ * Enforces the fail-closed readiness policy at the final client seam before any injected Data
+ * transport can be invoked.
+ *
+ * The coordinator asks independent authority providers for current evidence about the exact
+ * prepared-message conversation. Callers cannot supply a preassembled positive readiness object to
+ * this send seam. Conversation authorization must be verified for the exact conversation carried by
+ * the prepared message, and the separately resolved E2EE scope must agree with it.
+ *
+ * This coordinator does not authenticate, authorize, encrypt, persist, retry, queue, synchronize,
+ * or send on its own. It refuses to call the supplied transport unless all four independent
+ * authorities are positively verified and their scopes match the attempted operation.
+ */
+class DataMessageSendCoordinator(
+    private val authorityResolver: DataMessagingAuthorityResolver,
+    private val transport: EncryptedDataMessageTransport,
+) {
+    sealed interface Result {
+        data class Blocked(val reasons: Set<DataMessagingReadiness.BlockReason>) : Result
+
+        data class Submitted(
+            val provenance: CommunicationProvenance,
+        ) : Result
+
+        data class TransportRejected(
+            val reason: EncryptedDataMessageTransport.RejectionReason,
+        ) : Result
+    }
+
+    fun submit(message: PreparedEncryptedDataMessage): Result {
+        val evidence = authorityResolver.evidenceFor(message.conversationId)
+
+        return when (val readiness = DataMessagingReadiness.evaluate(evidence)) {
+            is DataMessagingReadiness.Result.Blocked -> Result.Blocked(readiness.reasons)
+            is DataMessagingReadiness.Result.Ready -> {
+                if (readiness.verifiedConversationId != message.conversationId) {
+                    Result.Blocked(
+                        setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
+                    )
+                } else {
+                    val submission = try {
+                        transport.submit(message)
+                    } catch (_: Exception) {
+                        EncryptedDataMessageTransport.Submission.Rejected(
+                            EncryptedDataMessageTransport.RejectionReason.UNKNOWN,
+                        )
+                    }
+                    when (submission) {
+                        EncryptedDataMessageTransport.Submission.Accepted ->
+                            Result.Submitted(readiness.provenance)
+
+                        is EncryptedDataMessageTransport.Submission.Rejected ->
+                            Result.TransportRejected(submission.reason)
+                    }
+                }
+            }
+        }
+    }
+}
