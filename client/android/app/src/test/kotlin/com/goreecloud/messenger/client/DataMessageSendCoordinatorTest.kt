@@ -7,6 +7,50 @@ import org.junit.Test
 
 class DataMessageSendCoordinatorTest {
     @Test
+    fun authenticatedIdentityWithoutSessionBindingNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            identitySessionBinding = IdentityBindingState.NOT_BOUND,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun authenticatedIdentityWithoutDeviceBindingNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            identityDeviceBinding = IdentityBindingState.NOT_BOUND,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            DataMessageSendCoordinator.Result.Blocked(
+                setOf(DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED),
+            ),
+            result,
+        )
+    }
+
+    @Test
     fun blockedAuthorityReadinessNeverInvokesTransport() {
         var calls = 0
         val coordinator = coordinator(
@@ -268,6 +312,8 @@ class DataMessageSendCoordinatorTest {
 
     private fun coordinator(
         identity: DataMessagingReadiness.IdentityState = DataMessagingReadiness.IdentityState.AUTHENTICATED,
+        identitySessionBinding: IdentityBindingState = IdentityBindingState.BOUND,
+        identityDeviceBinding: IdentityBindingState = IdentityBindingState.BOUND,
         conversationAccess: DataMessagingReadiness.ConversationAccessState =
             DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         authorizedConversationId: String? = "conversation-1",
@@ -286,7 +332,13 @@ class DataMessageSendCoordinatorTest {
         onTransportSubmit: (PreparedEncryptedDataMessage) -> EncryptedDataMessageTransport.Submission,
     ): DataMessageSendCoordinator {
         val resolver = DataMessagingAuthorityResolver(
-            identityAuthority = GoreeCloudIdentitySessionAuthority { identity },
+            identityAuthority = GoreeCloudIdentitySessionAuthority {
+                IdentitySessionEvidence(
+                    state = identity,
+                    sessionBinding = identitySessionBinding,
+                    deviceBinding = identityDeviceBinding,
+                )
+            },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority {
                 ConversationAuthorizationEvidence(
                     state = conversationAccess,
