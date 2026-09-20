@@ -216,7 +216,7 @@ conformance:
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
   blockers:
     - A native Android Messenger client exists only as a disconnected Development foundation; production account/session binding, connected messaging, durable client state, representative-device acceptance, protected signing, deployment, and release acceptance are not established.
-    - Messenger Android presentation source maps to current Official Stable Glaze UI V1.6 / 1.6.0, but application acceptance remains blocked: authoritative runtime accessibility/performance context, rendered accessibility, adaptive/form-factor, localization/RTL, representative-device, performance, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete.
+    - "Messenger Android presentation source maps to current Official Stable Glaze UI V1.6 / 1.6.0, but application acceptance remains blocked: authoritative runtime accessibility/performance context, rendered accessibility, adaptive/form-factor, localization/RTL, representative-device, performance, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete."
     - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
     - Accepted production cryptographic session and key lifecycle are not established.
     - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.

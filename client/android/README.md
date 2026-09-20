@@ -6,7 +6,7 @@ This directory contains the first original GoreeCloud-owned native Android clien
 
 Lifecycle: **Development**
 
-This disconnected native Android Development client is integrated into authoritative Messenger `main` through PR #79. Historical stacked branches remain provenance only; exact source revision and CI evidence must always be read from the revision being evaluated.
+The authoritative Messenger main before this candidate is `96aabdd7baf257821a3b9b3288c0e577b1caec88` after source PR #91 and documentation reconciliation PR #92. The disconnected native Android Development client is part of that line; historical stacked branches remain provenance only, and exact source revision plus CI evidence must always be read from the revision being evaluated.
 
 Successful source/build evidence for the merged Development foundation does not establish Release Candidate, production, Stable, protected signing, deployment, representative-device, accessibility, or rendered GLAZE UI acceptance for future materially changed revisions.
 
@@ -35,7 +35,7 @@ The future Data-send seam is intentionally split across independent authorities:
 
 - `GoreeCloudIdentitySessionAuthority` supplies authentication state only;
 - `ConversationAuthorizationAuthority` supplies participant state plus its exact authorized conversation scope;
-- `GoreeCloudDataTransportAuthority` supplies minimized transport evidence whose configuration, authentication binding, protected channel, and bounded failure policy must all be independently accepted before availability may participate in readiness; and
+- `GoreeCloudDataTransportAuthority` supplies minimized transport evidence whose configuration, authentication binding, protected channel, bounded failure policy, current deployment/environment binding, and freshness must all be independently accepted before availability may participate in readiness; and
 - `E2EESessionAuthority` supplies reviewed cryptographic state plus the exact conversation scope for which active E2EE is verified.
 
 `DataMessagingAuthorityResolver` queries those providers independently for the prepared encrypted message's exact canonical conversation. A provider exception fails closed to that provider's `UNKNOWN` state. Positive authorization cannot substitute for Identity, accepted transport, or E2EE evidence, and positive E2EE cannot substitute for conversation authorization. Authorization and E2EE scopes must still identify the same exact conversation.
