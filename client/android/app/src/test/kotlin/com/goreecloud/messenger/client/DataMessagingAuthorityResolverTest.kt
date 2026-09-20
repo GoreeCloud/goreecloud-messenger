@@ -6,6 +6,51 @@ import org.junit.Test
 
 class DataMessagingAuthorityResolverTest {
     @Test
+    fun bareAuthenticatedIdentityClaimFailsClosed() {
+        val evidence = resolver(
+            identityEvidence = IdentitySessionEvidence(
+                state = DataMessagingReadiness.IdentityState.AUTHENTICATED,
+            ),
+        ).evidenceFor("conversation-1")
+
+        assertIdentityBlocked(evidence)
+    }
+
+    @Test
+    fun missingIdentitySessionBindingFailsClosed() {
+        val evidence = resolver(
+            identityEvidence = acceptedIdentityEvidence().copy(
+                sessionBinding = IdentityBindingState.NOT_BOUND,
+            ),
+        ).evidenceFor("conversation-1")
+
+        assertIdentityBlocked(evidence)
+    }
+
+    @Test
+    fun missingIdentityDeviceBindingFailsClosed() {
+        val evidence = resolver(
+            identityEvidence = acceptedIdentityEvidence().copy(
+                deviceBinding = IdentityBindingState.NOT_BOUND,
+            ),
+        ).evidenceFor("conversation-1")
+
+        assertIdentityBlocked(evidence)
+    }
+
+    @Test
+    fun unauthenticatedIdentityIsNotUpgradedByPositiveBindings() {
+        val evidence = resolver(
+            identityEvidence = acceptedIdentityEvidence().copy(
+                state = DataMessagingReadiness.IdentityState.UNAUTHENTICATED,
+            ),
+        ).evidenceFor("conversation-1")
+
+        assertEquals(DataMessagingReadiness.IdentityState.UNAUTHENTICATED, evidence.identity)
+        assertIdentityBlocked(evidence)
+    }
+
+    @Test
     fun resolvesEachIndependentAuthorityForExactRequestedConversation() {
         val requestedScopes = mutableListOf<String>()
         val resolver = resolver(
@@ -173,7 +218,7 @@ class DataMessagingAuthorityResolverTest {
     fun oneProviderFailureFailsClosedWithoutUpgradingFromOtherAuthorities() {
         val resolver = DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
-                DataMessagingReadiness.IdentityState.AUTHENTICATED
+                acceptedIdentityEvidence()
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority {
                 throw IllegalStateException("authorization unavailable")
@@ -198,7 +243,7 @@ class DataMessagingAuthorityResolverTest {
     fun transportFailureCannotBorrowReadinessFromIdentityAuthorizationOrE2ee() {
         val resolver = DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
-                DataMessagingReadiness.IdentityState.AUTHENTICATED
+                acceptedIdentityEvidence()
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
                 ConversationAuthorizationEvidence(
@@ -228,7 +273,7 @@ class DataMessagingAuthorityResolverTest {
         val resolver = DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
                 calls += 1
-                DataMessagingReadiness.IdentityState.AUTHENTICATED
+                acceptedIdentityEvidence()
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority {
                 calls += 1
@@ -272,6 +317,7 @@ class DataMessagingAuthorityResolverTest {
     }
 
     private fun resolver(
+        identityEvidence: IdentitySessionEvidence = acceptedIdentityEvidence(),
         e2eeProvider: (String) -> E2EESessionEvidence = { conversationId ->
             acceptedE2eeEvidence(conversationId)
         },
@@ -280,7 +326,7 @@ class DataMessagingAuthorityResolverTest {
     ): DataMessagingAuthorityResolver =
         DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
-                DataMessagingReadiness.IdentityState.AUTHENTICATED
+                identityEvidence
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
                 authorizationObserver(conversationId)
@@ -291,6 +337,13 @@ class DataMessagingAuthorityResolverTest {
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority { transportEvidence },
             e2eeSessionAuthority = E2EESessionAuthority(e2eeProvider),
+        )
+
+    private fun acceptedIdentityEvidence(): IdentitySessionEvidence =
+        IdentitySessionEvidence(
+            state = DataMessagingReadiness.IdentityState.AUTHENTICATED,
+            sessionBinding = IdentityBindingState.BOUND,
+            deviceBinding = IdentityBindingState.BOUND,
         )
 
     private fun acceptedTransportEvidence(): DataTransportEvidence =
@@ -311,6 +364,14 @@ class DataMessagingAuthorityResolverTest {
             sessionEstablishment = E2EESessionEstablishmentState.ESTABLISHED,
             keyLifecycle = E2EEKeyLifecycleState.CURRENT,
         )
+
+    private fun assertIdentityBlocked(evidence: DataMessagingReadiness.Evidence) {
+        val result = DataMessagingReadiness.evaluate(evidence)
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
 
     private fun assertTransportBlocked(evidence: DataMessagingReadiness.Evidence) {
         val result = DataMessagingReadiness.evaluate(evidence)

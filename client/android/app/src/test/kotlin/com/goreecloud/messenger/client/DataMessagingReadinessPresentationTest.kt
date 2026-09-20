@@ -16,7 +16,7 @@ class DataMessagingReadinessPresentationTest {
 
         assertEquals(
             listOf(
-                "Identity authentication",
+                "Identity session/device binding",
                 "Conversation authorization",
                 "GoreeCloud Data transport",
                 "Verified active E2EE",
@@ -39,7 +39,7 @@ class DataMessagingReadinessPresentationTest {
         val presentation = DataMessagingReadinessPresentationPolicy.present(result)
 
         assertEquals(listOf(true, true, false, false), presentation.checklist.map { it.verified })
-        assertTrue(presentation.body().contains("Verified — Identity authentication"))
+        assertTrue(presentation.body().contains("Verified — Identity session/device binding"))
         assertTrue(presentation.body().contains("Not verified — Verified active E2EE"))
         assertFalse(presentation.body().contains("prerequisites are independently verified ("))
     }
@@ -64,7 +64,7 @@ class DataMessagingReadinessPresentationTest {
 
         assertEquals(
             listOf(
-                "No verified GoreeCloud Identity session evidence is available.",
+                "No verified GoreeCloud Identity session/device binding evidence is available.",
                 "No verified conversation-participant authorization evidence is available.",
                 "No verified GoreeCloud Data transport availability evidence is available.",
                 "No verified active E2EE evidence is available.",
