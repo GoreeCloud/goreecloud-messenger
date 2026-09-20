@@ -29,7 +29,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - Attachment services transport opaque ciphertext and do not decrypt user content.
 - Typing presence remains content-free, short-lived, participant-authorized, and independently privacy-gated for publish and observe behavior.
 - Operational diagnostics must minimize sensitive configuration and communication data.
-- Current Official Stable Glaze UI V1.5 / 1.5.1 plus GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability are substantive platform integration requirements for applicable surfaces; repository-local source mapping does not establish acceptance.
+- Current Official Stable GLAZE UI V1.6 / 1.6.0 plus GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability are substantive platform integration requirements for applicable surfaces. The Android client still carries a V1.5.1 source mapping, which is migration-required rather than current acceptance.
 
 ## Repository layout
 
@@ -56,7 +56,7 @@ After configuration is accepted, the executable can report a minimized categoric
 
 ## Client status
 
-A native Android Development client is present as a disconnected, fail-closed shell. It has no production account, network/message transport, durable message storage, active E2EE provider, carrier authority, or Send control. It exists to validate native client structure, communication provenance, independent readiness authorities, current Glaze UI 1.5.1 source mapping, lifecycle behavior, and artifact provenance without manufacturing messaging capability.
+A native Android Development client is present as a disconnected, fail-closed shell. It has no production account, network/message transport, durable message storage, active E2EE provider, carrier authority, or Send control. It exists to validate native client structure, communication provenance, independent readiness authorities, the retained Glaze UI 1.5.1 source mapping plus current V1.6 migration boundary, lifecycle behavior, and artifact provenance without manufacturing messaging capability.
 
 Additional tablet, desktop Linux, and other approved clients remain planned. All clients must consume shared transport, identity, privacy, security, recovery, policy, observability, and messaging contracts rather than redefining them independently. Consumer username resolution remains a GoreeCloud Identity-owned exact-handle disclosure concern rather than a Messenger-owned account directory.
 
