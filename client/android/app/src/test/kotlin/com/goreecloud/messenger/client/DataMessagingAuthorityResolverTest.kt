@@ -297,10 +297,7 @@ class DataMessagingAuthorityResolverTest {
                 acceptedIdentityEvidence()
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
-                ConversationAuthorizationEvidence(
-                    state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
-                    authorizedConversationId = conversationId,
-                )
+                acceptedConversationAuthorizationEvidence(conversationId)
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
                 throw IllegalStateException("transport unavailable")
