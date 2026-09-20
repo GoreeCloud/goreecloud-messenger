@@ -13,6 +13,11 @@ import android.widget.ScrollView
 import android.widget.TextView
 
 class MessengerClientActivity : Activity() {
+    private val neutralPresentation = GlazeMessengerPresentationPolicy.resolve(
+        requestedMaterial = GlazeMessengerMaterialRole.RAISED,
+        context = GlazeMessengerPresentationContext(),
+    )
+
     private val isDark: Boolean
         get() = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
             Configuration.UI_MODE_NIGHT_YES
@@ -150,7 +155,7 @@ class MessengerClientActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             val padding = dp(18)
             setPadding(padding, padding, padding, padding)
-            minimumHeight = dp(GlazeClientTokens.InteractionFloorDp)
+            minimumHeight = dp(neutralPresentation.minimumInteractionTargetDp)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(GlazeClientTokens.SurfaceRadiusDp).toFloat()
