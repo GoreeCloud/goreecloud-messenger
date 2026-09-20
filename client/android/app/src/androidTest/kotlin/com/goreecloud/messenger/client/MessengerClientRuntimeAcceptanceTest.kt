@@ -97,6 +97,14 @@ class MessengerClientRuntimeAcceptanceTest {
         // A disconnected provenance/readiness preview must not grow a live message-send control.
         assertFalse(visibleText.any { it.trim().equals("Send", ignoreCase = true) })
 
+        // The current disconnected shell is intentionally read-only. A clickable or long-clickable
+        // descendant would widen runtime authority beyond the accepted Development presentation.
+        val interactiveViews = collectViews(root).filter { it.isClickable || it.isLongClickable }
+        assertTrue(
+            "Disconnected Development shell must remain read-only and non-interactive",
+            interactiveViews.isEmpty(),
+        )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val headings = collectTextViews(root)
                 .filter { it.isAccessibilityHeading }
@@ -113,6 +121,14 @@ class MessengerClientRuntimeAcceptanceTest {
                 ),
             )
         }
+    }
+
+    private fun collectViews(view: View): List<View> = when (view) {
+        is ViewGroup -> buildList {
+            add(view)
+            repeat(view.childCount) { index -> addAll(collectViews(view.getChildAt(index))) }
+        }
+        else -> listOf(view)
     }
 
     private fun collectTextViews(view: View): List<TextView> = when (view) {

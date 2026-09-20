@@ -3,7 +3,7 @@
 ## Current stabilization context
 
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
-- Authoritative `main` includes the disconnected native Android Development client and exact-source CI hardening through `d18ed837507c1da441529267014a406f75a067b5` (PR #82), building on the Android foundation merge `08ea079527960e6c3ac7e5f1f4234236aef6d508` (PR #79).
+- Authoritative `main` is `5b1bfac01f6da0bf95df0bc37b9a45c2dc4ca997`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, and immutable Messenger Foundation CI dependencies from PR #84.
 - PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
 - The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
 - Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
@@ -31,13 +31,21 @@ Any material Android source change requires fresh exact-head validation. Existin
 - These controls strengthen exact-source and build-variant evidence only. They do not activate network transport, Identity, E2EE, durable client state, Send authority, production signing, Release Candidate, or Stable status.
 
 
-## Accessibility stabilization candidate — September 18, 2026
+## Accessibility stabilization — September 18, 2026
 
-The current candidate restacks the section-heading semantics change directly onto the CI-hardened authoritative base. It marks the app title and major readiness/provenance/platform section headings as Android accessibility headings on API 28+ and extends Android 16 runtime acceptance to verify those semantics. It does not widen messaging or platform authority.
+PR #83 is integrated on `main`. The app title and major readiness/provenance/platform section headings use Android accessibility-heading semantics on API 28+, and Android 16 runtime acceptance verifies them. This does not widen messaging or platform authority.
 
 
-## Foundation CI supply-chain stabilization candidate — September 18, 2026
+## Foundation CI supply-chain stabilization — September 18, 2026
 
-- Messenger Foundation is being moved from mutable Ubuntu/action tags to Ubuntu 24.04 plus immutable checkout and setup-go commit SHAs while preserving the existing action major versions.
+- PR #84 is integrated on `main`; Messenger Foundation uses Ubuntu 24.04 plus immutable checkout and setup-go commit SHAs while preserving the accepted action major versions.
 - Foundation checkout now targets and verifies the exact pull-request head or pushed main revision before Go source is executed.
 - This changes CI provenance only; it does not activate Data transport, Identity, E2EE, durable state, Send authority, production signing, RC, or Stable status.
+
+
+## Disconnected runtime authority stabilization — September 19, 2026
+
+- Android 16 runtime acceptance now treats the current disconnected shell as explicitly read-only: no descendant view may be clickable or long-clickable.
+- The existing no-network/no-live-communication permission boundary and exact `Send`-control absence check remain in force.
+- This protects the Development shell from silently acquiring user-triggered messaging authority before accepted Identity/session/device binding, exact conversation authorization, Data transport, E2EE lifecycle, durable state, Privacy Shield, Wardveil Security, Everkeep, Mesh, Manager, Policy, and Observability integration exist.
+- The change does not connect Messenger, add a transport, create a Send action, or satisfy issue #78 production/release blockers.
