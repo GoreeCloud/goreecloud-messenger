@@ -42,28 +42,36 @@ The future Data-send seam is intentionally split across independent authorities:
 
 `DataMessageSendCoordinator` resolves the provider evidence itself rather than accepting caller-preassembled positive `DataMessagingReadiness.Evidence`. It invokes an injected encrypted Data transport only after all four authorities are positive and the resulting verified conversation exactly matches the prepared message target. This is a composition contract only; the current client still supplies no production providers or network transport and exposes no real Send control.
 
-## GLAZE UI V1.5.1 boundary
+## GLAZE UI V1.6 source boundary
 
-The shared design-system source target is **GLAZE UI V1.5 / `1.5.1` Stable — Contextual + Capability Awareness**. Stable lifecycle authority is `98da57064ede0f334627b632bc16801f580331af`; the reviewed V1.5 implementation anchor is `ee1032a0822ab8e103f8afe48e5c1859fde65cc9`; V1.5.1 qualification remains bound to `5b59d0e36950d737dba35b58ae58058684e0831b`; V1.5.0 is the immediate shared rollback baseline.
+The Android Development branch maps presentation source to **Official Stable GLAZE UI V1.6 / `1.6.0`** at exact release source `a7180679ea851389e0f3004515f9a25f420e716d`. Shared V1.6 consumer eligibility does not auto-certify Messenger, so application acceptance remains explicitly false. The immediate shared rollback Stable is V1.5.1.
 
-V1.5.1 preserves the reviewed V1.5 contextual/capability presentation over the inherited V1.4.1 optical material baseline. Messenger preserves the neutral material foundation, 48dp ordinary interaction floor, 56dp Touch Assistance floor, System Light/Dark Development behavior, and V1.5.0 as the immediate rollback baseline.
+`GlazeClientTokens` records exact V1.6 provenance plus the inherited Stable 44dp-equivalent coarse and 32dp pointer-compact target floors. Messenger deliberately keeps a stricter 48dp ordinary interaction target and 56dp accessibility-oriented target. The shell's 20dp gutter, 22dp radius, 14dp section spacing, and neutral pigments remain Messenger-owned product values rather than relabeled canonical V1.6 tokens.
 
-`GlazeMessengerOptics` keeps a Messenger-specific fail-closed source policy:
+`GlazeMessengerPresentationPolicy` maps presentation-only V1.6 behavior:
 
-- the shared Optical Engine is treated as local and deterministic;
+- Reduced Transparency fails functional/clear glass down to solid presentation;
+- Essential performance reduces costly non-solid material to solid and uses minimal motion;
+- Efficient performance reduces glass to raised presentation;
+- Reduced Motion uses minimal motion;
+- large/extra-large text may make density yield to reflow;
+- keyboard-first, screen-reader-optimized, strong-focus, and increased-contrast contexts require strong visible focus;
+- caller/platform context defaults remain neutral and no accessibility/performance state is inferred.
+
+The current disconnected Activity consumes only a **neutral** presentation result for its existing conservative minimum target. It does not activate network, messaging, Identity, E2EE, environmental sampling, or consequential behavior.
+
+`GlazeMessengerOptics` remains a fail-closed authority boundary:
+
+- presentation stays local and deterministic;
 - telemetry, camera access, and remote context are not required;
-- Messenger environmental color-memory influence is fixed at `0.0`, below the shared maximum of `0.08`;
-- Reduced Transparency and Forced Colors require solid-accessible treatment;
-- Increased Contrast suppresses decorative tint and warmth;
-- accessibility cannot be overridden by optical context;
-- optical presentation cannot become semantic/product authority; and
-- message content, composer drafts, conversation/participant identity, delivery receipts, typing presence, E2EE state, Data-transport state, Identity-session state, Privacy Shield/Wardveil/Everkeep/Sync state, and remote artwork/media are prohibited optical inputs in this disconnected Development shell.
+- environmental-memory influence remains `0.0`;
+- Reduced Transparency, Reduced Motion, constrained performance, increased contrast, and visible-focus semantics cannot be overridden by optical context;
+- optical/context presentation cannot become semantic or product authority; and
+- message content, drafts, conversation/participant identity, receipts, typing, E2EE, Data transport, Identity session, Privacy Shield/Wardveil/Everkeep/Sync state, and remote artwork/media remain prohibited appearance inputs.
 
-The optical adapter remains inactive. `MessengerClientActivity` does not consume `GlazeMessengerOptics`, so migrating source authority does not silently activate context-aware rendering.
+The optical adapter remains inactive. Shared V1.6 qualification does not establish Messenger-local visual, accessibility/assistive-technology, large-text, Reduced Motion, Reduced Transparency, contrast/high-contrast, adaptive/form-factor, RTL/localization, representative-device, performance, rollback, Human Visual Excellence, release, or production acceptance.
 
-Shared GLAZE UI V1.5.1 human/manual/device qualification does not auto-certify Messenger. Messenger still requires fresh exact-revision visual, accessibility/assistive-technology, large-text, Reduced Motion, Reduced Transparency, contrast/high-contrast, adaptive/form-factor, RTL/localization, representative-device, performance, rollback, Human Visual Excellence, and final product-specific acceptance before production promotion.
-
-GLAZE UI presentation cannot manufacture Data transport availability, E2EE state, Identity authorization, Wardveil Security state, Privacy Shield privacy state, Everkeep recovery state, GoreeCloud Sync state, Mesh coordination, message delivery, or any other runtime authority.
+GLAZE UI presentation cannot manufacture Data transport availability, E2EE state, Identity authorization, Wardveil Security state, Privacy Shield privacy state, Everkeep recovery state, GoreeCloud Sync state, Mesh coordination, Policy decisions, Observability health, message delivery, or any other runtime authority.
 
 ## Platform Contract boundary
 
@@ -82,7 +90,7 @@ Before this Android client can approach Release Candidate status it still requir
 - reviewed cryptographic device/session/key lifecycle plus truthful exact conversation-scoped E2EE state derivation;
 - a live GoreeCloud Data client transport and production delivery/synchronization boundary;
 - Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Sync, and Manager integration/acceptance;
-- complete application-specific GLAZE UI V1.5.1 rendered/accessibility/adaptive/device/performance/rollback/Human Visual Excellence acceptance;
+- complete application-specific GLAZE UI V1.6 rendered/accessibility/adaptive/device/performance/rollback/Human Visual Excellence acceptance;
 - representative Android lifecycle, IME, Back, adaptive/form-factor, and accessibility acceptance; and
 - protected release signing, artifact provenance, release/rollback/upgrade documentation, and final exact-candidate acceptance.
 

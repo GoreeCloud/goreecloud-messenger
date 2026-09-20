@@ -5,6 +5,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 CLIENT = ROOT / "client" / "android" / "app" / "src" / "main" / "kotlin" / "com" / "goreecloud" / "messenger" / "client"
 TOKENS = CLIENT / "GlazeClientTokens.kt"
+POLICY = CLIENT / "GlazeMessengerPresentationPolicy.kt"
 OPTICS = CLIENT / "GlazeMessengerOptics.kt"
 ACTIVITY = CLIENT / "MessengerClientActivity.kt"
 
@@ -21,39 +22,56 @@ def forbid(text: str, fragment: str, label: str) -> None:
         errors.append(f"{label}: forbidden fragment present: {fragment!r}")
 
 
-if not TOKENS.is_file() or not OPTICS.is_file() or not ACTIVITY.is_file():
-    errors.append("Messenger V1.5.1 Glaze source files are incomplete")
+if not TOKENS.is_file() or not POLICY.is_file() or not OPTICS.is_file() or not ACTIVITY.is_file():
+    errors.append("Messenger V1.6 Glaze source files are incomplete")
 else:
     tokens = TOKENS.read_text(encoding="utf-8")
+    policy = POLICY.read_text(encoding="utf-8")
     optics = OPTICS.read_text(encoding="utf-8")
     activity = ACTIVITY.read_text(encoding="utf-8")
 
     for marker in (
-        'const val Version = "1.5.1"',
-        'const val ReleaseTheme = "Contextual + Capability Awareness"',
-        'const val StableReleaseRevision = "98da57064ede0f334627b632bc16801f580331af"',
-        'const val StableWebEntrypoint = "css/glaze-v1.4.1.css"',
-        'const val StableRuntimeEntrypoint = "js/glaze-v1.5.1.mjs"',
-        'const val RollbackBaselineVersion = "1.5.0"',
-        'const val ReviewedV15ImplementationAnchor = "ee1032a0822ab8e103f8afe48e5c1859fde65cc9"',
-        'const val StableQualificationAnchor = "5b59d0e36950d737dba35b58ae58058684e0831b"',
+        'const val Version = "1.6.0"',
+        'const val StableReleaseRevision = "a7180679ea851389e0f3004515f9a25f420e716d"',
+        'const val StableReleaseTag = "v1.6.0"',
+        'const val RollbackBaselineVersion = "1.5.1"',
+        "const val SharedStableConsumerEligible = true",
+        "const val ApplicationAcceptanceAutomatic = false",
+        "const val InheritedCoarseInteractionFloorDp = 44",
+        "const val InheritedPointerCompactFloorDp = 32",
         "const val InteractionFloorDp = 48",
         "const val TouchAssistanceFloorDp = 56",
     ):
         require(tokens, marker, "GlazeClientTokens")
 
     for marker in (
-        'const val Version = "1.5.1"',
-        'const val StableRevision = "98da57064ede0f334627b632bc16801f580331af"',
+        'const val StableVersion = "1.6.0"',
+        'const val StableSourceRevision = "a7180679ea851389e0f3004515f9a25f420e716d"',
+        "GlazeMessengerMaterialRole.FUNCTIONAL_GLASS",
+        "GlazeMessengerMaterialRole.CLEAR_GLASS",
+        "GlazeMessengerMaterialRole.SOLID",
+        "GlazeMessengerPerformanceLevel.ESSENTIAL",
+        "GlazeMessengerPerformanceLevel.EFFICIENT",
+        "GlazeMessengerMotionMode.MINIMAL",
+        "context.reducedTransparency",
+        "context.reducedMotion",
+        "context.largeText || context.extraLargeText",
+        "context.keyboardFirst",
+    ):
+        require(policy, marker, "GlazeMessengerPresentationPolicy")
+
+    for marker in (
+        'const val Version = "1.6.0"',
+        'const val StableRevision = "a7180679ea851389e0f3004515f9a25f420e716d"',
         "const val OpticalEngineIsLocalAndDeterministic = true",
         "const val TelemetryRequired = false",
         "const val CameraRequired = false",
         "const val RemoteContextRequired = false",
         "const val EnvironmentalColorMemoryInfluence = 0.0f",
-        "const val SharedMaximumEnvironmentalMemoryInfluence = 0.08f",
         "const val ReducedTransparencyUsesSolidAccessibleTreatment = true",
-        "const val ForcedColorsUsesSolidAccessibleTreatment = true",
-        "const val IncreasedContrastSuppressesDecorativeTintAndWarmth = true",
+        "const val ReducedMotionUsesMinimalPresentation = true",
+        "const val EssentialPerformanceUsesSolidMinimalPresentation = true",
+        "const val StrongFocusCannotBeSuppressed = true",
         "const val AccessibilityMayBeOverriddenByOpticalContext = false",
         "const val MessageContentSamplingAllowed = false",
         "const val ComposerDraftSamplingAllowed = false",
@@ -78,14 +96,16 @@ else:
     ):
         require(optics, marker, "GlazeMessengerOptics")
 
-    # Source mapping must not silently activate contextual/optical authority in
-    # the disconnected Development UI.
+    # The disconnected UI may consume only the pure presentation resolver with a neutral local
+    # context. The optical boundary itself remains inactive and cannot inspect runtime messaging.
+    require(activity, "GlazeMessengerPresentationPolicy.resolve(", "MessengerClientActivity")
+    require(activity, "GlazeMessengerPresentationContext()", "MessengerClientActivity")
     forbid(activity, "GlazeMessengerOptics", "MessengerClientActivity")
 
 if errors:
-    print("Messenger Android GLAZE UI V1.5.1 boundary FAILED:", file=sys.stderr)
+    print("Messenger Android GLAZE UI V1.6 boundary FAILED:", file=sys.stderr)
     for error in errors:
         print(f"- {error}", file=sys.stderr)
     raise SystemExit(1)
 
-print("Messenger Android GLAZE UI V1.5.1 source boundary passed")
+print("Messenger Android GLAZE UI V1.6 source boundary passed")

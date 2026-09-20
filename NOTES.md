@@ -3,7 +3,7 @@
 ## Current stabilization context
 
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
-- Latest source-bearing integration baseline is `b6059cbd0616fbbf13983ddaf1b582d4915de788`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, immutable Messenger Foundation CI dependencies from PR #84, the non-interactive disconnected-shell runtime guard from PR #85, the integrated PR #86 Identity session/device authority hardening, and the integrated PR #89 exact-conversation authorization hardening. Earlier documentation-only PR #87/#88 changed documentation only and did not alter Messenger runtime behavior or communication authority.
+- Current authoritative main before this candidate is `96aabdd7baf257821a3b9b3288c0e577b1caec88`, including the disconnected native Android Development client, exact-source Android CI hardening, accessibility-heading semantics, immutable Foundation CI, non-interactive runtime guard, PR #86 Identity session/device authority hardening, PR #89 exact-conversation authorization hardening, PR #91 current deployment/freshness-bound Data transport readiness, and PR #92 documentation reconciliation.
 - PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
 - The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
 - Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
@@ -13,7 +13,7 @@
 - The native Android client has no production account/session binding, connected message transport, durable client message storage, active production E2EE lifecycle, carrier authority, or live Send control.
 - Client integration must not activate message transport, Identity, E2EE, privacy, security, recovery, policy, observability, synchronization, or delivery authority merely because UI source is present.
 - The repository now declares accepted Platform Contract 0.4 structure and all nine Integral Platform Systems, while unresolved runtime systems remain explicitly blocked.
-- The Android client remains source-mapped to Glaze UI V1.5 / 1.5.1, while current Official Stable GLAZE UI V1.6 / 1.6.0 is now the required migration target. Messenger-local V1.6 implementation, rendered, accessibility, representative-device/form-factor, localization/RTL, performance, rollback, and Human Visual Excellence acceptance remain incomplete.
+- This V1.6 source-migration branch maps Android presentation source to exact Official Stable GLAZE UI V1.6 / 1.6.0 authority while Messenger-local rendered, accessibility, representative-device/form-factor, localization/RTL, performance, rollback, and Human Visual Excellence acceptance remain incomplete.
 - Production Identity/session/device integration, accepted cryptographic session/key lifecycle, Wardveil, Privacy Shield, Everkeep, Mesh, Manager, GoreeCloud Policy, GoreeCloud Observability, protected signing/deployment, and representative target-environment evidence remain incomplete.
 
 ## Maintenance notes
@@ -80,6 +80,16 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 - A positive Data transport state now requires accepted configuration, Identity/authentication binding, protected-channel behavior, bounded failure policy, **current deployment/environment binding**, and **fresh acceptance evidence**.
 - Missing or rejected deployment binding or stale transport acceptance fails closed to `UNKNOWN`; coordinator tests verify that neither condition can invoke the injected send transport.
 - No endpoint, credential, token, certificate, Android INTERNET permission, durable queue, retry engine, Send control, production adapter, deployment, Release Candidate, or Stable authority is created.
-- Current Official Stable GLAZE UI V1.6 / 1.6.0 is recorded as the required migration target while the implemented V1.5.1 source mapping remains truthfully transitional.
+- Current Official Stable GLAZE UI V1.6 / 1.6.0 remains the required authority; the new source-migration candidate maps Android presentation source to that exact release while keeping application acceptance blocked.
 
 - Accepted exact-head evidence for PR #91: Platform Contract run `35490212282`, Messenger Foundation run `35490212048`, and Messenger Android Client run `35490212049` all succeeded before squash merge to authoritative main commit `fa0417fcf7274fb611981af768d35b8555908c53`.
+
+
+## Android GLAZE UI V1.6 source migration candidate — September 20, 2026
+
+- This Development branch maps the disconnected Android presentation source from V1.5.1 to exact Official Stable GLAZE UI V1.6 / 1.6.0 release source `a7180679ea851389e0f3004515f9a25f420e716d`.
+- Shared V1.6 consumer eligibility is not rebound as Messenger acceptance. The Platform Contract Glaze result becomes applicable-blocked, overall conformance stays nonconformant, and all Messenger-local rendered/device/release gates remain open.
+- A pure presentation resolver adds Reduced Transparency, Reduced Motion, performance-cost, large-text, focus, and conservative target semantics without accepting message, conversation, Identity, E2EE, transport, privacy, security, recovery, policy, observability, or remote-content inputs.
+- The Activity consumes only a neutral resolver result for its existing minimum interaction target. No INTERNET permission, connected transport, Send control, account/session provider, durable message storage, cryptographic session, telemetry, or optical adapter is activated.
+- Retained neutral pigments and layout conveniences are explicitly Messenger-owned rather than represented as exact shared tokens.
+- Issue #78 remains open for production communication authorities and full product acceptance.

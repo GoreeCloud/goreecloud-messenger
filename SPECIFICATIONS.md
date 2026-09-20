@@ -28,7 +28,7 @@ Messenger must use GoreeCloud Identity for account/session authority and consume
 - Encrypted conversations must not silently downgrade to SMS/MMS.
 - Attachment raw-byte transport must remain generic binary with no content sniffing and no server-side plaintext MIME interpretation.
 - Wardveil Security, Privacy Shield, Everkeep, GoreeCloud Mesh, and GoreeCloud Identity integration are required where applicable.
-- Client surfaces must migrate to current Official Stable GLAZE UI V1.6 / 1.6.0 and pass repository-local rendered, accessibility, representative-device, and release acceptance before Stable promotion. Existing V1.5.1 source mapping is transitional evidence only.
+- This Development branch maps the Android client source to current Official Stable GLAZE UI V1.6 / 1.6.0 at exact release source `a7180679ea851389e0f3004515f9a25f420e716d`. Repository-local rendered, accessibility, adaptive/form-factor, localization/RTL, representative-device, performance, rollback, Human Visual Excellence, signing, release, and production acceptance remain required; source mapping alone is not conformance.
 
 ## Current acceptance boundary
 

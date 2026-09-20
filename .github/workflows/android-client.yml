@@ -38,8 +38,8 @@ jobs:
       - name: Validate Development client authority boundary
         run: python3 scripts/check_android_client_boundary.py
 
-      - name: Validate GLAZE UI V1.5.1 source boundary
-        run: python3 scripts/check_android_glaze_v15_boundary.py
+      - name: Validate GLAZE UI V1.6 source boundary
+        run: python3 scripts/check_android_glaze_v16_boundary.py
 
       - name: Test Development SBOM dependency parser
         run: python3 -m unittest scripts/test_generate_android_sbom.py
