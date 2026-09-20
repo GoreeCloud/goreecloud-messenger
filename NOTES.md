@@ -69,3 +69,5 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 - Superseded candidate head `f73139adf5d5d7eb0a6e67cdaee8fe23a24d34e6` failed the Android client authority-boundary guard because the required literal conversation-authority call was split across lines. The authorization logic itself had not executed; the corrected candidate preserves the strengthened fail-closed projection while restoring the repository guard-visible call shape.
 
+- Superseded candidate head `09663a64bd9aaf66f09bfe731ac424b4189742f2` cleared the authority-boundary guard but failed unit tests because existing send-coordinator fixtures still modeled a bare positive conversation claim. The corrected candidate updates only accepted test fixtures to carry the new authorization acceptance facts and drops unaccepted authorization scope before readiness evaluation so rejected scope cannot manufacture an unrelated E2EE mismatch reason.
+
