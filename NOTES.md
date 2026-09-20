@@ -71,3 +71,5 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 - Superseded candidate head `09663a64bd9aaf66f09bfe731ac424b4189742f2` cleared the authority-boundary guard but failed unit tests because existing send-coordinator fixtures still modeled a bare positive conversation claim. The corrected candidate updates only accepted test fixtures to carry the new authorization acceptance facts and drops unaccepted authorization scope before readiness evaluation so rejected scope cannot manufacture an unrelated E2EE mismatch reason.
 
+- Superseded candidate head `e340cbdbf30548a06e1075e569050845795d7fb6` reduced the remaining failures to two stale expectations: one transport-isolation test still used a bare participant claim, and one mismatched-conversation test expected only the cryptographic gate to reject a scope mismatch. The corrected candidate uses accepted authorization evidence when testing transport isolation and expects both independent conversation-scoped gates to fail closed when both scopes mismatch.
+
