@@ -29,7 +29,7 @@ After configuration is accepted, the executable can report a minimized categoric
 - Attachment services transport opaque ciphertext and do not decrypt user content.
 - Typing presence remains content-free, short-lived, participant-authorized, and independently privacy-gated for publish and observe behavior.
 - Operational diagnostics must minimize sensitive configuration and communication data.
-- Current Official Stable GLAZE UI V1.6 / 1.6.0 plus GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability are substantive platform integration requirements for applicable surfaces. This Development branch maps the Android client source to exact V1.6 Stable release source `a7180679ea851389e0f3004515f9a25f420e716d`, while Messenger-local application acceptance remains blocked.
+- Current Official Stable GLAZE UI V1.6 / 1.6.0 plus GoreeCloud Manager, Privacy Shield, Wardveil Security, Everkeep, GoreeCloud Mesh, GoreeCloud Identity, GoreeCloud Policy, and GoreeCloud Observability are substantive platform integration requirements for applicable surfaces. Integrated source-bearing PR #94 maps the Android client source to exact V1.6 Stable release source `a7180679ea851389e0f3004515f9a25f420e716d`, while Messenger-local application acceptance remains blocked.
 
 ## Repository layout
 
