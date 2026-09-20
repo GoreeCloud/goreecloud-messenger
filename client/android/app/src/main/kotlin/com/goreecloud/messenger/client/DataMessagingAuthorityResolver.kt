@@ -72,7 +72,7 @@ data class ConversationAuthorizationEvidence(
 ) {
     fun readinessProjectionFor(expectedConversationId: String): ConversationAuthorizationEvidence {
         if (state != DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT) {
-            return this
+            return copy(authorizedConversationId = null)
         }
 
         val canonicalConversationId = authorizedConversationId
@@ -87,7 +87,7 @@ data class ConversationAuthorizationEvidence(
         } else {
             copy(
                 state = DataMessagingReadiness.ConversationAccessState.UNKNOWN,
-                authorizedConversationId = canonicalConversationId,
+                authorizedConversationId = null,
             )
         }
     }
