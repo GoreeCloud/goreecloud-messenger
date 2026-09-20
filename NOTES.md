@@ -3,7 +3,7 @@
 ## Current stabilization context
 
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
-- Latest source-bearing integration baseline is `edb69de4a9f7c71f298dd98f8e000d05881fe711`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, immutable Messenger Foundation CI dependencies from PR #84, the non-interactive disconnected-shell runtime guard from PR #85, and the integrated PR #86 Identity session/device authority hardening. Documentation-only PR #87 followed that source-bearing baseline without changing Messenger runtime behavior or communication authority.
+- Latest source-bearing integration baseline is `b6059cbd0616fbbf13983ddaf1b582d4915de788`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, immutable Messenger Foundation CI dependencies from PR #84, the non-interactive disconnected-shell runtime guard from PR #85, the integrated PR #86 Identity session/device authority hardening, and the integrated PR #89 exact-conversation authorization hardening. Earlier documentation-only PR #87/#88 changed documentation only and did not alter Messenger runtime behavior or communication authority.
 - PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
 - The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
 - Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
@@ -61,7 +61,7 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 ## Exact-conversation authorization stabilization — September 19, 2026
 
-- This Development candidate strengthens the future conversation authorization seam used by Android Data messaging readiness.
+- PR #89 is integrated on `main` and strengthens the future conversation authorization seam used by Android Data messaging readiness.
 - A bare VERIFIED_PARTICIPANT claim is no longer sufficient. Positive readiness also requires the responsible authorization authority to bind its decision to the current accepted Identity session/device authority, report the decision as current, and identify the exact canonical conversation scope requested by the client.
 - The minimized boundary carries no participant list, principal identifier, ACL, token, credential, or reusable authorization material.
 - Unit coverage fails closed for bare participant claims, missing Identity binding, stale authorization decisions, and mismatched conversation scope.
