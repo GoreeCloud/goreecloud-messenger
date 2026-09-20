@@ -2,7 +2,7 @@
 
 Status: Development  
 Canonical project record: `GoreeCloud/Projects/Project Specification — Messenger`  
-Repository: `GoreeCloud/goreecloud-messenger`
+Repository: `GoreeCloud/messenger`
 
 ## Product boundary
 

@@ -4,7 +4,7 @@ component:
   type: application
   id: goreecloud-messenger
   product_name: GoreeCloud Messenger
-  repository: GoreeCloud/goreecloud-messenger
+  repository: GoreeCloud/messenger
 
 lifecycle: development
 version: "0.1.0-dev"
