@@ -116,17 +116,16 @@ else:
     ):
         require(android_context, marker, "MessengerAndroidGlazeContext")
     for forbidden in (
-        "Message",
-        "Conversation",
-        "Identity",
-        "Transport",
-        "E2EE",
-        "http",
-        "https",
+        "GoreeCloudIdentitySessionAuthority",
+        "ConversationAuthorizationAuthority",
+        "GoreeCloudDataTransportAuthority",
+        "E2EESessionAuthority",
+        "DataMessagingReadiness",
+        "PreparedEncryptedDataMessage",
+        "java.net",
+        "android.net",
     ):
-        # Comments intentionally name prohibited authority domains, so only executable/provider
-        # references are forbidden from this narrow platform projection.
-        pass
+        forbid(android_context, forbidden, "MessengerAndroidGlazeContext")
 
     require(activity, "GlazeMessengerPresentationPolicy.resolve(", "MessengerClientActivity")
     require(activity, "MessengerAndroidGlazeContext.fromFontScale(", "MessengerClientActivity")
