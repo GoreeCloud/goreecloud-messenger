@@ -197,6 +197,8 @@ class DataMessageSendCoordinatorTest {
                 ConversationAuthorizationEvidence(
                     state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
                     authorizedConversationId = conversationId,
+                    identityBinding = ConversationAuthorizationAcceptanceState.ACCEPTED,
+                    decisionFreshness = ConversationAuthorizationAcceptanceState.ACCEPTED,
                 )
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
@@ -317,6 +319,10 @@ class DataMessageSendCoordinatorTest {
         conversationAccess: DataMessagingReadiness.ConversationAccessState =
             DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
         authorizedConversationId: String? = "conversation-1",
+        conversationIdentityBinding: ConversationAuthorizationAcceptanceState =
+            ConversationAuthorizationAcceptanceState.ACCEPTED,
+        conversationDecisionFreshness: ConversationAuthorizationAcceptanceState =
+            ConversationAuthorizationAcceptanceState.ACCEPTED,
         transport: DataMessagingReadiness.DataTransportState = DataMessagingReadiness.DataTransportState.AVAILABLE,
         transportConfiguration: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
         transportAuthenticationBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
@@ -343,6 +349,8 @@ class DataMessageSendCoordinatorTest {
                 ConversationAuthorizationEvidence(
                     state = conversationAccess,
                     authorizedConversationId = authorizedConversationId,
+                    identityBinding = conversationIdentityBinding,
+                    decisionFreshness = conversationDecisionFreshness,
                 )
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority {
