@@ -97,3 +97,12 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 - Retained neutral pigments and layout conveniences are explicitly Messenger-owned rather than represented as exact shared tokens.
 - Accepted pre-merge evidence for exact PR #94 head `c2a54e467106184280c58fa094997d5941a5f08f`: Platform Contract run `35491709281`, Messenger Foundation run `35491709047`, and Messenger Android Client run `35491709088` succeeded, including Android 16 runtime acceptance. Post-merge Platform Contract run `35491897117`, Foundation run `35491896713`, and Android Client run `35491896747` all succeeded on exact source merge commit `b27114a816d4c480a6b4160b5d59d43ec78860c3`, including Android 16 runtime acceptance.
 - Issue #78 remains open for production communication authorities and full product acceptance.
+
+
+## Android V1.6 runtime text-scale candidate — September 20, 2026
+
+- This Development branch is based on exact authoritative main `34383fa50e585fa7ebc64147b319d6448125d7aa`; no historical Android stack is reused as integration authority.
+- `MessengerAndroidGlazeContext` projects only Android's local `fontScale` into the existing V1.6 large-text / extra-large-text presentation flags. Invalid configuration fails closed to the neutral default, and the 200%-class threshold follows the shared V1.6 large-text resilience boundary.
+- The disconnected Activity consumes that presentation result only for existing conservative interaction targets and application-owned screen-gutter density yielding. No account/session, conversation authorization, Data transport, E2EE, message, privacy, security, recovery, policy, observability, remote-content, or networking authority is added.
+- Android instrumentation adds Activity recreation regression coverage requiring the Development, Data-send-unavailable, and Not-Release-Candidate boundaries to remain visible after recreation.
+- Exact-head Foundation, Platform Contract (when path-triggered), Android build/evidence, unit, and Android 16 emulator validation remain required before integration. Representative physical-device large-text/accessibility/rendered review remains separately required and this slice does not establish Release Candidate, production, or Stable status.
