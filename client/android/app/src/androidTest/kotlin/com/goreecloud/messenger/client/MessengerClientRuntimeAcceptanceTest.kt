@@ -71,13 +71,13 @@ class MessengerClientRuntimeAcceptanceTest {
         assertTrue(visibleText.any { it.contains("Development boundary") })
         assertTrue(visibleText.any { it.contains("Data messaging readiness") })
         assertTrue(visibleText.any { it.contains("Data send unavailable") })
-        assertTrue(visibleText.any { it.contains("Identity authentication") })
+        assertTrue(visibleText.any { it.contains("Identity session/device binding") })
         assertTrue(visibleText.any { it.contains("Conversation authorization") })
         assertTrue(visibleText.any { it.contains("GoreeCloud Data transport") })
         assertTrue(visibleText.any { it.contains("Verified active E2EE") })
         assertTrue(
             visibleText.any {
-                it.contains("No verified GoreeCloud Identity session evidence is available.")
+                it.contains("No verified GoreeCloud Identity session/device binding evidence is available.")
             },
         )
         assertTrue(
