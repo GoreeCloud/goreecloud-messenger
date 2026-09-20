@@ -9,7 +9,7 @@ class DataMessagingAuthorityResolverTest {
     fun bareAuthenticatedIdentityClaimFailsClosed() {
         val evidence = resolver(
             identityEvidence = IdentitySessionEvidence(
-                state = acceptedIdentityEvidence(),
+                state = DataMessagingReadiness.IdentityState.AUTHENTICATED,
             ),
         ).evidenceFor("conversation-1")
 
@@ -218,7 +218,7 @@ class DataMessagingAuthorityResolverTest {
     fun oneProviderFailureFailsClosedWithoutUpgradingFromOtherAuthorities() {
         val resolver = DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
-                identityEvidence
+                acceptedIdentityEvidence()
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority {
                 throw IllegalStateException("authorization unavailable")
@@ -326,7 +326,7 @@ class DataMessagingAuthorityResolverTest {
     ): DataMessagingAuthorityResolver =
         DataMessagingAuthorityResolver(
             identityAuthority = GoreeCloudIdentitySessionAuthority {
-                acceptedIdentityEvidence()
+                identityEvidence
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
                 authorizationObserver(conversationId)
