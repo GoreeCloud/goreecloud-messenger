@@ -67,3 +67,5 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 - Unit coverage fails closed for bare participant claims, missing Identity binding, stale authorization decisions, and mismatched conversation scope.
 - This does not create a production authorization adapter, authenticate a user, connect Data transport, expose Send, establish E2EE, persist messages, or establish production, Release Candidate, or Stable authority.
 
+- Superseded candidate head `f73139adf5d5d7eb0a6e67cdaee8fe23a24d34e6` failed the Android client authority-boundary guard because the required literal conversation-authority call was split across lines. The authorization logic itself had not executed; the corrected candidate preserves the strengthened fail-closed projection while restoring the repository guard-visible call shape.
+
