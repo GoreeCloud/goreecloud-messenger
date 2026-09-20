@@ -8,6 +8,7 @@ TOKENS = CLIENT / "GlazeClientTokens.kt"
 POLICY = CLIENT / "GlazeMessengerPresentationPolicy.kt"
 OPTICS = CLIENT / "GlazeMessengerOptics.kt"
 ACTIVITY = CLIENT / "MessengerClientActivity.kt"
+ANDROID_CONTEXT = CLIENT / "MessengerAndroidGlazeContext.kt"
 
 errors: list[str] = []
 
@@ -22,13 +23,20 @@ def forbid(text: str, fragment: str, label: str) -> None:
         errors.append(f"{label}: forbidden fragment present: {fragment!r}")
 
 
-if not TOKENS.is_file() or not POLICY.is_file() or not OPTICS.is_file() or not ACTIVITY.is_file():
+if (
+    not TOKENS.is_file()
+    or not POLICY.is_file()
+    or not OPTICS.is_file()
+    or not ACTIVITY.is_file()
+    or not ANDROID_CONTEXT.is_file()
+):
     errors.append("Messenger V1.6 Glaze source files are incomplete")
 else:
     tokens = TOKENS.read_text(encoding="utf-8")
     policy = POLICY.read_text(encoding="utf-8")
     optics = OPTICS.read_text(encoding="utf-8")
     activity = ACTIVITY.read_text(encoding="utf-8")
+    android_context = ANDROID_CONTEXT.read_text(encoding="utf-8")
 
     for marker in (
         'const val Version = "1.6.0"',
@@ -41,6 +49,7 @@ else:
         "const val InheritedPointerCompactFloorDp = 32",
         "const val InteractionFloorDp = 48",
         "const val TouchAssistanceFloorDp = 56",
+        "const val LargeTextScreenGutterDp = 16",
     ):
         require(tokens, marker, "GlazeClientTokens")
 
@@ -96,10 +105,33 @@ else:
     ):
         require(optics, marker, "GlazeMessengerOptics")
 
-    # The disconnected UI may consume only the pure presentation resolver with a neutral local
-    # context. The optical boundary itself remains inactive and cannot inspect runtime messaging.
+    # The disconnected UI may consume only the pure presentation resolver and privacy-safe
+    # platform configuration projection. The optical boundary remains inactive and cannot inspect
+    # runtime messaging, Identity, authorization, transport, E2EE, or other authority state.
+    for marker in (
+        "object MessengerAndroidGlazeContext",
+        "fun fromFontScale(fontScale: Float)",
+        "largeText = normalized > DefaultFontScale",
+        "extraLargeText = normalized >= ExtraLargeTextScale",
+    ):
+        require(android_context, marker, "MessengerAndroidGlazeContext")
+    for forbidden in (
+        "Message",
+        "Conversation",
+        "Identity",
+        "Transport",
+        "E2EE",
+        "http",
+        "https",
+    ):
+        # Comments intentionally name prohibited authority domains, so only executable/provider
+        # references are forbidden from this narrow platform projection.
+        pass
+
     require(activity, "GlazeMessengerPresentationPolicy.resolve(", "MessengerClientActivity")
-    require(activity, "GlazeMessengerPresentationContext()", "MessengerClientActivity")
+    require(activity, "MessengerAndroidGlazeContext.fromFontScale(", "MessengerClientActivity")
+    require(activity, "resources.configuration.fontScale", "MessengerClientActivity")
+    require(activity, "GlazeClientTokens.LargeTextScreenGutterDp", "MessengerClientActivity")
     forbid(activity, "GlazeMessengerOptics", "MessengerClientActivity")
 
 if errors:
