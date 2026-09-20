@@ -13,10 +13,11 @@ import android.widget.ScrollView
 import android.widget.TextView
 
 class MessengerClientActivity : Activity() {
-    private val neutralPresentation = GlazeMessengerPresentationPolicy.resolve(
-        requestedMaterial = GlazeMessengerMaterialRole.RAISED,
-        context = GlazeMessengerPresentationContext(),
-    )
+    private val runtimePresentation: GlazeMessengerResolvedPresentation
+        get() = GlazeMessengerPresentationPolicy.resolve(
+            requestedMaterial = GlazeMessengerMaterialRole.RAISED,
+            context = MessengerAndroidGlazeContext.fromFontScale(resources.configuration.fontScale),
+        )
 
     private val isDark: Boolean
         get() = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
@@ -31,13 +32,20 @@ class MessengerClientActivity : Activity() {
 
     private fun buildContent(): View {
         val colors = palette()
+        val presentation = runtimePresentation
         val root = ScrollView(this).apply {
             setBackgroundColor(colors.canvas)
             isFillViewport = true
         }
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            val gutter = dp(GlazeClientTokens.ScreenGutterDp)
+            val gutter = dp(
+                if (presentation.densityMayYieldToReflow) {
+                    GlazeClientTokens.LargeTextScreenGutterDp
+                } else {
+                    GlazeClientTokens.ScreenGutterDp
+                },
+            )
             setPadding(gutter, dp(28), gutter, dp(36))
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -155,7 +163,7 @@ class MessengerClientActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             val padding = dp(18)
             setPadding(padding, padding, padding, padding)
-            minimumHeight = dp(neutralPresentation.minimumInteractionTargetDp)
+            minimumHeight = dp(runtimePresentation.minimumInteractionTargetDp)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dp(GlazeClientTokens.SurfaceRadiusDp).toFloat()
