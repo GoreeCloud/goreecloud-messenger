@@ -97,6 +97,46 @@ class DataMessageSendCoordinatorTest {
     }
 
     @Test
+    fun availableTransportWithoutCurrentDeploymentBindingNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            transportDeploymentBinding = DataTransportAcceptanceState.NOT_ACCEPTED,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.DATA_TRANSPORT_NOT_AVAILABLE),
+            (result as DataMessageSendCoordinator.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
+    fun staleTransportAcceptanceNeverInvokesTransport() {
+        var calls = 0
+        val coordinator = coordinator(
+            transportDecisionFreshness = DataTransportAcceptanceState.NOT_ACCEPTED,
+            onTransportSubmit = {
+                calls += 1
+                EncryptedDataMessageTransport.Submission.Accepted
+            },
+        )
+
+        val result = coordinator.submit(message())
+
+        assertEquals(0, calls)
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.DATA_TRANSPORT_NOT_AVAILABLE),
+            (result as DataMessageSendCoordinator.Result.Blocked).reasons,
+        )
+    }
+
+    @Test
     fun activeE2eeWithoutAcceptedSecurityReviewNeverInvokesTransport() {
         var calls = 0
         val coordinator = coordinator(
@@ -331,6 +371,8 @@ class DataMessageSendCoordinatorTest {
         transportAuthenticationBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
         transportChannelProtection: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
         transportFailurePolicy: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
+        transportDeploymentBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
+        transportDecisionFreshness: DataTransportAcceptanceState = DataTransportAcceptanceState.ACCEPTED,
         cryptography: DataMessagingReadiness.CryptographicState =
             DataMessagingReadiness.CryptographicState.E2EE_ACTIVE,
         e2eeConversationId: String? = "conversation-1",
@@ -363,6 +405,8 @@ class DataMessageSendCoordinatorTest {
                     authenticationBinding = transportAuthenticationBinding,
                     channelProtection = transportChannelProtection,
                     failurePolicy = transportFailurePolicy,
+                    deploymentBinding = transportDeploymentBinding,
+                    decisionFreshness = transportDecisionFreshness,
                 )
             },
             e2eeSessionAuthority = E2EESessionAuthority {
@@ -389,6 +433,8 @@ class DataMessageSendCoordinatorTest {
             authenticationBinding = DataTransportAcceptanceState.ACCEPTED,
             channelProtection = DataTransportAcceptanceState.ACCEPTED,
             failurePolicy = DataTransportAcceptanceState.ACCEPTED,
+            deploymentBinding = DataTransportAcceptanceState.ACCEPTED,
+            decisionFreshness = DataTransportAcceptanceState.ACCEPTED,
         )
 
     private fun acceptedE2eeEvidence(conversationId: String): E2EESessionEvidence =

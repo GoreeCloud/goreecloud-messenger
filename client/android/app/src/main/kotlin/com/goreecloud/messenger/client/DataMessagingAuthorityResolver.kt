@@ -114,7 +114,8 @@ enum class DataTransportAcceptanceState {
  *
  * A provider may project [DataMessagingReadiness.DataTransportState.AVAILABLE] into readiness only
  * after its responsible runtime has independently accepted required configuration, authentication
- * binding, protected-channel operation, and bounded timeout/retry/failure behavior. Test fixtures
+ * binding, protected-channel operation, bounded timeout/retry/failure behavior, current deployment
+ * binding, and freshness of the acceptance decision. Test fixtures
  * can exercise these states but do not create production transport acceptance.
  */
 data class DataTransportEvidence(
@@ -123,6 +124,8 @@ data class DataTransportEvidence(
     val authenticationBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
     val channelProtection: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
     val failurePolicy: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+    val deploymentBinding: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
+    val decisionFreshness: DataTransportAcceptanceState = DataTransportAcceptanceState.UNKNOWN,
 ) {
     /**
      * Return only the transport state allowed to participate in messaging readiness.
@@ -139,7 +142,9 @@ data class DataTransportEvidence(
             configuration == DataTransportAcceptanceState.ACCEPTED &&
                 authenticationBinding == DataTransportAcceptanceState.ACCEPTED &&
                 channelProtection == DataTransportAcceptanceState.ACCEPTED &&
-                failurePolicy == DataTransportAcceptanceState.ACCEPTED
+                failurePolicy == DataTransportAcceptanceState.ACCEPTED &&
+                deploymentBinding == DataTransportAcceptanceState.ACCEPTED &&
+                decisionFreshness == DataTransportAcceptanceState.ACCEPTED
 
         return if (accepted) this else copy(state = DataMessagingReadiness.DataTransportState.UNKNOWN)
     }

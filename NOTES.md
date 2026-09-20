@@ -13,7 +13,7 @@
 - The native Android client has no production account/session binding, connected message transport, durable client message storage, active production E2EE lifecycle, carrier authority, or live Send control.
 - Client integration must not activate message transport, Identity, E2EE, privacy, security, recovery, policy, observability, synchronization, or delivery authority merely because UI source is present.
 - The repository now declares accepted Platform Contract 0.4 structure and all nine Integral Platform Systems, while unresolved runtime systems remain explicitly blocked.
-- Current Official Stable Glaze UI V1.5 / 1.5.1 is source-mapped, but Messenger-local rendered, accessibility, representative-device/form-factor, localization/RTL, performance, rollback, and Human Visual Excellence acceptance remain incomplete.
+- The Android client remains source-mapped to Glaze UI V1.5 / 1.5.1, while current Official Stable GLAZE UI V1.6 / 1.6.0 is now the required migration target. Messenger-local V1.6 implementation, rendered, accessibility, representative-device/form-factor, localization/RTL, performance, rollback, and Human Visual Excellence acceptance remain incomplete.
 - Production Identity/session/device integration, accepted cryptographic session/key lifecycle, Wardveil, Privacy Shield, Everkeep, Mesh, Manager, GoreeCloud Policy, GoreeCloud Observability, protected signing/deployment, and representative target-environment evidence remain incomplete.
 
 ## Maintenance notes
@@ -73,3 +73,11 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 - Superseded candidate head `e340cbdbf30548a06e1075e569050845795d7fb6` reduced the remaining failures to two stale expectations: one transport-isolation test still used a bare participant claim, and one mismatched-conversation test expected only the cryptographic gate to reject a scope mismatch. The corrected candidate uses accepted authorization evidence when testing transport isolation and expects both independent conversation-scoped gates to fail closed when both scopes mismatch.
 
+
+## Data transport current-authority hardening — September 19, 2026
+
+- This stabilization candidate strengthens the existing accepted-transport projection without adding a live network adapter or widening the disconnected Development shell.
+- A positive Data transport state now requires accepted configuration, Identity/authentication binding, protected-channel behavior, bounded failure policy, **current deployment/environment binding**, and **fresh acceptance evidence**.
+- Missing or rejected deployment binding or stale transport acceptance fails closed to `UNKNOWN`; coordinator tests verify that neither condition can invoke the injected send transport.
+- No endpoint, credential, token, certificate, Android INTERNET permission, durable queue, retry engine, Send control, production adapter, deployment, Release Candidate, or Stable authority is created.
+- Current Official Stable GLAZE UI V1.6 / 1.6.0 is recorded as the required migration target while the implemented V1.5.1 source mapping remains truthfully transitional.
