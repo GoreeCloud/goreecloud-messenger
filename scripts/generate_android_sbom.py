@@ -20,7 +20,7 @@ from urllib.parse import quote
 from uuid import NAMESPACE_URL, uuid5
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_REPOSITORY = "GoreeCloud/goreecloud-messenger"
+EXPECTED_REPOSITORY = "GoreeCloud/messenger"
 EXPECTED_PACKAGE = "com.goreecloud.messenger.development"
 EXPECTED_VERSION_NAME = "0.1.0-dev+android.1"
 EXPECTED_CONFIGURATION = "debugRuntimeClasspath"

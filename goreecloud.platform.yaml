@@ -4,7 +4,7 @@ component:
   type: application
   id: goreecloud-messenger
   product_name: GoreeCloud Messenger
-  repository: GoreeCloud/goreecloud-messenger
+  repository: GoreeCloud/messenger
 
 lifecycle: development
 version: "0.1.0-dev"
@@ -109,7 +109,7 @@ platform_systems:
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeClientTokensTest.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeMessengerPresentationPolicyTest.kt
       - scripts/check_android_glaze_v16_boundary.py
-    notes: This Development candidate maps the disconnected Android presentation source to exact Official Stable Glaze UI V1.6 / 1.6.0 release source a7180679ea851389e0f3004515f9a25f420e716d with fail-closed presentation authority. Glaze remains applicable-blocked because Messenger-local rendered, accessibility, representative-device/form-factor, performance, localization/RTL, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete.
+    notes: Authoritative Messenger Android source maps the disconnected presentation boundary to exact Official Stable Glaze UI V1.6 / 1.6.0 release source a7180679ea851389e0f3004515f9a25f420e716d with fail-closed presentation authority. Glaze remains applicable-blocked because Messenger-local rendered, accessibility, representative-device/form-factor, performance, localization/RTL, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete.
   mesh:
     result: applicable-blocked
     version: null

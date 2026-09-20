@@ -6,7 +6,7 @@ This directory contains the first original GoreeCloud-owned native Android clien
 
 Lifecycle: **Development**
 
-The authoritative Messenger main before this candidate is `96aabdd7baf257821a3b9b3288c0e577b1caec88` after source PR #91 and documentation reconciliation PR #92. The disconnected native Android Development client is part of that line; historical stacked branches remain provenance only, and exact source revision plus CI evidence must always be read from the revision being evaluated.
+Authoritative Messenger source-bearing main is `b27114a816d4c480a6b4160b5d59d43ec78860c3` after integrated source PR #94. The disconnected native Android Development client remains on that line; historical stacked branches remain provenance only, and exact source revision plus CI evidence must always be read from the revision being evaluated.
 
 Successful source/build evidence for the merged Development foundation does not establish Release Candidate, production, Stable, protected signing, deployment, representative-device, accessibility, or rendered GLAZE UI acceptance for future materially changed revisions.
 
@@ -44,7 +44,7 @@ The future Data-send seam is intentionally split across independent authorities:
 
 ## GLAZE UI V1.6 source boundary
 
-The Android Development branch maps presentation source to **Official Stable GLAZE UI V1.6 / `1.6.0`** at exact release source `a7180679ea851389e0f3004515f9a25f420e716d`. Shared V1.6 consumer eligibility does not auto-certify Messenger, so application acceptance remains explicitly false. The immediate shared rollback Stable is V1.5.1.
+Authoritative Android Development source maps presentation to **Official Stable GLAZE UI V1.6 / `1.6.0`** at exact release source `a7180679ea851389e0f3004515f9a25f420e716d`. Shared V1.6 consumer eligibility does not auto-certify Messenger, so application acceptance remains explicitly false. The immediate shared rollback Stable is V1.5.1.
 
 `GlazeClientTokens` records exact V1.6 provenance plus the inherited Stable 44dp-equivalent coarse and 32dp pointer-compact target floors. Messenger deliberately keeps a stricter 48dp ordinary interaction target and 56dp accessibility-oriented target. The shell's 20dp gutter, 22dp radius, 14dp section spacing, and neutral pigments remain Messenger-owned product values rather than relabeled canonical V1.6 tokens.
 

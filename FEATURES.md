@@ -5,7 +5,7 @@
 - Disconnected native Android Development client with explicit no-account/no-network/no-message-storage presentation, transport/protection provenance examples, fail-closed Data readiness explanation, and no live Send control.
 - Android source separates Identity session, exact conversation authorization, accepted GoreeCloud Data transport, and exact-conversation E2EE evidence as independent prerequisites; provider absence or error remains unknown/blocked rather than becoming readiness.
 - Android Development artifact boundary keeps backup disabled, requests no Internet/contacts/SMS/phone/microphone/camera permissions, uses a distinct Development package identity, and carries adaptive, round, and monochrome launcher resources.
-- This Development candidate maps Android presentation source to current Official Stable Glaze UI V1.6 / 1.6.0 at exact release source `a7180679ea851389e0f3004515f9a25f420e716d` while leaving application-specific rendered, accessibility, adaptive-device, performance, rollback, Human Visual Excellence, release, and production acceptance false.
+- Integrated PR #94 maps Android presentation source to current Official Stable Glaze UI V1.6 / 1.6.0 at exact release source `a7180679ea851389e0f3004515f9a25f420e716d` while leaving application-specific rendered, accessibility, adaptive-device, performance, rollback, Human Visual Excellence, release, and production acceptance false.
 - GoreeCloud Data conversation/message domain contracts.
 - Transport provenance separating Data, SMS, MMS, and RCS semantics.
 - Authenticated sender and conversation authorization.
