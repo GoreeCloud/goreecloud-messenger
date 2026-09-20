@@ -146,6 +146,8 @@ class DataMessagingAuthorityResolverTest {
             acceptedTransportEvidence().copy(authenticationBinding = rejected),
             acceptedTransportEvidence().copy(channelProtection = rejected),
             acceptedTransportEvidence().copy(failurePolicy = rejected),
+            acceptedTransportEvidence().copy(deploymentBinding = rejected),
+            acceptedTransportEvidence().copy(decisionFreshness = rejected),
         )
 
         candidates.forEach { evidence ->
@@ -411,6 +413,8 @@ class DataMessagingAuthorityResolverTest {
             authenticationBinding = DataTransportAcceptanceState.ACCEPTED,
             channelProtection = DataTransportAcceptanceState.ACCEPTED,
             failurePolicy = DataTransportAcceptanceState.ACCEPTED,
+            deploymentBinding = DataTransportAcceptanceState.ACCEPTED,
+            decisionFreshness = DataTransportAcceptanceState.ACCEPTED,
         )
 
     private fun acceptedE2eeEvidence(conversationId: String): E2EESessionEvidence =
