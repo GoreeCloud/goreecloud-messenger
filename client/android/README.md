@@ -58,7 +58,7 @@ Authoritative Android Development source maps presentation to **Official Stable 
 - keyboard-first, screen-reader-optimized, strong-focus, and increased-contrast contexts require strong visible focus;
 - caller/platform context defaults remain neutral and no accessibility/performance state is inferred.
 
-The current disconnected Activity consumes only a **neutral** presentation result for its existing conservative minimum target. It does not activate network, messaging, Identity, E2EE, environmental sampling, or consequential behavior.
+This Development candidate replaces the prior always-neutral text-scale input with a narrow Android runtime projection: `resources.configuration.fontScale` is normalized locally, values above the default enable the resolver's large-text reflow signal, and the shared 200%-class boundary enables the extra-large-text signal. Invalid/non-positive/non-finite values fail back to the neutral default. The Activity uses only that resolved presentation state for conservative target sizing and application-owned large-text gutter yielding. It does not activate network, messaging, Identity, E2EE, environmental/private-content sampling, or consequential behavior.
 
 `GlazeMessengerOptics` remains a fail-closed authority boundary:
 

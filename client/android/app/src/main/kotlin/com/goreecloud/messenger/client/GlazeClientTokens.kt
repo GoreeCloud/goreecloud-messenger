@@ -27,6 +27,7 @@ object GlazeClientTokens {
 
     // Messenger-owned composition values; not claimed as canonical V1.6 tokens.
     const val ScreenGutterDp = 20
+    const val LargeTextScreenGutterDp = 16
     const val SurfaceRadiusDp = 22f
     const val SectionSpacingDp = 14
 
