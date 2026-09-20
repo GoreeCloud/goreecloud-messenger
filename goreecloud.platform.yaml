@@ -97,15 +97,19 @@ platform_systems:
       - README.md
     notes: Messenger has durable single-node Development stores for selected encrypted communication state, but accepted Everkeep backup, restore, recovery, migration, rollback, portability, and continuity behavior are not established.
   glaze_ui:
-    result: applicable-migration-required
-    version: "1.5.1"
+    result: applicable-blocked
+    version: "1.6.0"
     evidence:
       - README.md
       - SPECIFICATIONS.md
       - client/android/README.md
       - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeClientTokens.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeMessengerPresentationPolicy.kt
+      - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/GlazeMessengerOptics.kt
       - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeClientTokensTest.kt
-    notes: The disconnected native Android Development client remains source-mapped to Glaze UI V1.5 / 1.5.1 with fail-closed presentation authority. Current Official Stable Glaze UI V1.6 / 1.6.0 is now the required migration target; Messenger-specific V1.6 implementation plus rendered, accessibility, representative-device/form-factor, performance, localization/RTL, rollback, Human Visual Excellence, and production acceptance remain incomplete.
+      - client/android/app/src/test/kotlin/com/goreecloud/messenger/client/GlazeMessengerPresentationPolicyTest.kt
+      - scripts/check_android_glaze_v16_boundary.py
+    notes: This Development candidate maps the disconnected Android presentation source to exact Official Stable Glaze UI V1.6 / 1.6.0 release source a7180679ea851389e0f3004515f9a25f420e716d with fail-closed presentation authority. Glaze remains applicable-blocked because Messenger-local rendered, accessibility, representative-device/form-factor, performance, localization/RTL, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete.
   mesh:
     result: applicable-blocked
     version: null
@@ -212,7 +216,7 @@ conformance:
     - client/android/app/src/main/kotlin/com/goreecloud/messenger/client/MessengerClientActivity.kt
   blockers:
     - A native Android Messenger client exists only as a disconnected Development foundation; production account/session binding, connected messaging, durable client state, representative-device acceptance, protected signing, deployment, and release acceptance are not established.
-    - The Android Development client remains source-mapped to Glaze UI V1.5 / 1.5.1. Current Official Stable Glaze UI V1.6 / 1.6.0 migration and Messenger-local rendered, accessibility, adaptive/form-factor, localization/RTL, performance, rollback, Human Visual Excellence, and production acceptance remain incomplete.
+    - "Messenger Android presentation source maps to current Official Stable Glaze UI V1.6 / 1.6.0, but application acceptance remains blocked: authoritative runtime accessibility/performance context, rendered accessibility, adaptive/form-factor, localization/RTL, representative-device, performance, rollback, Human Visual Excellence, signing, release, and production acceptance remain incomplete."
     - Production GoreeCloud Identity credential, session, device identity, isolation, revocation, and username-resolution integration are not established.
     - Accepted production cryptographic session and key lifecycle are not established.
     - Wardveil Security runtime integration, distributed production abuse controls, security-event provenance, and production security acceptance are not established.
