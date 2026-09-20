@@ -44,13 +44,54 @@ fun interface GoreeCloudIdentitySessionAuthority {
 }
 
 /**
+ * Protocol-neutral acceptance state for one conversation-authorization prerequisite.
+ *
+ * These projections carry no participant list, principal identifier, ACL, token, credential, or
+ * other reusable authorization material.
+ */
+enum class ConversationAuthorizationAcceptanceState {
+    ACCEPTED,
+    NOT_ACCEPTED,
+    UNKNOWN,
+}
+
+/**
  * Conversation-scoped authorization evidence supplied by the future authorization authority.
- * A positive state without its exact authority-owned conversation scope remains insufficient.
+ *
+ * A positive participant claim is insufficient by itself. Readiness also requires the responsible
+ * authority to bind the authorization decision to the current accepted Identity session/device
+ * authority, report the decision as current, and identify the exact canonical conversation scope.
  */
 data class ConversationAuthorizationEvidence(
     val state: DataMessagingReadiness.ConversationAccessState,
     val authorizedConversationId: String? = null,
-)
+    val identityBinding: ConversationAuthorizationAcceptanceState =
+        ConversationAuthorizationAcceptanceState.UNKNOWN,
+    val decisionFreshness: ConversationAuthorizationAcceptanceState =
+        ConversationAuthorizationAcceptanceState.UNKNOWN,
+) {
+    fun readinessProjectionFor(expectedConversationId: String): ConversationAuthorizationEvidence {
+        if (state != DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT) {
+            return this
+        }
+
+        val canonicalConversationId = authorizedConversationId
+            ?.let(DataReceiptIdentifierPolicy::canonicalOrNull)
+        val accepted =
+            canonicalConversationId == expectedConversationId &&
+                identityBinding == ConversationAuthorizationAcceptanceState.ACCEPTED &&
+                decisionFreshness == ConversationAuthorizationAcceptanceState.ACCEPTED
+
+        return if (accepted) {
+            copy(authorizedConversationId = canonicalConversationId)
+        } else {
+            copy(
+                state = DataMessagingReadiness.ConversationAccessState.UNKNOWN,
+                authorizedConversationId = canonicalConversationId,
+            )
+        }
+    }
+}
 
 fun interface ConversationAuthorizationAuthority {
     fun accessFor(conversationId: String): ConversationAuthorizationEvidence
@@ -233,7 +274,9 @@ class DataMessagingAuthorityResolver(
         }
 
         val authorization = try {
-            conversationAuthorizationAuthority.accessFor(targetConversationId)
+            conversationAuthorizationAuthority
+                .accessFor(targetConversationId)
+                .readinessProjectionFor(targetConversationId)
         } catch (_: Exception) {
             ConversationAuthorizationEvidence(
                 state = DataMessagingReadiness.ConversationAccessState.UNKNOWN,
