@@ -50,7 +50,7 @@ internal object DataMessagingReadinessPresentationPolicy {
             },
             checklist = listOf(
                 item(
-                    label = "Identity authentication",
+                    label = "Identity session/device binding",
                     reason = DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED,
                     missing = missing,
                     ready = ready,
@@ -85,11 +85,11 @@ internal object DataMessagingReadinessPresentationPolicy {
         when (evidence?.identity) {
             null -> null
             DataMessagingReadiness.IdentityState.UNKNOWN ->
-                "No verified GoreeCloud Identity session evidence is available."
+                "No verified GoreeCloud Identity session/device binding evidence is available."
             DataMessagingReadiness.IdentityState.UNAUTHENTICATED ->
                 "GoreeCloud Identity reports that this client is not authenticated."
             DataMessagingReadiness.IdentityState.AUTHENTICATED ->
-                "The evaluated readiness result does not verify GoreeCloud Identity authentication."
+                "The evaluated readiness result does not verify GoreeCloud Identity session/device binding."
         }
 
     private fun conversationFailureDetail(evidence: DataMessagingReadiness.Evidence?): String? {
