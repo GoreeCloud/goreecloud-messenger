@@ -7,8 +7,40 @@ package com.goreecloud.messenger.client
  * authenticated Identity session. This interface does not carry credentials, tokens, user secrets,
  * or permission to synthesize authentication from local UI state.
  */
+enum class IdentityBindingState {
+    BOUND,
+    NOT_BOUND,
+    UNKNOWN,
+}
+
+/**
+ * Minimized Identity evidence for the current Messenger client runtime.
+ *
+ * AUTHENTICATED alone is insufficient. A positive readiness projection also requires the
+ * responsible GoreeCloud Identity authority to accept both the current session binding and the
+ * current device binding. No principal identifier, session identifier, device identifier, token,
+ * credential, or secret crosses this boundary.
+ */
+data class IdentitySessionEvidence(
+    val state: DataMessagingReadiness.IdentityState,
+    val sessionBinding: IdentityBindingState = IdentityBindingState.UNKNOWN,
+    val deviceBinding: IdentityBindingState = IdentityBindingState.UNKNOWN,
+) {
+    fun readinessProjection(): IdentitySessionEvidence {
+        if (state != DataMessagingReadiness.IdentityState.AUTHENTICATED) {
+            return this
+        }
+
+        val accepted =
+            sessionBinding == IdentityBindingState.BOUND &&
+                deviceBinding == IdentityBindingState.BOUND
+
+        return if (accepted) this else copy(state = DataMessagingReadiness.IdentityState.UNKNOWN)
+    }
+}
+
 fun interface GoreeCloudIdentitySessionAuthority {
-    fun authenticationState(): DataMessagingReadiness.IdentityState
+    fun evidence(): IdentitySessionEvidence
 }
 
 /**
@@ -195,7 +227,7 @@ class DataMessagingAuthorityResolver(
         )
 
         val identity = try {
-            identityAuthority.authenticationState()
+            identityAuthority.evidence().readinessProjection().state
         } catch (_: Exception) {
             DataMessagingReadiness.IdentityState.UNKNOWN
         }
