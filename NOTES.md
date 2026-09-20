@@ -76,8 +76,10 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 ## Data transport current-authority hardening — September 19, 2026
 
-- This stabilization candidate strengthens the existing accepted-transport projection without adding a live network adapter or widening the disconnected Development shell.
+- PR #91 is integrated on `main` and strengthens the existing accepted-transport projection without adding a live network adapter or widening the disconnected Development shell.
 - A positive Data transport state now requires accepted configuration, Identity/authentication binding, protected-channel behavior, bounded failure policy, **current deployment/environment binding**, and **fresh acceptance evidence**.
 - Missing or rejected deployment binding or stale transport acceptance fails closed to `UNKNOWN`; coordinator tests verify that neither condition can invoke the injected send transport.
 - No endpoint, credential, token, certificate, Android INTERNET permission, durable queue, retry engine, Send control, production adapter, deployment, Release Candidate, or Stable authority is created.
 - Current Official Stable GLAZE UI V1.6 / 1.6.0 is recorded as the required migration target while the implemented V1.5.1 source mapping remains truthfully transitional.
+
+- Accepted exact-head evidence for PR #91: Platform Contract run `35490212282`, Messenger Foundation run `35490212048`, and Messenger Android Client run `35490212049` all succeeded before squash merge to authoritative main commit `fa0417fcf7274fb611981af768d35b8555908c53`.
