@@ -274,8 +274,7 @@ class DataMessagingAuthorityResolver(
         }
 
         val authorization = try {
-            conversationAuthorizationAuthority
-                .accessFor(targetConversationId)
+            conversationAuthorizationAuthority.accessFor(targetConversationId)
                 .readinessProjectionFor(targetConversationId)
         } catch (_: Exception) {
             ConversationAuthorizationEvidence(
