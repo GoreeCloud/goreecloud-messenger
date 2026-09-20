@@ -51,6 +51,57 @@ class DataMessagingAuthorityResolverTest {
     }
 
     @Test
+    fun bareVerifiedParticipantClaimFailsClosed() {
+        val evidence = resolver(
+            authorizationProvider = { conversationId ->
+                ConversationAuthorizationEvidence(
+                    state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
+                    authorizedConversationId = conversationId,
+                )
+            },
+        ).evidenceFor("conversation-1")
+
+        assertConversationBlocked(evidence)
+    }
+
+    @Test
+    fun missingConversationIdentityBindingFailsClosed() {
+        val evidence = resolver(
+            authorizationProvider = { conversationId ->
+                acceptedConversationAuthorizationEvidence(conversationId).copy(
+                    identityBinding = ConversationAuthorizationAcceptanceState.NOT_ACCEPTED,
+                )
+            },
+        ).evidenceFor("conversation-1")
+
+        assertConversationBlocked(evidence)
+    }
+
+    @Test
+    fun staleConversationAuthorizationDecisionFailsClosed() {
+        val evidence = resolver(
+            authorizationProvider = { conversationId ->
+                acceptedConversationAuthorizationEvidence(conversationId).copy(
+                    decisionFreshness = ConversationAuthorizationAcceptanceState.NOT_ACCEPTED,
+                )
+            },
+        ).evidenceFor("conversation-1")
+
+        assertConversationBlocked(evidence)
+    }
+
+    @Test
+    fun mismatchedConversationAuthorizationScopeFailsClosed() {
+        val evidence = resolver(
+            authorizationProvider = {
+                acceptedConversationAuthorizationEvidence("conversation-2")
+            },
+        ).evidenceFor("conversation-1")
+
+        assertConversationBlocked(evidence)
+    }
+
+    @Test
     fun resolvesEachIndependentAuthorityForExactRequestedConversation() {
         val requestedScopes = mutableListOf<String>()
         val resolver = resolver(
@@ -322,6 +373,9 @@ class DataMessagingAuthorityResolverTest {
             acceptedE2eeEvidence(conversationId)
         },
         transportEvidence: DataTransportEvidence = acceptedTransportEvidence(),
+        authorizationProvider: (String) -> ConversationAuthorizationEvidence = { conversationId ->
+            acceptedConversationAuthorizationEvidence(conversationId)
+        },
         authorizationObserver: (String) -> Unit = {},
     ): DataMessagingAuthorityResolver =
         DataMessagingAuthorityResolver(
@@ -330,10 +384,7 @@ class DataMessagingAuthorityResolverTest {
             },
             conversationAuthorizationAuthority = ConversationAuthorizationAuthority { conversationId ->
                 authorizationObserver(conversationId)
-                ConversationAuthorizationEvidence(
-                    state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
-                    authorizedConversationId = conversationId,
-                )
+                authorizationProvider(conversationId)
             },
             dataTransportAuthority = GoreeCloudDataTransportAuthority { transportEvidence },
             e2eeSessionAuthority = E2EESessionAuthority(e2eeProvider),
@@ -344,6 +395,16 @@ class DataMessagingAuthorityResolverTest {
             state = DataMessagingReadiness.IdentityState.AUTHENTICATED,
             sessionBinding = IdentityBindingState.BOUND,
             deviceBinding = IdentityBindingState.BOUND,
+        )
+
+    private fun acceptedConversationAuthorizationEvidence(
+        conversationId: String,
+    ): ConversationAuthorizationEvidence =
+        ConversationAuthorizationEvidence(
+            state = DataMessagingReadiness.ConversationAccessState.VERIFIED_PARTICIPANT,
+            authorizedConversationId = conversationId,
+            identityBinding = ConversationAuthorizationAcceptanceState.ACCEPTED,
+            decisionFreshness = ConversationAuthorizationAcceptanceState.ACCEPTED,
         )
 
     private fun acceptedTransportEvidence(): DataTransportEvidence =
@@ -369,6 +430,14 @@ class DataMessagingAuthorityResolverTest {
         val result = DataMessagingReadiness.evaluate(evidence)
         assertEquals(
             setOf(DataMessagingReadiness.BlockReason.IDENTITY_NOT_AUTHENTICATED),
+            (result as DataMessagingReadiness.Result.Blocked).reasons,
+        )
+    }
+
+    private fun assertConversationBlocked(evidence: DataMessagingReadiness.Evidence) {
+        val result = DataMessagingReadiness.evaluate(evidence)
+        assertEquals(
+            setOf(DataMessagingReadiness.BlockReason.CONVERSATION_ACCESS_NOT_VERIFIED),
             (result as DataMessagingReadiness.Result.Blocked).reasons,
         )
     }
