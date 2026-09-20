@@ -58,3 +58,12 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 - The minimized boundary carries no principal, session, device, token, credential, or secret identifiers.
 - Unit tests verify that missing session binding, missing device binding, provider failure, and explicit unauthenticated state all fail closed before the send coordinator may invoke an injected transport.
 - This is Development authority-contract hardening only. The disconnected Android shell still has no production Identity adapter, network authority, Send control, durable client state, or accepted production messaging capability.
+
+## Exact-conversation authorization stabilization — September 19, 2026
+
+- This Development candidate strengthens the future conversation authorization seam used by Android Data messaging readiness.
+- A bare VERIFIED_PARTICIPANT claim is no longer sufficient. Positive readiness also requires the responsible authorization authority to bind its decision to the current accepted Identity session/device authority, report the decision as current, and identify the exact canonical conversation scope requested by the client.
+- The minimized boundary carries no participant list, principal identifier, ACL, token, credential, or reusable authorization material.
+- Unit coverage fails closed for bare participant claims, missing Identity binding, stale authorization decisions, and mismatched conversation scope.
+- This does not create a production authorization adapter, authenticate a user, connect Data transport, expose Send, establish E2EE, persist messages, or establish production, Release Candidate, or Stable authority.
+
