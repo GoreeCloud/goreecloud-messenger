@@ -3,7 +3,7 @@
 ## Current stabilization context
 
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
-- Authoritative `main` is `6925fa6428ffd014b314c61580f7ffee4a4bfc79`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, immutable Messenger Foundation CI dependencies from PR #84, and the non-interactive disconnected-shell runtime guard from PR #85.
+- Authoritative `main` is `edb69de4a9f7c71f298dd98f8e000d05881fe711`, including the disconnected native Android Development client, exact-source Android CI hardening from PR #82, accessibility-heading semantics from PR #83, immutable Messenger Foundation CI dependencies from PR #84, the non-interactive disconnected-shell runtime guard from PR #85, and the integrated PR #86 Identity session/device authority hardening.
 - PR #79 exact source head `3cd0066c47d5c2779f4aaa231b1d220a19b0c337` passed the Messenger Foundation, Platform Contract 0.4, Android client build/evidence, and Android 16 emulator workflows before merge.
 - The Android client is therefore authoritative Development source, but its disconnected/fail-closed behavior remains intentional and does not establish production messaging capability.
 - Draft PR #76 and its stacked Glaze 1.4.1 lineage remain historical provenance only and must not be treated as current integration authority.
@@ -53,7 +53,7 @@ PR #83 is integrated on `main`. The app title and major readiness/provenance/pla
 
 ## Identity session/device authority boundary — September 19, 2026
 
-- The current stabilization candidate strengthens the future GoreeCloud Identity seam so a bare authenticated state is no longer sufficient for Data messaging readiness.
+- PR #86 is integrated on `main` and strengthens the future GoreeCloud Identity seam so a bare authenticated state is no longer sufficient for Data messaging readiness.
 - A positive Identity projection now requires both session binding and device binding to be independently reported as bound by the responsible Identity authority.
 - The minimized boundary carries no principal, session, device, token, credential, or secret identifiers.
 - Unit tests verify that missing session binding, missing device binding, provider failure, and explicit unauthenticated state all fail closed before the send coordinator may invoke an injected transport.
