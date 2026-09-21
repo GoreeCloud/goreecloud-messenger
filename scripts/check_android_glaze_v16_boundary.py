@@ -109,10 +109,14 @@ else:
     # platform configuration projection. The optical boundary remains inactive and cannot inspect
     # runtime messaging, Identity, authorization, transport, E2EE, or other authority state.
     for marker in (
+        "data class MessengerAndroidGlazeSignals",
         "object MessengerAndroidGlazeContext",
-        "fun fromFontScale(fontScale: Float)",
+        "fun fromSignals(signals: MessengerAndroidGlazeSignals)",
+        "reducedMotion = !signals.animationsEnabled",
         "largeText = normalized > DefaultFontScale",
         "extraLargeText = normalized >= ExtraLargeTextScale",
+        "touchAssistance = signals.touchExplorationEnabled",
+        "screenReaderOptimized = signals.touchExplorationEnabled",
     ):
         require(android_context, marker, "MessengerAndroidGlazeContext")
     for forbidden in (
@@ -128,8 +132,10 @@ else:
         forbid(android_context, forbidden, "MessengerAndroidGlazeContext")
 
     require(activity, "GlazeMessengerPresentationPolicy.resolve(", "MessengerClientActivity")
-    require(activity, "MessengerAndroidGlazeContext.fromFontScale(", "MessengerClientActivity")
+    require(activity, "MessengerAndroidGlazeContext.fromSignals(", "MessengerClientActivity")
     require(activity, "resources.configuration.fontScale", "MessengerClientActivity")
+    require(activity, "ValueAnimator.areAnimatorsEnabled()", "MessengerClientActivity")
+    require(activity, "isTouchExplorationEnabled", "MessengerClientActivity")
     require(activity, "GlazeClientTokens.LargeTextScreenGutterDp", "MessengerClientActivity")
     forbid(activity, "GlazeMessengerOptics", "MessengerClientActivity")
 
