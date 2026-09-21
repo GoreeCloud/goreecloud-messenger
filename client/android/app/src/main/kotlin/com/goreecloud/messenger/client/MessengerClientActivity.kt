@@ -1,5 +1,6 @@
 package com.goreecloud.messenger.client
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.res.Configuration
 import android.graphics.Typeface
@@ -8,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityManager
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -16,7 +18,14 @@ class MessengerClientActivity : Activity() {
     private val runtimePresentation: GlazeMessengerResolvedPresentation
         get() = GlazeMessengerPresentationPolicy.resolve(
             requestedMaterial = GlazeMessengerMaterialRole.RAISED,
-            context = MessengerAndroidGlazeContext.fromFontScale(resources.configuration.fontScale),
+            context = MessengerAndroidGlazeContext.fromSignals(
+                MessengerAndroidGlazeSignals(
+                    fontScale = resources.configuration.fontScale,
+                    animationsEnabled = ValueAnimator.areAnimatorsEnabled(),
+                    touchExplorationEnabled = getSystemService(AccessibilityManager::class.java)
+                        ?.isTouchExplorationEnabled == true,
+                ),
+            ),
         )
 
     private val isDark: Boolean

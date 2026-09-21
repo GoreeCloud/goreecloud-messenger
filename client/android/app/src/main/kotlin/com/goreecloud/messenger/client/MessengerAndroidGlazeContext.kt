@@ -8,15 +8,36 @@ package com.goreecloud.messenger.client
  * Identity, transport, cryptographic, privacy, security, recovery, policy, observability, or
  * remote-content state may enter this projection.
  */
+data class MessengerAndroidGlazeSignals(
+    val fontScale: Float,
+    val animationsEnabled: Boolean,
+    val touchExplorationEnabled: Boolean,
+)
+
 object MessengerAndroidGlazeContext {
     const val DefaultFontScale = 1.0f
     const val ExtraLargeTextScale = 2.0f
 
-    fun fromFontScale(fontScale: Float): GlazeMessengerPresentationContext {
-        val normalized = fontScale.takeIf { it.isFinite() && it > 0f } ?: DefaultFontScale
+    fun fromSignals(signals: MessengerAndroidGlazeSignals): GlazeMessengerPresentationContext {
+        val normalized = signals.fontScale
+            .takeIf { it.isFinite() && it > 0f }
+            ?: DefaultFontScale
+
         return GlazeMessengerPresentationContext(
+            reducedMotion = !signals.animationsEnabled,
             largeText = normalized > DefaultFontScale,
             extraLargeText = normalized >= ExtraLargeTextScale,
+            touchAssistance = signals.touchExplorationEnabled,
+            screenReaderOptimized = signals.touchExplorationEnabled,
         )
     }
+
+    fun fromFontScale(fontScale: Float): GlazeMessengerPresentationContext =
+        fromSignals(
+            MessengerAndroidGlazeSignals(
+                fontScale = fontScale,
+                animationsEnabled = true,
+                touchExplorationEnabled = false,
+            ),
+        )
 }

@@ -2,6 +2,7 @@
 
 ## Current stabilization context
 
+- Current V1.6 accessibility-context candidate projects only Android font scale, animator enablement, and touch-exploration state into the pure presentation policy. Touch exploration raises the existing interaction floor to 56 dp and enables screen-reader-optimized focus semantics; disabled Android animators request minimal motion. No message, Identity, transport, E2EE, privacy, security, recovery, policy, observability, persistence, or network authority is added. Exact-head CI and representative-device assistive-technology acceptance remain required.
 - Repository lifecycle remains **Development**, overall platform conformance remains **nonconformant**, and Messenger is not Stable or production accepted.
 - GitHub repository identity is now `GoreeCloud/messenger` after a repository rename. Repository ID, product identity, Android package namespaces, protocol/data identifiers, and communication authority boundaries remain unchanged; the rename does not establish runtime or release acceptance.
 - Superseded documentation head `577c36669420ed689395fb752b036a38b4f1fda1` passed Platform Contract and Foundation validation but failed Android Client run `35492393753` because the SBOM provenance guard still expected the pre-rename GitHub path. Build, unit tests, debug assembly, and release assembly succeeded before that guard rejected `GoreeCloud/messenger`; the failed head remains audit evidence and is not accepted.
