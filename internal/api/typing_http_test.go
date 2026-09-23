@@ -139,7 +139,6 @@ func TestTypingHTTPRejectsCallerSuppliedUserIdentity(t *testing.T) {
 	}
 }
 
-
 func TestTypingHTTPRejectsTrailingJSONValue(t *testing.T) {
 	now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
 	service, _ := newTypingHTTPTestService(t, &now)
