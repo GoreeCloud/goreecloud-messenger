@@ -17,7 +17,6 @@ func writeAccepted(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-
 // hasUnexpectedTrailingJSON reports whether a decoded request contains any
 // non-whitespace bytes after its first JSON value. Both additional valid values
 // and malformed trailing content fail closed instead of being silently ignored.
