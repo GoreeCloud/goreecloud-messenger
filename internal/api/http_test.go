@@ -196,7 +196,6 @@ func TestMessageResponseTimestampIsStable(t *testing.T) {
 	}
 }
 
-
 func TestSubmitRejectsTrailingJSONValue(t *testing.T) {
 	handler := newTestHandler(t, "user-1")
 	body := `{"message_id":"message-trailing","conversation_id":"conversation-1","sender_id":"user-1","client_nonce":"nonce-trailing","ciphertext":"Y2lwaGVydGV4dA==","encryption":"e2ee","created_at":"2026-09-23T12:00:00Z"}{"plaintext":"must-not-be-ignored"}`
